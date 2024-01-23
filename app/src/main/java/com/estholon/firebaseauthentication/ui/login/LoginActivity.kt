@@ -16,6 +16,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.databinding.ActivityLoginBinding
 import com.estholon.firebaseauthentication.ui.detail.DetailActivity
+import com.estholon.firebaseauthentication.ui.signup.SignUpActivity
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collect
@@ -60,9 +61,17 @@ class LoginActivity : AppCompatActivity() {
                 password = binding.tiePassword.text.toString()
             ){ navigateToDetail()}
         }
+        binding.tvSignUp.setOnClickListener{
+            navigateToSignUp()
+        }
     }
 
     fun navigateToDetail(){
         startActivity(Intent(this, DetailActivity::class.java))
     }
+
+    private fun navigateToSignUp() {
+        startActivity(Intent(this, SignUpActivity::class.java))
+    }
+
 }

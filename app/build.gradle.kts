@@ -46,6 +46,9 @@ android {
     buildFeatures{
         viewBinding = true
     }
+    kotlin{
+        jvmToolchain(8)
+    }
 }
 
 dependencies {
@@ -58,8 +61,8 @@ dependencies {
     // Hilt
 
     implementation("com.google.dagger:hilt-android:2.45")
-    implementation("androidx.navigation:navigation-fragment-ktx:2.6.0")
-    implementation("androidx.navigation:navigation-ui-ktx:2.6.0")
+    implementation("androidx.navigation:navigation-fragment-ktx:2.7.6")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.6")
     kapt("com.google.dagger:hilt-compiler:2.44")
 
     //ViewModel

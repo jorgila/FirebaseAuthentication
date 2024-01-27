@@ -2,10 +2,13 @@ package com.estholon.firebaseauthentication.ui.login
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
+import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -15,6 +18,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.databinding.ActivityLoginBinding
+import com.estholon.firebaseauthentication.databinding.DialogPhoneLoginBinding
 import com.estholon.firebaseauthentication.ui.detail.DetailActivity
 import com.estholon.firebaseauthentication.ui.signup.SignUpActivity
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,7 +31,7 @@ class LoginActivity : AppCompatActivity() {
 
     // CONNECTIONS
     //// ViewModel
-    private val loginViewModel: LoginViewModel by viewModels()
+    private val viewModel: LoginViewModel by viewModels()
 
     // BINDING
     private lateinit var binding: ActivityLoginBinding
@@ -47,7 +51,7 @@ class LoginActivity : AppCompatActivity() {
     private fun initUIState() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED){
-                loginViewModel.isLoading.collect{
+                viewModel.isLoading.collect{
                     binding.pb.isVisible = it
                 }
             }
@@ -56,7 +60,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun initListeners() {
         binding.btn.setOnClickListener{
-            loginViewModel.login(
+            viewModel.login(
                 user = binding.tieUser.text.toString(),
                 password = binding.tiePassword.text.toString()
             ){ navigateToDetail()}
@@ -64,9 +68,41 @@ class LoginActivity : AppCompatActivity() {
         binding.tvSignUp.setOnClickListener{
             navigateToSignUp()
         }
+        binding.btnMobile.setOnClickListener{
+            showPhoneLogin()
+        }
     }
 
-    fun navigateToDetail(){
+    private fun showPhoneLogin(){
+        val phoneBinding = DialogPhoneLoginBinding.inflate(layoutInflater)
+        val alertDialog = AlertDialog.Builder(this).apply{setView(phoneBinding.root)}.create()
+
+        phoneBinding.btnPhone.setOnClickListener{
+            viewModel.loginWithPhone(
+                phoneBinding.tiePhone.text.toString(),
+                this,
+                onCodeSent={
+                           phoneBinding.pinView.isVisible = true
+                },
+                onVerificationComplete={navigateToDetail()},
+                onVerificationFailed={showToast("Ha habido un error:$it")}
+            )
+        }
+
+        phoneBinding.pinView.doOnTextChanged { text, _, _, _ ->
+            if(text?.length == 6){
+                viewModel.verifyCode(text.toString()){navigateToDetail()}
+            }
+        }
+
+        alertDialog.show()
+    }
+
+    private fun showToast(msg: String){
+        Toast.makeText(this,msg,Toast.LENGTH_SHORT).show()
+    }
+
+    private fun navigateToDetail(){
         startActivity(Intent(this, DetailActivity::class.java))
     }
 

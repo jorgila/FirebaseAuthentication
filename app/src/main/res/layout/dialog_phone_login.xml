@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilPhone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginTop="12dp"
+        android:hint="SignIn">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/tiePhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="+34622413829"
+            android:maxLines="1"
+            android:singleLine="true"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.chaos.view.PinView
+        android:id="@+id/pinView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        style="@style/PinWidget.PinView"
+        android:visibility="gone"
+        android:cursorVisible="true"
+        android:inputType="number"
+        android:itemBackground="@color/white"
+        android:layout_marginTop="12dp"
+        android:padding="12dp"
+        app:hideLineWhenFilled="false"
+        app:itemCount="6"
+        app:itemRadius="10dp"/>
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnPhone"
+        android:text="SendSMS"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        />
+
+</androidx.appcompat.widget.LinearLayoutCompat>

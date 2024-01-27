@@ -65,6 +65,9 @@ dependencies {
     implementation("androidx.navigation:navigation-ui-ktx:2.7.6")
     kapt("com.google.dagger:hilt-compiler:2.44")
 
+    // Pin View
+    implementation("io.github.chaosleung:pinview:1.4.4")
+
     //ViewModel
     implementation ("androidx.activity:activity-ktx:1.8.2")
 

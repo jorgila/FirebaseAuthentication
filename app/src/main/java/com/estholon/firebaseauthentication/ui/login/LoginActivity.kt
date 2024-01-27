@@ -1,29 +1,27 @@
 package com.estholon.firebaseauthentication.ui.login
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
-import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import androidx.navigation.findNavController
-import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
-import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.databinding.ActivityLoginBinding
 import com.estholon.firebaseauthentication.databinding.DialogPhoneLoginBinding
 import com.estholon.firebaseauthentication.ui.detail.DetailActivity
 import com.estholon.firebaseauthentication.ui.signup.SignUpActivity
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -36,6 +34,20 @@ class LoginActivity : AppCompatActivity() {
     // BINDING
     private lateinit var binding: ActivityLoginBinding
 
+    private val googleLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            if(result.resultCode== Activity.RESULT_OK){
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                try {
+                    val account = task.getResult(ApiException::class.java)!!
+                    viewModel.signInWithGoogle(account.idToken!!){
+                        navigateToDetail()
+                    }
+                } catch (e:ApiException){
+                    Toast.makeText(this,"Ha ocurrido un error: ${e.message}",Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
         binding = ActivityLoginBinding.inflate(layoutInflater)
@@ -71,6 +83,12 @@ class LoginActivity : AppCompatActivity() {
         binding.btnMobile.setOnClickListener{
             showPhoneLogin()
         }
+        binding.btnGoogle.setOnClickListener {
+            viewModel.onGoogleSignInSelected{
+                googleLauncher.launch(it.signInIntent)
+            }
+        }
+
     }
 
     private fun showPhoneLogin(){
@@ -82,7 +100,12 @@ class LoginActivity : AppCompatActivity() {
                 phoneBinding.tiePhone.text.toString(),
                 this,
                 onCodeSent={
-                           phoneBinding.pinView.isVisible = true
+                    phoneBinding.tiePhone.isEnabled = false
+                    phoneBinding.btnPhone.isEnabled = false
+                    phoneBinding.pinView.isVisible = true
+                    phoneBinding.pinView.requestFocus()
+                    val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.showSoftInput(phoneBinding.pinView, InputMethodManager.SHOW_IMPLICIT)
                 },
                 onVerificationComplete={navigateToDetail()},
                 onVerificationFailed={showToast("Ha habido un error:$it")}

@@ -9,9 +9,9 @@
 
     <!-- FACEBOOK LOGIN -->
 
-    <string name="facebook_app_id">299708492699342</string>
-    <string name="fb_login_protocol_scheme">fb299708492699342</string>
-    <string name="facebook_client_token">40e0feb30adfc272b0e63d57b438ffb1</string>
+    <string name="facebook_app_id"></string>
+    <string name="fb_login_protocol_scheme"></string>
+    <string name="facebook_client_token"></string>
 
 
 

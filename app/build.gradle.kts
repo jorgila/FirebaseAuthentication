@@ -58,7 +58,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.android.gms:play-services-auth:20.7.0")
-
+    implementation("com.facebook.android:facebook-login:16.2.0")
     // Hilt
 
     implementation("com.google.dagger:hilt-android:2.45")

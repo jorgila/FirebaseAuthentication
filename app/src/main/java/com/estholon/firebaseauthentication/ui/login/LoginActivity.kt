@@ -19,6 +19,11 @@ import com.estholon.firebaseauthentication.databinding.ActivityLoginBinding
 import com.estholon.firebaseauthentication.databinding.DialogPhoneLoginBinding
 import com.estholon.firebaseauthentication.ui.detail.DetailActivity
 import com.estholon.firebaseauthentication.ui.signup.SignUpActivity
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,6 +38,9 @@ class LoginActivity : AppCompatActivity() {
 
     // BINDING
     private lateinit var binding: ActivityLoginBinding
+
+    // VARIABLES
+    private lateinit var callbackManager: CallbackManager
 
     private val googleLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
@@ -87,7 +95,35 @@ class LoginActivity : AppCompatActivity() {
             viewModel.onGoogleSignInSelected{
                 googleLauncher.launch(it.signInIntent)
             }
+
         }
+
+        // Facebook
+
+        callbackManager = CallbackManager.Factory.create()
+
+        LoginManager.getInstance()
+            .registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+                override fun onCancel() {
+                    showToast("Probamos otra red social?")
+                }
+
+                override fun onError(error: FacebookException) {
+                    showToast("Ha ocurrido un error: ${error.message}")
+                }
+
+                override fun onSuccess(result: LoginResult) {
+                    viewModel.signInWithFacebook(result.accessToken) { navigateToDetail() }
+                }
+
+            })
+
+        binding.btnFacebook.setOnClickListener {
+            LoginManager.getInstance()
+                .logInWithReadPermissions(this, callbackManager, listOf("email", "public_profile"))
+        }
+
+        // Facebook End
 
     }
 

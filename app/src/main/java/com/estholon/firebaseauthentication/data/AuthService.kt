@@ -3,11 +3,15 @@ package com.estholon.firebaseauthentication.data
 import android.app.Activity
 import android.content.Context
 import com.estholon.firebaseauthentication.R
+import com.facebook.AccessToken
+import com.facebook.login.LoginManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.Firebase
 import com.google.firebase.auth.AuthCredential
+import com.google.firebase.auth.FacebookAuthCredential
+import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -26,6 +30,8 @@ class AuthService @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     @ApplicationContext private val context: Context
 ) {
+
+    private fun getCurrentUser() = firebaseAuth.currentUser
 
     suspend fun login(user: String, password: String): FirebaseUser? {
         return firebaseAuth.signInWithEmailAndPassword(user,password).await().user
@@ -50,9 +56,9 @@ class AuthService @Inject constructor(
 
     fun logout() {
         firebaseAuth.signOut()
+        LoginManager.getInstance().logOut()
     }
 
-    private fun getCurrentUser() = firebaseAuth.currentUser
 
     fun loginWithPhone(
         phoneNumber:String,
@@ -106,5 +112,10 @@ class AuthService @Inject constructor(
     }
 
     suspend fun completeRegisterWithPhoneVerification(credentials: PhoneAuthCredential) = completeRegisterWithCredential(credentials)
+
+    suspend fun signInWithFacebook(accessToken: AccessToken): FirebaseUser? {
+        val credential = FacebookAuthProvider.getCredential(accessToken.token)
+        return completeRegisterWithCredential(credential)
+    }
 
 }

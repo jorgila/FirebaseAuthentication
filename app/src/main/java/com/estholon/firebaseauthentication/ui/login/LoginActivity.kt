@@ -102,6 +102,11 @@ class LoginActivity : AppCompatActivity() {
             viewModel.onGitHubSignInSelected(this){ navigateToDetail() }
         }
 
+        binding.btnMicrosoft.setOnClickListener {
+            viewModel.onMicrosoftSignInSelected(this){ navigateToDetail() }
+        }
+
+
         // Facebook
 
         callbackManager = CallbackManager.Factory.create()

@@ -35,6 +35,27 @@ class AuthService @Inject constructor(
 
     private fun getCurrentUser() = firebaseAuth.currentUser
 
+    private suspend fun initRegisterWithProvider(activity: Activity, provider: OAuthProvider) : FirebaseUser?{
+        return suspendCancellableCoroutine<FirebaseUser?> { cancellableContinuation ->
+            firebaseAuth.pendingAuthResult?.addOnSuccessListener {
+                cancellableContinuation.resume(it.user)
+            }?.addOnFailureListener {
+                cancellableContinuation.resumeWithException(it)
+            }?: completeRegisterWithProvider(activity, provider,cancellableContinuation)
+        }
+    }
+
+
+    private fun completeRegisterWithProvider(
+        activity: Activity,
+        provider: OAuthProvider,
+        cancellableContinuation: CancellableContinuation<FirebaseUser?>
+    ) {
+        firebaseAuth.startActivityForSignInWithProvider(activity, provider).addOnSuccessListener {
+            cancellableContinuation.resume(it.user)
+        }.addOnFailureListener { cancellableContinuation.resumeWithException(it) }
+    }
+
     suspend fun login(user: String, password: String): FirebaseUser? {
         return firebaseAuth.signInWithEmailAndPassword(user,password).await().user
     }
@@ -134,26 +155,9 @@ class AuthService @Inject constructor(
         return initRegisterWithProvider(activity,provider)
     }
 
-    suspend fun initRegisterWithProvider(activity: Activity, provider: OAuthProvider) : FirebaseUser?{
-        return suspendCancellableCoroutine<FirebaseUser?> { cancellableContinuation ->
-            firebaseAuth.pendingAuthResult?.addOnSuccessListener {
-                cancellableContinuation.resume(it.user)
-            }?.addOnFailureListener {
-                cancellableContinuation.resumeWithException(it)
-            }?: completeRegisterWithProvider(activity, provider,cancellableContinuation)
-        }
+    suspend fun signInWithTwitter(activity: Activity): FirebaseUser? {
+        val provider = OAuthProvider.newBuilder("twitter.com").build()
+        return initRegisterWithProvider(activity,provider)
     }
-
-
-    private fun completeRegisterWithProvider(
-        activity: Activity,
-        provider: OAuthProvider,
-        cancellableContinuation: CancellableContinuation<FirebaseUser?>
-    ) {
-        firebaseAuth.startActivityForSignInWithProvider(activity, provider).addOnSuccessListener {
-            cancellableContinuation.resume(it.user)
-        }.addOnFailureListener { cancellableContinuation.resumeWithException(it) }
-    }
-
 
 }

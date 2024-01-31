@@ -106,6 +106,9 @@ class LoginActivity : AppCompatActivity() {
             viewModel.onMicrosoftSignInSelected(this){ navigateToDetail() }
         }
 
+        binding.btnTwitter.setOnClickListener {
+            viewModel.onTwitterSignInSelected(this){ navigateToDetail() }
+        }
 
         // Facebook
 

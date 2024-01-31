@@ -160,4 +160,18 @@ class LoginViewModel @Inject constructor(private val authService: AuthService): 
 
     }
 
+    fun onTwitterSignInSelected(activity: Activity, navigateToDetail: () -> Unit) {
+        viewModelScope.launch {
+
+            val result = withContext(Dispatchers.IO){
+                authService.signInWithTwitter(activity)
+            }
+
+            if (result != null) {
+                navigateToDetail()
+            }
+
+        }
+    }
+
 }

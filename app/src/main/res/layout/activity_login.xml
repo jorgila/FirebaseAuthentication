@@ -148,6 +148,16 @@
             android:text="Log In With Microsoft"
             />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnTwitter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            app:icon="@drawable/ic_twitter"
+            android:backgroundTint="@color/black"
+            android:text="Log In With Twitter"
+            />
+
     </LinearLayout>
   </ScrollView>
 

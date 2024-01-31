@@ -89,40 +89,56 @@
       android:layout_marginVertical="24dp"
       android:text="LogIn"/>
 
-  <com.google.android.material.button.MaterialButton
-      android:id="@+id/btnMobile"
+  <ScrollView
       android:layout_width="0dp"
-      android:layout_height="wrap_content"
+      android:layout_height="0dp"
       app:layout_constraintTop_toBottomOf="@+id/btn"
-      app:layout_constraintEnd_toEndOf="parent"
       app:layout_constraintStart_toStartOf="parent"
-      android:layout_marginHorizontal="12dp"
-      app:icon="@drawable/ic_phone"
-      android:backgroundTint="@color/black"
-      android:text="Log In With Phone"
-      />
+      app:layout_constraintEnd_toEndOf="parent"
+      app:layout_constraintBottom_toBottomOf="parent"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnMobile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            app:icon="@drawable/ic_phone"
+            android:backgroundTint="@color/black"
+            android:text="Log In With Phone"
+            />
 
-  <com.google.android.material.button.MaterialButton
-      android:id="@+id/btnGoogle"
-      android:layout_width="0dp"
-      android:layout_height="wrap_content"
-      app:layout_constraintTop_toBottomOf="@+id/btnMobile"
-      app:layout_constraintEnd_toEndOf="parent"
-      app:layout_constraintStart_toStartOf="parent"
-      android:layout_marginHorizontal="12dp"
-      app:icon="@drawable/ic_google"
-      android:backgroundTint="@color/black"
-      android:text="Log In With Google"
-      />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnGoogle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            app:icon="@drawable/ic_google"
+            android:backgroundTint="@color/black"
+            android:text="Log In With Google"
+            />
 
-  <com.facebook.login.widget.LoginButton
-      android:id="@+id/btnFacebook"
-      android:layout_width="0dp"
-      android:layout_marginHorizontal="12dp"
-      android:layout_height="wrap_content"
-      app:layout_constraintTop_toBottomOf="@+id/btnGoogle"
-      app:layout_constraintStart_toStartOf="parent"
-      app:layout_constraintEnd_toEndOf="parent"
-      />
+        <com.facebook.login.widget.LoginButton
+            android:id="@+id/btnFacebook"
+            android:layout_width="match_parent"
+            android:layout_marginHorizontal="12dp"
+            android:layout_height="wrap_content"
+            />
+
+      <com.google.android.material.button.MaterialButton
+          android:id="@+id/btnGitHub"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginHorizontal="12dp"
+          app:icon="@drawable/ic_github"
+          android:backgroundTint="@color/black"
+          android:text="Log In With GitHub"
+          />
+
+    </LinearLayout>
+  </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

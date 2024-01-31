@@ -98,6 +98,10 @@ class LoginActivity : AppCompatActivity() {
 
         }
 
+        binding.btnGitHub.setOnClickListener {
+            viewModel.onGitHubSignInSelected(this){ navigateToDetail() }
+        }
+
         // Facebook
 
         callbackManager = CallbackManager.Factory.create()

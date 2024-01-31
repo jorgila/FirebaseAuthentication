@@ -131,4 +131,18 @@ class LoginViewModel @Inject constructor(private val authService: AuthService): 
         }
     }
 
+    fun onGitHubSignInSelected(activity: Activity, navigateToDetail: () -> Unit) {
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO){
+                authService.signInWithGitHub(activity)
+            }
+
+            if (result != null) {
+                navigateToDetail()
+            }
+
+        }
+
+    }
+
 }

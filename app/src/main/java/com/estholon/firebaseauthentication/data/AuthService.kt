@@ -160,4 +160,9 @@ class AuthService @Inject constructor(
         return initRegisterWithProvider(activity,provider)
     }
 
+    suspend fun signInWithYahoo(activity: Activity): FirebaseUser? {
+        val provider = OAuthProvider.newBuilder("yahoo.com").build()
+        return initRegisterWithProvider(activity,provider)
+    }
+
 }

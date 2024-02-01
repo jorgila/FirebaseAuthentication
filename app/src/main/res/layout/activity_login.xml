@@ -158,6 +158,16 @@
             android:text="Log In With Twitter"
             />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnYahoo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="12dp"
+            app:icon="@drawable/ic_yahoo"
+            android:backgroundTint="@color/black"
+            android:text="Log In With Yahoo"
+            />
+
     </LinearLayout>
   </ScrollView>
 

@@ -110,6 +110,10 @@ class LoginActivity : AppCompatActivity() {
             viewModel.onTwitterSignInSelected(this){ navigateToDetail() }
         }
 
+        binding.btnYahoo.setOnClickListener {
+            viewModel.onYahooSignInSelected(this){ navigateToDetail() }
+        }
+
         // Facebook
 
         callbackManager = CallbackManager.Factory.create()

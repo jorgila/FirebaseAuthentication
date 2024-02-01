@@ -18,6 +18,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.estholon.firebaseauthentication.databinding.ActivityLoginBinding
 import com.estholon.firebaseauthentication.databinding.DialogPhoneLoginBinding
 import com.estholon.firebaseauthentication.ui.detail.DetailActivity
+import com.estholon.firebaseauthentication.ui.login.OathLogin.*
 import com.estholon.firebaseauthentication.ui.signup.SignUpActivity
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
@@ -99,24 +100,29 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.btnGitHub.setOnClickListener {
-            viewModel.onGitHubSignInSelected(this){ navigateToDetail() }
+            viewModel.onOathLoginSelected(GitHub,this){ navigateToDetail() }
         }
 
         binding.btnMicrosoft.setOnClickListener {
-            viewModel.onMicrosoftSignInSelected(this){ navigateToDetail() }
+            viewModel.onOathLoginSelected(Microsoft,this){ navigateToDetail() }
         }
 
         binding.btnTwitter.setOnClickListener {
-            viewModel.onTwitterSignInSelected(this){ navigateToDetail() }
+            viewModel.onOathLoginSelected(Twitter,this){ navigateToDetail() }
         }
 
         binding.btnYahoo.setOnClickListener {
-            viewModel.onYahooSignInSelected(this){ navigateToDetail() }
+            viewModel.onOathLoginSelected(Yahoo,this){ navigateToDetail() }
+        }
+
+        binding.btnAnonymously.setOnClickListener {
+            viewModel.loginAnonymously(){ navigateToDetail() }
         }
 
         // Facebook
 
         callbackManager = CallbackManager.Factory.create()
+
 
         LoginManager.getInstance()
             .registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
@@ -133,6 +139,7 @@ class LoginActivity : AppCompatActivity() {
                 }
 
             })
+
 
         binding.btnFacebook.setOnClickListener {
             LoginManager.getInstance()

@@ -60,6 +60,10 @@ class AuthService @Inject constructor(
         return firebaseAuth.signInWithEmailAndPassword(user,password).await().user
     }
 
+    suspend fun loginAnonymously() : FirebaseUser? {
+        return firebaseAuth.signInAnonymously().await().user
+    }
+
     suspend fun register(email: String, password: String): FirebaseUser? {
         return suspendCancellableCoroutine { cancellableContinuation ->
             firebaseAuth.createUserWithEmailAndPassword(email,password)

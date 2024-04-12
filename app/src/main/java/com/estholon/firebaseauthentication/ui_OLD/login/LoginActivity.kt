@@ -1,4 +1,4 @@
-package com.estholon.firebaseauthentication.ui.login
+package com.estholon.firebaseauthentication.ui_OLD.login
 
 import android.app.Activity
 import android.content.Intent
@@ -17,9 +17,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.estholon.firebaseauthentication.databinding.ActivityLoginBinding
 import com.estholon.firebaseauthentication.databinding.DialogPhoneLoginBinding
-import com.estholon.firebaseauthentication.ui.detail.DetailActivity
-import com.estholon.firebaseauthentication.ui.login.OathLogin.*
-import com.estholon.firebaseauthentication.ui.signup.SignUpActivity
+import com.estholon.firebaseauthentication.ui_OLD.detail.DetailActivity
+import com.estholon.firebaseauthentication.ui_OLD.login.OathLogin.*
+import com.estholon.firebaseauthentication.ui_OLD.signup.SignUpActivity
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException

@@ -1,7 +1,6 @@
-package com.estholon.firebaseauthentication.ui.signup
+package com.estholon.firebaseauthentication.ui_OLD.signup
 
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.data.AuthService

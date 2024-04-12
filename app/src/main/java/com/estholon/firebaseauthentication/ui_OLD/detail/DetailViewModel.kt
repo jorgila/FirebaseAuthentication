@@ -1,4 +1,4 @@
-package com.estholon.firebaseauthentication.ui.detail
+package com.estholon.firebaseauthentication.ui_OLD.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

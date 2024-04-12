@@ -1,4 +1,4 @@
-package com.estholon.firebaseauthentication.ui.signup
+package com.estholon.firebaseauthentication.ui_OLD.signup
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
@@ -8,9 +8,8 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.databinding.ActivitySignUpBinding
-import com.estholon.firebaseauthentication.ui.detail.DetailActivity
+import com.estholon.firebaseauthentication.ui_OLD.detail.DetailActivity
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 

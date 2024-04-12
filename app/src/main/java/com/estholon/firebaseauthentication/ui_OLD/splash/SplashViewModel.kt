@@ -1,4 +1,4 @@
-package com.estholon.firebaseauthentication.ui.splash
+package com.estholon.firebaseauthentication.ui_OLD.splash
 
 import androidx.lifecycle.ViewModel
 import com.estholon.firebaseauthentication.data.AuthService

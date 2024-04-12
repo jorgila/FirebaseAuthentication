@@ -16,17 +16,17 @@
         android:theme="@style/Theme.FirebaseAuthentication"
         tools:targetApi="31">
         <activity
-            android:name=".ui.detail.DetailActivity"
+            android:name=".ui_OLD.detail.DetailActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.login.LoginActivity"
+            android:name=".ui_OLD.login.LoginActivity"
             android:exported="false"
             />
         <activity
-            android:name=".ui.signup.SignUpActivity"
+            android:name=".ui_OLD.signup.SignUpActivity"
             android:exported="false" />
         <activity
-            android:name=".ui.splash.SplashActivity"
+            android:name=".ui_OLD.splash.SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

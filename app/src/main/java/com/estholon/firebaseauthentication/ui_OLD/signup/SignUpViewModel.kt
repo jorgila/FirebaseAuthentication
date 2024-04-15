@@ -18,7 +18,7 @@ class SignUpViewModel @Inject constructor(private val authService: AuthService) 
     private var _isLoading = MutableStateFlow<Boolean>(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    fun register(email: String, password: String, navigateToDetail: () -> Unit) {
+    fun signUpEmail(email: String, password: String, navigateToDetail: () -> Unit, communicateError: () -> Unit) {
 
         viewModelScope.launch {
             _isLoading.value = true
@@ -26,7 +26,7 @@ class SignUpViewModel @Inject constructor(private val authService: AuthService) 
             try {
 
                 val result =  withContext(Dispatchers.IO){
-                    authService.register(email, password)
+                    authService.signUpWithEmail(email, password)
                 }
 
                 if(result!=null){
@@ -42,5 +42,7 @@ class SignUpViewModel @Inject constructor(private val authService: AuthService) 
         }
 
     }
+
+
 
 }

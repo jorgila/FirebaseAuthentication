@@ -9,7 +9,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.estholon.firebaseauthentication.ui.core.ContentWrapper
+import com.estholon.firebaseauthentication.ui.navigation.AppNavigation
 import com.estholon.firebaseauthentication.ui.theme.FirebaseAuthenticationAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -27,8 +27,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    navHostController = rememberNavController()
-                    ContentWrapper(navHostController = navHostController)
+                    AppNavigation()
                 }
             }
         }

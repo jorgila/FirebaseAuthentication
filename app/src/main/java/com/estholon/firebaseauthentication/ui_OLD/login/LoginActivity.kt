@@ -17,8 +17,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.estholon.firebaseauthentication.databinding.ActivityLoginBinding
 import com.estholon.firebaseauthentication.databinding.DialogPhoneLoginBinding
+import com.estholon.firebaseauthentication.ui.screens.auth.OathLogin
 import com.estholon.firebaseauthentication.ui_OLD.detail.DetailActivity
-import com.estholon.firebaseauthentication.ui_OLD.login.OathLogin.*
 import com.estholon.firebaseauthentication.ui_OLD.signup.SignUpActivity
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
@@ -100,19 +100,19 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.btnGitHub.setOnClickListener {
-            viewModel.onOathLoginSelected(GitHub,this){ navigateToDetail() }
+            viewModel.onOathLoginSelected(OathLogin.GitHub,this){ navigateToDetail() }
         }
 
         binding.btnMicrosoft.setOnClickListener {
-            viewModel.onOathLoginSelected(Microsoft,this){ navigateToDetail() }
+            viewModel.onOathLoginSelected(OathLogin.Microsoft,this){ navigateToDetail() }
         }
 
         binding.btnTwitter.setOnClickListener {
-            viewModel.onOathLoginSelected(Twitter,this){ navigateToDetail() }
+            viewModel.onOathLoginSelected(OathLogin.Twitter,this){ navigateToDetail() }
         }
 
         binding.btnYahoo.setOnClickListener {
-            viewModel.onOathLoginSelected(Yahoo,this){ navigateToDetail() }
+            viewModel.onOathLoginSelected(OathLogin.Yahoo,this){ navigateToDetail() }
         }
 
         binding.btnAnonymously.setOnClickListener {

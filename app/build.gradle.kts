@@ -45,7 +45,13 @@ android {
 
     buildFeatures{
         viewBinding = true
+        compose = true
     }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
+    }
+
     kotlin{
         jvmToolchain(8)
     }
@@ -62,7 +68,7 @@ dependencies {
     // Hilt
 
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.6")
-    implementation("androidx.navigation:navigation-ui_OLD-ktx:2.7.6")
+    implementation("androidx.navigation:navigation-ui-ktx:2.7.6")
 
     // HILT
     implementation("com.google.dagger:hilt-android:2.51")

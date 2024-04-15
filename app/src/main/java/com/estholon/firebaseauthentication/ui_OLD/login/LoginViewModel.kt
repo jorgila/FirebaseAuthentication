@@ -4,6 +4,7 @@ import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.data.AuthService
+import com.estholon.firebaseauthentication.ui.screens.auth.OathLogin
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.FirebaseException
@@ -30,7 +31,7 @@ class LoginViewModel @Inject constructor(private val authService: AuthService): 
             _isLoading.value = true
 
             val result = withContext(Dispatchers.IO){
-                authService.login(user,password)
+                authService.signInWithEmail(user,password)
             }
 
             if(result!=null){
@@ -46,7 +47,7 @@ class LoginViewModel @Inject constructor(private val authService: AuthService): 
             _isLoading.value = true
 
             val result = withContext(Dispatchers.IO){
-                authService.loginAnonymously()
+                authService.signInAnonymously()
             }
 
             if(result!=null){
@@ -99,7 +100,7 @@ class LoginViewModel @Inject constructor(private val authService: AuthService): 
             }
 
             withContext(Dispatchers.IO){
-                authService.loginWithPhone(phoneNumber,activity,callback)
+                authService.signInWithPhone(phoneNumber,activity,callback)
             }
 
             _isLoading.value=false
@@ -173,11 +174,4 @@ class LoginViewModel @Inject constructor(private val authService: AuthService): 
 
     }
 
-}
-
-sealed class OathLogin() {
-    object GitHub:OathLogin()
-    object Microsoft:OathLogin()
-    object Twitter:OathLogin()
-    object Yahoo: OathLogin()
 }

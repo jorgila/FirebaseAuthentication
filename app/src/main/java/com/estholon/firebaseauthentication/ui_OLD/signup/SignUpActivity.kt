@@ -45,12 +45,6 @@ class SignUpActivity : AppCompatActivity() {
     }
 
     private fun initUIState() {
-        binding.btn.setOnClickListener {
-            viewModel.register(
-                email = binding.tieUser.text.toString(),
-                password = binding.tiePassword.text.toString()
-            ){ navigateToDetail()}
-        }
     }
 
     private fun navigateToDetail() {

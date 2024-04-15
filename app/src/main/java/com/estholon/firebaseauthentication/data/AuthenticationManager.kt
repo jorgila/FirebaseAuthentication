@@ -20,6 +20,7 @@ import com.google.firebase.auth.PhoneAuthProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -84,6 +85,22 @@ class AuthService @Inject constructor(
                 }
                 .addOnFailureListener {
                     val result = AuthRes.Error("Error al iniciar sesión: $it")
+                    cancellableContinuation.resume(result)
+                }
+        }
+    }
+
+    // Email Recover
+
+    suspend fun resetPassword(email: String): AuthRes<Unit> {
+        return suspendCancellableCoroutine {cancellableContinuation ->
+            firebaseAuth.sendPasswordResetEmail(email)
+                .addOnSuccessListener {
+                    val result = AuthRes.Success(Unit)
+                    cancellableContinuation.resume(result)
+                }
+                .addOnFailureListener{
+                    val result = AuthRes.Error(it.message ?: "Error al restablecer la contraseña")
                     cancellableContinuation.resume(result)
                 }
         }

@@ -1,5 +1,6 @@
 package com.estholon.firebaseauthentication.ui.screens.auth
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,16 +27,24 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.ui.navigation.Routes
 
 
 @Composable
-fun RecoverScreen(navController: NavHostController) {
+fun RecoverScreen(
+    recoverViewModel: RecoverViewModel = hiltViewModel(),
+    navController: NavHostController
+) {
+
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -48,13 +57,23 @@ fun RecoverScreen(navController: NavHostController) {
             contentDescription = "Firebase Authentication"
         )
         Spacer(modifier = Modifier.height(30.dp))
-        RecoverPassword()
+        RecoverPassword(
+            onRecoverPassword = {user ->
+                recoverViewModel.resetPassword(
+                    email = user,
+                    navigateToSignIn = { navController.navigate(Routes.SignInScreen.route) },
+                    communicateError = { Toast.makeText(context,"Failed recovery",Toast.LENGTH_LONG).show()}
+                )
+            }
+        )
         Spacer(modifier = Modifier.height(350.dp))
     }
 }
 
 @Composable
-fun RecoverPassword(){
+fun RecoverPassword(
+    onRecoverPassword: (email: String) -> Unit
+){
 
     var user by rememberSaveable {
         mutableStateOf("")
@@ -74,7 +93,7 @@ fun RecoverPassword(){
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
         Button(
             onClick = {
-
+                onRecoverPassword(user)
             },
             enabled = (user != null),
             shape = RoundedCornerShape(50.dp),

@@ -15,28 +15,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FirebaseAuthentication"
         tools:targetApi="31">
+
         <activity
-            android:name=".ui_OLD.detail.DetailActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui_OLD.login.LoginActivity"
-            android:exported="false"
-            />
-        <activity
-            android:name=".ui_OLD.signup.SignUpActivity"
-            android:exported="false" />
-        <activity
-            android:name=".ui_OLD.splash.SplashActivity"
+            android:name=".ui.screens.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <activity
-            android:name=".ui.screens.MainActivity"
-            android:exported="true">
-
         </activity>
 
         <!-- Facebook -->

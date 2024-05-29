@@ -48,7 +48,6 @@ fun RecoverScreen(
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
     ) {
 
         SignInLink(onCreateAccount = { navController.navigate(Routes.SignInScreen.route) })
@@ -85,7 +84,9 @@ fun RecoverPassword(
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email
         ),
-        onValueChange = { user = it}
+        onValueChange = { user = it},
+        singleLine = true,
+        maxLines = 1
     )
 
     Spacer(modifier = Modifier.height(10.dp))

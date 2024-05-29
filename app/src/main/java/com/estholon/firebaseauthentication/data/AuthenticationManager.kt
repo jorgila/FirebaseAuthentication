@@ -49,6 +49,7 @@ class AuthService @Inject constructor(
     fun logout() {
         firebaseAuth.signOut()
         LoginManager.getInstance().logOut()
+        getGoogleClient().signOut()
     }
 
     // Anonymously Sign In and Sign Up
@@ -84,7 +85,7 @@ class AuthService @Inject constructor(
                     cancellableContinuation.resume(result)
                 }
                 .addOnFailureListener {
-                    val result = AuthRes.Error("Error al iniciar sesión: $it")
+                    val result = AuthRes.Error(it.message.toString())
                     cancellableContinuation.resume(result)
                 }
         }
@@ -120,7 +121,7 @@ class AuthService @Inject constructor(
                     cancellableContinuation.resume(result)
                 }
                 .addOnFailureListener {
-                    val result = AuthRes.Error("Error al iniciar sesión: $it")
+                    val result = AuthRes.Error(it.message.toString())
                     cancellableContinuation.resume(result)
                 }
         }
@@ -142,7 +143,7 @@ class AuthService @Inject constructor(
                     cancellableContinuation.resume(result)
                 }
                 ?.addOnFailureListener {
-                    val result = AuthRes.Error("Error al iniciar sesión: $it")
+                    val result = AuthRes.Error(it.message.toString())
                     cancellableContinuation.resume(result)
               }?: completeRegisterWithProvider(activity, provider,cancellableContinuation)
         }
@@ -164,7 +165,7 @@ class AuthService @Inject constructor(
                 cancellableContinuation.resume(result)
             }
             .addOnFailureListener {
-                val result = AuthRes.Error("Error al iniciar sesión: $it")
+                val result = AuthRes.Error(it.message.toString())
                 cancellableContinuation.resume(result)
             }
     }
@@ -210,7 +211,7 @@ class AuthService @Inject constructor(
                     cancellableContinuation.resume(result)
                 }
                 .addOnFailureListener {
-                    val result = AuthRes.Error("Error al iniciar sesión: $it")
+                    val result = AuthRes.Error(it.message.toString())
                     cancellableContinuation.resume(result)
                 }
         }

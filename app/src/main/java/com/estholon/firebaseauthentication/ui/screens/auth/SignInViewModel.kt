@@ -1,6 +1,7 @@
 package com.estholon.firebaseauthentication.ui.screens.auth
 
 import android.app.Activity
+import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -17,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.math.sign
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
@@ -27,6 +29,14 @@ class SignInViewModel @Inject constructor(
     // Progress Indicator Variable
 
     var isLoading: Boolean by mutableStateOf(false)
+
+    // Error message
+    var message : String by mutableStateOf("")
+
+    // Check to see if the text entered is an email
+    fun isEmail(user: String) : Boolean {
+        return Patterns.EMAIL_ADDRESS.matcher(user).matches()
+    }
 
     // Anonymously Sign In
 
@@ -66,12 +76,15 @@ class SignInViewModel @Inject constructor(
         email: String,
         password: String,
         navigateToHome: () -> Unit,
-        communicateError: () -> Unit
+        communicateError: (String) -> Unit
     ) {
         viewModelScope.launch {
             isLoading = true
+
+            val signIn = authService.signInWithEmail(email,password)
+
             when(val result = withContext(Dispatchers.IO){
-                authService.signInWithEmail(email, password)
+                signIn
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
@@ -82,7 +95,13 @@ class SignInViewModel @Inject constructor(
                     analytics.sendEvent(analyticModel)
                 }
                 is AuthRes.Error -> {
-                    communicateError()
+
+                    signIn.let {
+                        val string = it.toString().substringAfter("errorMessage=")
+                        message = string.substring( 0 , string.length - 1 )
+                    }
+
+                    communicateError(message)
                     val analyticModel = AnalyticModel(
                         title = "Sign In", analyticsString = listOf(Pair("Email", "Failed Sign In: ${result.errorMessage}"))
                     )
@@ -98,12 +117,15 @@ class SignInViewModel @Inject constructor(
         googleLauncherSignIn(gsc)
     }
 
-    fun signInWithGoogle(idToken: String?, navigateToHome: () -> Unit, communicateError: () -> Unit) {
+    fun signInWithGoogle(idToken: String?, navigateToHome: () -> Unit, communicateError: (String) -> Unit) {
         viewModelScope.launch {
 
             isLoading = true
+
+            val signIn = authService.signInWithGoogle(idToken)
+
             when(val result = withContext(Dispatchers.IO){
-                authService.signInWithGoogle(idToken)
+                signIn
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
@@ -114,7 +136,13 @@ class SignInViewModel @Inject constructor(
                     analytics.sendEvent(analyticModel)
                 }
                 is AuthRes.Error -> {
-                    communicateError()
+
+                    signIn.let {
+                        val string = it.toString().substringAfter("errorMessage=")
+                        message = string.substring( 0 , string.length - 1 )
+                    }
+
+                    communicateError(message)
                     val analyticModel = AnalyticModel(
                         title = "Sign In", analyticsString = listOf(Pair("Email", "Failed Sign In: ${result.errorMessage}"))
                     )

@@ -57,27 +57,10 @@ fun SignUpScreen(
     val context = LocalContext.current
     val activity = LocalContext.current as Activity
     lateinit var callbackManager: CallbackManager
-    val googleLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            if(result.resultCode== Activity.RESULT_OK){
-                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                try {
-                    val account = task.getResult(ApiException::class.java)!!
-                    signUpViewModel.signUpWithGoogle(
-                        idToken = account.idToken!!,
-                        navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                        communicateError = {Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show()})
-                } catch (e: ApiException){
-                    Toast.makeText(context,"Ha ocurrido un error: ${e.message}",Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
     ) {
 
         SignInLink(onCreateAccount = { navController.navigate(Routes.SignInScreen.route) })
@@ -91,83 +74,6 @@ fun SignUpScreen(
                     password = password,
                     navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
                     communicateError = { Toast.makeText(context,"Failed Sign Up",Toast.LENGTH_LONG).show() }
-                )
-            }
-        )
-
-        // Facebook
-
-        callbackManager = CallbackManager.Factory.create()
-
-        LoginManager.getInstance()
-            .registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
-                override fun onCancel() {
-                    Toast.makeText(context,"Probamos otra red social?",Toast.LENGTH_LONG).show()
-                }
-
-                override fun onError(error: FacebookException) {
-                    Toast.makeText(context,"Ha ocurrido un error: ${error.message}",Toast.LENGTH_LONG).show()
-                }
-
-                override fun onSuccess(result: LoginResult) {
-                    signUpViewModel.signUpWithFacebook(
-                        result.accessToken,
-                        navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                        communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
-                    )
-                }
-
-            })
-
-        // Facebook End
-
-
-        Spacer(modifier = Modifier.height(30.dp))
-        OtherMethods(
-            onAnonymously = { signUpViewModel.signUpAnonymously(
-                navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                communicateError = { Toast.makeText(context,"Failed Sign Up", Toast.LENGTH_LONG).show() }
-            )
-            },
-            onGoogleSignIn = {
-                signUpViewModel.onGoogleSignUpSelected{
-                    googleLauncher.launch(it.signInIntent)
-                }
-            },
-            onFacebookSignIn = {
-                LoginManager.getInstance()
-                    .logInWithReadPermissions(context as ActivityResultRegistryOwner, callbackManager, listOf("email", "public_profile"))
-            },
-            onGitHubSignIn = {
-              signUpViewModel.onOathLoginSelected(
-                  oath = OathLogin.GitHub,
-                  activity = activity,
-                  navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
-                  communicateError = { Toast.makeText(context,"Failed login", Toast.LENGTH_LONG).show() }
-              )
-            },
-            onMicrosoftSignIn = {
-                signUpViewModel.onOathLoginSelected(
-                    oath = OathLogin.Microsoft,
-                    activity = activity,
-                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)  },
-                    communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
-                )
-            },
-            onTwitterSignIn = {
-                signUpViewModel.onOathLoginSelected(
-                    oath = OathLogin.Twitter,
-                    activity = activity,
-                    navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                    communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
-                )
-            },
-            onYahooSignIn = {
-                signUpViewModel.onOathLoginSelected(
-                    oath = OathLogin.Yahoo,
-                    activity = activity,
-                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
-                    communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
                 )
             }
         )
@@ -191,11 +97,21 @@ fun SignInLink(onCreateAccount: () -> Unit){
     }
 }
 @Composable
-fun SignUpByMail(onSignUpEmail: (user: String, password: String) -> Unit){
+fun SignUpByMail(
+    onSignUpEmail: (user: String, password: String) -> Unit,
+    signUpViewModel: SignUpViewModel = hiltViewModel()
+){
+
+    val context = LocalContext.current
 
     var user by rememberSaveable {
         mutableStateOf("")
     }
+
+    var isError by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     var password by rememberSaveable {
         mutableStateOf("")
     }
@@ -203,10 +119,20 @@ fun SignUpByMail(onSignUpEmail: (user: String, password: String) -> Unit){
     TextField(
         label = { Text(text="Usuario") },
         value = user,
+        isError = isError,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email
         ),
-        onValueChange = { user = it}
+        onValueChange = {
+            if(signUpViewModel.isEmail(it)){
+                isError = false
+            } else {
+                isError = true
+            }
+            user = it
+        },
+        singleLine = true,
+        maxLines = 1
     )
 
     Spacer(modifier = Modifier.height(10.dp))
@@ -217,7 +143,9 @@ fun SignUpByMail(onSignUpEmail: (user: String, password: String) -> Unit){
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password
         ),
-        onValueChange = {password = it}
+        onValueChange = {password = it},
+        singleLine = true,
+        maxLines = 1
     )
 
     Spacer(modifier = Modifier.height(10.dp))
@@ -225,7 +153,11 @@ fun SignUpByMail(onSignUpEmail: (user: String, password: String) -> Unit){
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
         Button(
             onClick = {
-                onSignUpEmail(user, password)
+                if(isError){
+                    Toast.makeText(context, "El usuario introducido debe ser un email",Toast.LENGTH_LONG).show()
+                } else {
+                    onSignUpEmail(user, password)
+                }
             },
             enabled = (user != null && password.length >= 6),
             shape = RoundedCornerShape(50.dp),

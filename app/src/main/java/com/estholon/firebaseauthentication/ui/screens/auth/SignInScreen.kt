@@ -42,12 +42,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.ui.navigation.Routes.*
-import com.estholon.firebaseauthentication.ui_OLD.splash.SplashDestination
-import com.facebook.AccessToken
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
@@ -55,10 +52,6 @@ import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlin.math.sign
 
 @Composable
 fun SignInScreen(
@@ -78,7 +71,7 @@ fun SignInScreen(
                     signInViewModel.signInWithGoogle(
                         idToken = account.idToken!!,
                         navigateToHome = { navController.navigate(HomeScreen.route) },
-                        communicateError = {Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show()})
+                        communicateError = {message -> Toast.makeText(context,message,Toast.LENGTH_LONG).show()})
                 } catch (e: ApiException){
                     Toast.makeText(context,"Ha ocurrido un error: ${e.message}",Toast.LENGTH_SHORT).show()
                 }
@@ -91,7 +84,6 @@ fun SignInScreen(
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
     ) {
 
         SignUpLink(onCreateAccount = { navController.navigate(SignUpScreen.route) })
@@ -191,7 +183,9 @@ fun SignInScreen(
 
     if(signInViewModel.isLoading){
         Box(modifier = Modifier.fillMaxSize()){
-            CircularProgressIndicator(modifier = Modifier.size(100.dp).align(Alignment.Center))
+            CircularProgressIndicator(modifier = Modifier
+                .size(100.dp)
+                .align(Alignment.Center))
         }
     }
 
@@ -217,22 +211,40 @@ fun SignUpLink(onCreateAccount: () -> Unit){
 fun SignInByMail(
     onSignInEmail: (user: String, password: String) -> Unit,
     onForgotPassword: () -> Unit,
+    signInViewModel: SignInViewModel = hiltViewModel()
 ){
+
+    val context = LocalContext.current
 
     var user by rememberSaveable {
         mutableStateOf("")
     }
+
+    var isError by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     var password by rememberSaveable {
         mutableStateOf("")
     }
 
     TextField(
         label = { Text(text="Usuario")},
+        isError = isError,
         value = user,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email
         ),
-        onValueChange = { user = it}
+        onValueChange = {
+            if(signInViewModel.isEmail(it)){
+                isError = false
+            } else {
+                isError = true
+            }
+            user = it
+        },
+        singleLine = true,
+        maxLines = 1
     )
 
     Spacer(modifier = Modifier.height(10.dp))
@@ -243,7 +255,9 @@ fun SignInByMail(
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password
         ),
-        onValueChange = {password = it}
+        onValueChange = {password = it},
+        singleLine = true,
+        maxLines = 1
     )
 
     Spacer(modifier = Modifier.height(10.dp))
@@ -251,7 +265,11 @@ fun SignInByMail(
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
         Button(
             onClick = {
-                onSignInEmail(user, password)
+                if(isError){
+                    Toast.makeText(context, "El usuario introducido debe ser un email",Toast.LENGTH_LONG).show()
+                } else {
+                    onSignInEmail(user, password)
+                }
             },
             enabled = (user != null && password.length >= 6),
             shape = RoundedCornerShape(50.dp),

@@ -43,8 +43,10 @@ class SignUpViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
 
+            val signUp = authService.signInAnonymously()
+
             when(withContext(Dispatchers.IO){
-                authService.signInAnonymously()
+                signUp
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
@@ -53,10 +55,12 @@ class SignUpViewModel @Inject constructor(
                         title = "Sign Up", analyticsString = listOf(Pair("Anonymously", "Successful Sign Up"))
                     )
                     analytics.sendEvent(analyticModel)
-
-
                 }
                 is AuthRes.Error -> {
+                    signUp.let {
+                        val string = it.toString().substringAfter("errorMessage=")
+                        message = string.substring( 0 , string.length - 1 )
+                    }
                     communicateError()
                     val analyticModel = AnalyticModel(
                         title = "Sign Up", analyticsString = listOf(Pair("Anonymously", "Failed Sign Up"))
@@ -98,6 +102,10 @@ class SignUpViewModel @Inject constructor(
                 }
 
                 is AuthRes.Error -> {
+                    signUp.let {
+                        val string = it.toString().substringAfter("errorMessage=")
+                        message = string.substring( 0 , string.length - 1 )
+                    }
                     communicateError()
                     val analyticModel = AnalyticModel(
                         title = "Sign Up", analyticsString = listOf(Pair("Email", "Failed Sign Up"))
@@ -119,9 +127,10 @@ class SignUpViewModel @Inject constructor(
     fun signUpWithGoogle(idToken: String?, navigateToHome: () -> Unit, communicateError: () -> Unit) {
         viewModelScope.launch {
 
+            val signUp = authService.signInWithGoogle(idToken)
             isLoading = true
             when(withContext(Dispatchers.IO){
-                authService.signInWithGoogle(idToken)
+                signUp
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
@@ -132,6 +141,10 @@ class SignUpViewModel @Inject constructor(
                     analytics.sendEvent(analyticModel)
                 }
                 is AuthRes.Error -> {
+                    signUp.let {
+                        val string = it.toString().substringAfter("errorMessage=")
+                        message = string.substring( 0 , string.length - 1 )
+                    }
                     communicateError()
                     val analyticModel = AnalyticModel(
                         title = "Sign Up", analyticsString = listOf(Pair("Email", "Failed Sign In"))
@@ -154,15 +167,17 @@ class SignUpViewModel @Inject constructor(
 
         viewModelScope.launch {
 
+            val signUp = when (oath) {
+                OathLogin.GitHub -> authService.signInWithGitHub(activity)
+                OathLogin.Microsoft -> authService.signInWithMicrosoft(activity)
+                OathLogin.Twitter -> authService.signInWithTwitter(activity)
+                OathLogin.Yahoo -> authService.signInWithYahoo(activity)
+            }
+
             isLoading = true
 
             when(withContext(Dispatchers.IO){
-                when (oath) {
-                    OathLogin.GitHub -> authService.signInWithGitHub(activity)
-                    OathLogin.Microsoft -> authService.signInWithMicrosoft(activity)
-                    OathLogin.Twitter -> authService.signInWithTwitter(activity)
-                    OathLogin.Yahoo -> authService.signInWithYahoo(activity)
-                }
+                signUp
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
@@ -173,6 +188,10 @@ class SignUpViewModel @Inject constructor(
                     analytics.sendEvent(analyticModel)
                 }
                 is AuthRes.Error -> {
+                    signUp.let{
+                        val string = it.toString().substringAfter("errorMessage=")
+                        message = string.substring( 0 , string.length - 1 )
+                    }
                     communicateError()
                     val analyticModel = AnalyticModel(
                         title = "Sign In", analyticsString = listOf(Pair("$oath", "Failed Sign In"))
@@ -190,20 +209,23 @@ class SignUpViewModel @Inject constructor(
     fun signUpWithFacebook(accessToken: AccessToken, navigateToHome: () -> Unit, communicateError: () -> Unit) {
         viewModelScope.launch {
 
+            val signUp = authService.signInWithFacebook(accessToken)
             isLoading = true
-
             when(withContext(Dispatchers.IO){
-                authService.signInWithFacebook(accessToken)
+                signUp
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
-
                     val analyticModel = AnalyticModel(
                         title = "Sign In", analyticsString = listOf(Pair("Facebook", "Successful Sign In"))
                     )
                     analytics.sendEvent(analyticModel)
                 }
                 is AuthRes.Error -> {
+                    signUp.let {
+                        val string = it.toString().substringAfter("errorMessage=")
+                        message = string.substring( 0 , string.length - 1 )
+                    }
                     communicateError()
                     val analyticModel = AnalyticModel(
                         title = "Sign In", analyticsString = listOf(Pair("Facebook", "Failed Sign In"))
@@ -211,10 +233,7 @@ class SignUpViewModel @Inject constructor(
                     analytics.sendEvent(analyticModel)
                 }
             }
-
             isLoading = false
-
         }
     }
-
 }

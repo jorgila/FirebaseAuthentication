@@ -21,10 +21,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -39,6 +43,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -52,6 +58,7 @@ import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
+import kotlin.math.sign
 
 @Composable
 fun SignInScreen(
@@ -97,7 +104,7 @@ fun SignInScreen(
                 email = user,
                 password = password,
                 navigateToHome = { navController.navigate(HomeScreen.route) },
-                communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
+                communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
             ) },
             onForgotPassword = { navController.navigate(RecoverScreen.route)})
         Spacer(modifier = Modifier.height(30.dp))
@@ -118,7 +125,7 @@ fun SignInScreen(
                     signInViewModel.signInWithFacebook(
                         result.accessToken,
                         navigateToHome = { navController.navigate(HomeScreen.route) },
-                        communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
+                        communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
                     )
                 }
 
@@ -131,7 +138,7 @@ fun SignInScreen(
         OtherMethods(
             onAnonymously = { signInViewModel.signinAnonymously(
                 navigateToHome = { navController.navigate(HomeScreen.route) },
-                communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() })
+                communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() })
             },
             onGoogleSignIn = {
                 signInViewModel.onGoogleSignInSelected{
@@ -148,7 +155,7 @@ fun SignInScreen(
                     oath = OathLogin.GitHub,
                     activity = activity,
                     navigateToHome = { navController.navigate(HomeScreen.route) },
-                    communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
+                    communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             },
             onMicrosoftSignIn = {
@@ -157,7 +164,7 @@ fun SignInScreen(
                     oath = OathLogin.Microsoft,
                     activity = activity,
                     navigateToHome = { navController.navigate(HomeScreen.route) },
-                    communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
+                    communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             },
             onTwitterSignIn = {
@@ -165,7 +172,7 @@ fun SignInScreen(
                     oath = OathLogin.Twitter,
                     activity = activity,
                     navigateToHome = { navController.navigate(HomeScreen.route) },
-                    communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
+                    communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             },
             onYahooSignIn = {
@@ -173,7 +180,7 @@ fun SignInScreen(
                     oath = OathLogin.Yahoo,
                     activity = activity,
                     navigateToHome = { navController.navigate(HomeScreen.route)},
-                    communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
+                    communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             }
 
@@ -228,10 +235,14 @@ fun SignInByMail(
         mutableStateOf("")
     }
 
+    var passwordVisibility by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     TextField(
         label = { Text(text="Usuario")},
-        isError = isError,
         value = user,
+        isError = isError,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email
         ),
@@ -257,8 +268,23 @@ fun SignInByMail(
         ),
         onValueChange = {password = it},
         singleLine = true,
-        maxLines = 1
-    )
+        maxLines = 1,
+        trailingIcon = {
+            val image = if(passwordVisibility){
+                Icons.Filled.VisibilityOff
+            } else {
+                Icons.Filled.Visibility
+            }
+            IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
+                Icon(imageVector = image, contentDescription = "Show password")
+            }
+        },
+        visualTransformation = if(passwordVisibility){
+            VisualTransformation.None
+        } else {
+            PasswordVisualTransformation()
+        }
+        )
 
     Spacer(modifier = Modifier.height(10.dp))
 

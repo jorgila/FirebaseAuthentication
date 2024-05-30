@@ -1,4 +1,4 @@
-package com.estholon.firebaseauthentication.data
+package com.estholon.firebaseauthentication.data.managers
 
 import android.app.Activity
 import android.content.Context
@@ -20,11 +20,9 @@ import com.google.firebase.auth.PhoneAuthProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.tasks.await
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 sealed class AuthRes<out T> {
     data class Success<T>(val data: T): AuthRes<T>()
@@ -131,7 +129,7 @@ class AuthService @Inject constructor(
 
 
 
-    private suspend fun initRegisterWithProvider(activity: Activity, provider: OAuthProvider) : AuthRes<FirebaseUser?>{
+    private suspend fun initRegisterWithProvider(activity: Activity, provider: OAuthProvider) : AuthRes<FirebaseUser?> {
         return suspendCancellableCoroutine { cancellableContinuation ->
             firebaseAuth.pendingAuthResult
                 ?.addOnSuccessListener {
@@ -199,7 +197,7 @@ class AuthService @Inject constructor(
         return completeRegisterWithCredential(credentials)
     }
 
-    private suspend fun completeRegisterWithCredential(credential: AuthCredential):AuthRes<FirebaseUser?> {
+    private suspend fun completeRegisterWithCredential(credential: AuthCredential): AuthRes<FirebaseUser?> {
         return suspendCancellableCoroutine { cancellableContinuation ->
             firebaseAuth.signInWithCredential(credential)
                 .addOnSuccessListener {

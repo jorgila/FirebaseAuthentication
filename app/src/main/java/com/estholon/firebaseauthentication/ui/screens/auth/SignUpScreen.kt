@@ -57,6 +57,21 @@ fun SignUpScreen(
     val context = LocalContext.current
     val activity = LocalContext.current as Activity
     lateinit var callbackManager: CallbackManager
+    val googleLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            if(result.resultCode== Activity.RESULT_OK){
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                try {
+                    val account = task.getResult(ApiException::class.java)!!
+                    signUpViewModel.signUpWithGoogle(
+                        idToken = account.idToken!!,
+                        navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                        communicateError = {Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show()})
+                } catch (e: ApiException){
+                    Toast.makeText(context,"Ha ocurrido un error: ${e.message}",Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -77,6 +92,85 @@ fun SignUpScreen(
                 )
             }
         )
+
+
+        // Facebook
+
+        callbackManager = CallbackManager.Factory.create()
+
+        LoginManager.getInstance()
+            .registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+                override fun onCancel() {
+                    Toast.makeText(context,"Probamos otra red social?",Toast.LENGTH_LONG).show()
+                }
+
+                override fun onError(error: FacebookException) {
+                    Toast.makeText(context,"Ha ocurrido un error: ${error.message}",Toast.LENGTH_LONG).show()
+                }
+
+                override fun onSuccess(result: LoginResult) {
+                    signUpViewModel.signUpWithFacebook(
+                        result.accessToken,
+                        navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                        communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
+                    )
+                }
+
+            })
+
+        // Facebook End
+
+
+        Spacer(modifier = Modifier.height(30.dp))
+        OtherMethods(
+            onAnonymously = { signUpViewModel.signUpAnonymously(
+                navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                communicateError = { Toast.makeText(context,"Failed Sign Up", Toast.LENGTH_LONG).show() }
+            )
+            },
+            onGoogleSignIn = {
+                signUpViewModel.onGoogleSignUpSelected{
+                    googleLauncher.launch(it.signInIntent)
+                }
+            },
+            onFacebookSignIn = {
+                LoginManager.getInstance()
+                    .logInWithReadPermissions(context as ActivityResultRegistryOwner, callbackManager, listOf("email", "public_profile"))
+            },
+            onGitHubSignIn = {
+                signUpViewModel.onOathLoginSelected(
+                    oath = OathLogin.GitHub,
+                    activity = activity,
+                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
+                    communicateError = { Toast.makeText(context,"Failed login", Toast.LENGTH_LONG).show() }
+                )
+            },
+            onMicrosoftSignIn = {
+                signUpViewModel.onOathLoginSelected(
+                    oath = OathLogin.Microsoft,
+                    activity = activity,
+                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)  },
+                    communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
+                )
+            },
+            onTwitterSignIn = {
+                signUpViewModel.onOathLoginSelected(
+                    oath = OathLogin.Twitter,
+                    activity = activity,
+                    navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                    communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
+                )
+            },
+            onYahooSignIn = {
+                signUpViewModel.onOathLoginSelected(
+                    oath = OathLogin.Yahoo,
+                    activity = activity,
+                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
+                    communicateError = { Toast.makeText(context,"Failed login",Toast.LENGTH_LONG).show() }
+                )
+            }
+        )
+
     }
 }
 

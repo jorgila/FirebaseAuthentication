@@ -1,4 +1,4 @@
-package com.estholon.firebaseauthentication.data
+package com.estholon.firebaseauthentication.di
 
 import com.google.firebase.auth.FirebaseAuth
 import dagger.Module

@@ -1,4 +1,4 @@
-package com.estholon.firebaseauthentication.data
+package com.estholon.firebaseauthentication.data.managers
 
 import com.estholon.firebaseauthentication.data.model.AnalyticModel
 import com.google.firebase.analytics.FirebaseAnalytics

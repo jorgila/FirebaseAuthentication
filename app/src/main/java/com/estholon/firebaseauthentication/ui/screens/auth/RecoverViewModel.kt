@@ -5,9 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.firebaseauthentication.data.AnalyticsManager
-import com.estholon.firebaseauthentication.data.AuthRes
-import com.estholon.firebaseauthentication.data.AuthService
+import com.estholon.firebaseauthentication.data.managers.AnalyticsManager
+import com.estholon.firebaseauthentication.data.managers.AuthRes
+import com.estholon.firebaseauthentication.data.managers.AuthService
 import com.estholon.firebaseauthentication.data.model.AnalyticModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

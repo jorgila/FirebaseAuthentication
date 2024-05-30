@@ -2,7 +2,7 @@ package com.estholon.firebaseauthentication.ui.screens.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.firebaseauthentication.data.AuthService
+import com.estholon.firebaseauthentication.data.managers.AuthService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

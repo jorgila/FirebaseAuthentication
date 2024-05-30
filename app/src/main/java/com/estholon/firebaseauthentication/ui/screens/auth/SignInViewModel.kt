@@ -7,9 +7,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.firebaseauthentication.data.AnalyticsManager
-import com.estholon.firebaseauthentication.data.AuthRes
-import com.estholon.firebaseauthentication.data.AuthService
+import com.estholon.firebaseauthentication.data.managers.AnalyticsManager
+import com.estholon.firebaseauthentication.data.managers.AuthRes
+import com.estholon.firebaseauthentication.data.managers.AuthService
 import com.estholon.firebaseauthentication.data.model.AnalyticModel
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -18,7 +18,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.math.sign
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
@@ -159,18 +158,22 @@ class SignInViewModel @Inject constructor(
 
             isLoading = true
 
+            val signIn = authService.signInWithFacebook(accessToken)
             when(val result = withContext(Dispatchers.IO){
-                authService.signInWithFacebook(accessToken)
+                signIn
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
-
                     val analyticModel = AnalyticModel(
                         title = "Sign In", analyticsString = listOf(Pair("Facebook", "Successful Sign In"))
                     )
                     analytics.sendEvent(analyticModel)
                 }
                 is AuthRes.Error -> {
+                    signIn.let {
+                        val string = it.toString().substringAfter("errorMessage=")
+                        message = string.substring( 0 , string.length - 1 )
+                    }
                     communicateError()
                     val analyticModel = AnalyticModel(
                         title = "Sign In", analyticsString = listOf(Pair("Facebook", "Failed Sign In: ${result.errorMessage}"))
@@ -196,13 +199,16 @@ class SignInViewModel @Inject constructor(
 
             isLoading = true
 
+            val signIn = when (oath) {
+                OathLogin.GitHub -> authService.signInWithGitHub(activity)
+                OathLogin.Microsoft -> authService.signInWithMicrosoft(activity)
+                OathLogin.Twitter -> authService.signInWithTwitter(activity)
+                OathLogin.Yahoo -> authService.signInWithYahoo(activity)
+            }
+
+
             when(val result = withContext(Dispatchers.IO){
-                when (oath) {
-                    OathLogin.GitHub -> authService.signInWithGitHub(activity)
-                    OathLogin.Microsoft -> authService.signInWithMicrosoft(activity)
-                    OathLogin.Twitter -> authService.signInWithTwitter(activity)
-                    OathLogin.Yahoo -> authService.signInWithYahoo(activity)
-                }
+                signIn
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
@@ -213,6 +219,10 @@ class SignInViewModel @Inject constructor(
                     analytics.sendEvent(analyticModel)
                 }
                 is AuthRes.Error -> {
+                    signIn.let {
+                        val string = it.toString().substringAfter("errorMessage=")
+                        message = string.substring( 0 , string.length - 1 )
+                    }
                     communicateError()
                     val analyticModel = AnalyticModel(
                         title = "Sign In", analyticsString = listOf(Pair("$oath", "Failed Sign In: ${result.errorMessage}"))

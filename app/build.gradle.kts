@@ -76,15 +76,21 @@ dependencies {
     kapt("com.google.dagger:hilt-compiler:2.51")
 
 
-    // Pin View
+    // PIN VIEW
     implementation("io.github.chaosleung:pinview:1.4.4")
 
-    //ViewModel
+    // VIEW MODEL
     implementation ("androidx.activity:activity-ktx:1.8.2")
+
+    // ICONS
+    implementation(libs.androidx.material.icons.extended)
+
 
 
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
+
+    // Constraint Layout
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
 
     implementation(libs.androidx.core.ktx)

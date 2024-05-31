@@ -317,7 +317,6 @@ fun SignInByMail(
 
 @Composable
 fun OtherMethods(
-
     onAnonymously : () -> Unit,
     onGoogleSignIn : () -> Unit,
     onFacebookSignIn : () -> Unit,
@@ -325,7 +324,6 @@ fun OtherMethods(
     onMicrosoftSignIn : () -> Unit,
     onTwitterSignIn : () -> Unit,
     onYahooSignIn : () -> Unit
-
 ){
     Text(text = "Otros métodos")
     Spacer(modifier = Modifier.height(30.dp))

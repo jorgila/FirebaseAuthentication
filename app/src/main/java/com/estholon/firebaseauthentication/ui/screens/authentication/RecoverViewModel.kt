@@ -1,14 +1,12 @@
-package com.estholon.firebaseauthentication.ui.screens.auth
+package com.estholon.firebaseauthentication.ui.screens.authentication
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.firebaseauthentication.data.managers.AnalyticsManager
 import com.estholon.firebaseauthentication.data.managers.AuthRes
 import com.estholon.firebaseauthentication.data.managers.AuthService
-import com.estholon.firebaseauthentication.data.model.AnalyticModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -17,8 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RecoverViewModel @Inject constructor(
-    private val authService: AuthService,
-    private val analytics: AnalyticsManager
+    private val authService: AuthService
 ): ViewModel() {
 
     // Progress Indicator Variable
@@ -34,20 +31,9 @@ class RecoverViewModel @Inject constructor(
             }) {
                 is AuthRes.Success -> {
                     navigateToSignIn()
-
-                    val analyticModel = AnalyticModel(
-                        title = "Recover", analyticsString = listOf(Pair("Email", "Successful password recovery"))
-                    )
-                    analytics.sendEvent(analyticModel)
-
-
                 }
                 is AuthRes.Error -> {
                     communicateError()
-                    val analyticModel = AnalyticModel(
-                        title = "Recover", analyticsString = listOf(Pair("Email", "Failed recovery: ${result.errorMessage}"))
-                    )
-                    analytics.sendEvent(analyticModel)
                 }
             }
             isLoading = false

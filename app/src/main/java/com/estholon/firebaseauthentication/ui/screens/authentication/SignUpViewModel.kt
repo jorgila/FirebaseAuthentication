@@ -1,4 +1,4 @@
-package com.estholon.firebaseauthentication.ui.screens.auth
+package com.estholon.firebaseauthentication.ui.screens.authentication
 
 import android.app.Activity
 import android.util.Patterns
@@ -7,10 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.firebaseauthentication.data.managers.AnalyticsManager
 import com.estholon.firebaseauthentication.data.managers.AuthRes
 import com.estholon.firebaseauthentication.data.managers.AuthService
-import com.estholon.firebaseauthentication.data.model.AnalyticModel
+import com.estholon.firebaseauthentication.domain.usecases.analytics.SendEventUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignUpEmailUseCase
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val authService: AuthService,
-    private val analytics: AnalyticsManager
+    private val sendEventUseCase: SendEventUseCase,
+    private val signUpEmailUseCase: SignUpEmailUseCase
 ): ViewModel() {
 
     // Progress Indicator Variable
@@ -50,11 +51,6 @@ class SignUpViewModel @Inject constructor(
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
-
-                    val analyticModel = AnalyticModel(
-                        title = "Sign Up", analyticsString = listOf(Pair("Anonymously", "Successful Sign Up"))
-                    )
-                    analytics.sendEvent(analyticModel)
                 }
                 is AuthRes.Error -> {
                     signUp.let {
@@ -62,10 +58,6 @@ class SignUpViewModel @Inject constructor(
                         message = string.substring( 0 , string.length - 1 )
                     }
                     communicateError()
-                    val analyticModel = AnalyticModel(
-                        title = "Sign Up", analyticsString = listOf(Pair("Anonymously", "Failed Sign Up"))
-                    )
-                    analytics.sendEvent(analyticModel)
                 }
             }
 
@@ -85,34 +77,16 @@ class SignUpViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
 
-            val signUp = authService.signUpWithEmail(email,password)
-            when (withContext(Dispatchers.IO) {
-                signUp
-            }) {
-                is AuthRes.Success -> {
+            val result = signUpEmailUseCase(email,password)
+            result.fold(
+                onSuccess = {
                     navigateToHome()
-
-                    val analyticModel = AnalyticModel(
-                        title = "Sign Up",
-                        analyticsString = listOf(Pair("Email", "Successful Sign Up"))
-                    )
-                    analytics.sendEvent(analyticModel)
-
-
-                }
-
-                is AuthRes.Error -> {
-                    signUp.let {
-                        val string = it.toString().substringAfter("errorMessage=")
-                        message = string.substring( 0 , string.length - 1 )
-                    }
+                },
+                onFailure = { exception ->
+                    message = exception.message.toString()
                     communicateError()
-                    val analyticModel = AnalyticModel(
-                        title = "Sign Up", analyticsString = listOf(Pair("Email", "Failed Sign Up"))
-                    )
-                    analytics.sendEvent(analyticModel)
                 }
-            }
+            )
 
             isLoading = false
         }
@@ -124,7 +98,7 @@ class SignUpViewModel @Inject constructor(
         googleLauncherSignIn(gsc)
     }
 
-    fun signUpWithGoogle(idToken: String?, navigateToHome: () -> Unit, communicateError: () -> Unit) {
+    fun signUpGoogle(idToken: String?, navigateToHome: () -> Unit, communicateError: () -> Unit) {
         viewModelScope.launch {
 
             val signUp = authService.signInWithGoogle(idToken)
@@ -134,11 +108,6 @@ class SignUpViewModel @Inject constructor(
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
-
-                    val analyticModel = AnalyticModel(
-                        title = "Sign Up", analyticsString = listOf(Pair("Email", "Successful Sign In"))
-                    )
-                    analytics.sendEvent(analyticModel)
                 }
                 is AuthRes.Error -> {
                     signUp.let {
@@ -146,10 +115,6 @@ class SignUpViewModel @Inject constructor(
                         message = string.substring( 0 , string.length - 1 )
                     }
                     communicateError()
-                    val analyticModel = AnalyticModel(
-                        title = "Sign Up", analyticsString = listOf(Pair("Email", "Failed Sign In"))
-                    )
-                    analytics.sendEvent(analyticModel)
                 }
             }
             isLoading = false
@@ -181,11 +146,6 @@ class SignUpViewModel @Inject constructor(
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
-
-                    val analyticModel = AnalyticModel(
-                        title = "Sign In", analyticsString = listOf(Pair("$oath", "Successful Sign In"))
-                    )
-                    analytics.sendEvent(analyticModel)
                 }
                 is AuthRes.Error -> {
                     signUp.let{
@@ -193,10 +153,6 @@ class SignUpViewModel @Inject constructor(
                         message = string.substring( 0 , string.length - 1 )
                     }
                     communicateError()
-                    val analyticModel = AnalyticModel(
-                        title = "Sign In", analyticsString = listOf(Pair("$oath", "Failed Sign In"))
-                    )
-                    analytics.sendEvent(analyticModel)
                 }
             }
 
@@ -216,10 +172,6 @@ class SignUpViewModel @Inject constructor(
             }) {
                 is AuthRes.Success -> {
                     navigateToHome()
-                    val analyticModel = AnalyticModel(
-                        title = "Sign In", analyticsString = listOf(Pair("Facebook", "Successful Sign In"))
-                    )
-                    analytics.sendEvent(analyticModel)
                 }
                 is AuthRes.Error -> {
                     signUp.let {
@@ -227,10 +179,6 @@ class SignUpViewModel @Inject constructor(
                         message = string.substring( 0 , string.length - 1 )
                     }
                     communicateError()
-                    val analyticModel = AnalyticModel(
-                        title = "Sign In", analyticsString = listOf(Pair("Facebook", "Failed Sign In"))
-                    )
-                    analytics.sendEvent(analyticModel)
                 }
             }
             isLoading = false

@@ -69,26 +69,6 @@ class AuthService @Inject constructor(
         }
     }
 
-    // Email Sign Up
-
-    suspend fun signUpWithEmail(email: String, password: String): AuthRes<FirebaseUser?> {
-        return suspendCancellableCoroutine { cancellableContinuation ->
-            firebaseAuth.createUserWithEmailAndPassword(email,password)
-                .addOnSuccessListener {
-                    val result = if (it.user != null) {
-                        AuthRes.Success(it.user)
-                    } else {
-                        AuthRes.Error("Error al iniciar sesión")
-                    }
-                    cancellableContinuation.resume(result)
-                }
-                .addOnFailureListener {
-                    val result = AuthRes.Error(it.message.toString())
-                    cancellableContinuation.resume(result)
-                }
-        }
-    }
-
     // Email Recover
 
     suspend fun resetPassword(email: String): AuthRes<Unit> {

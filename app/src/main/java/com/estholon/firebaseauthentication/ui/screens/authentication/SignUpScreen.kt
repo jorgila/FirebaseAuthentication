@@ -1,4 +1,4 @@
-package com.estholon.firebaseauthentication.ui.screens.auth
+package com.estholon.firebaseauthentication.ui.screens.authentication
 
 import android.app.Activity
 import android.widget.Toast
@@ -7,15 +7,12 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -23,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -69,7 +65,7 @@ fun SignUpScreen(
                 val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
                 try {
                     val account = task.getResult(ApiException::class.java)!!
-                    signUpViewModel.signUpWithGoogle(
+                    signUpViewModel.signUpGoogle(
                         idToken = account.idToken!!,
                         navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
                         communicateError = {Toast.makeText(context,signUpViewModel.message,Toast.LENGTH_LONG).show()})

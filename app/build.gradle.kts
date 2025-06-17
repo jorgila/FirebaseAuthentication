@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id("com.google.gms.google-services")
     id("com.google.dagger.hilt.android")
-    id("kotlin-kapt")
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -62,8 +62,8 @@ dependencies {
     //Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth-ktx")
-    implementation("com.google.android.gms:play-services-auth:20.7.0")
+    implementation("com.google.firebase:firebase-authentication-ktx")
+    implementation("com.google.android.gms:play-services-authentication:20.7.0")
     implementation("com.facebook.android:facebook-login:16.2.0")
     // Hilt
 
@@ -73,7 +73,7 @@ dependencies {
     // HILT
     implementation("com.google.dagger:hilt-android:2.51")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    kapt("com.google.dagger:hilt-compiler:2.51")
+    ksp("com.google.dagger:hilt-compiler:2.51")
 
 
     // PIN VIEW

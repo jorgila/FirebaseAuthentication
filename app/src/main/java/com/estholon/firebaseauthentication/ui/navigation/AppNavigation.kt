@@ -5,9 +5,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.estholon.firebaseauthentication.ui.navigation.Routes.*
-import com.estholon.firebaseauthentication.ui.screens.auth.RecoverScreen
-import com.estholon.firebaseauthentication.ui.screens.auth.SignInScreen
-import com.estholon.firebaseauthentication.ui.screens.auth.SignUpScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.RecoverScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.SignInScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.SignUpScreen
 import com.estholon.firebaseauthentication.ui.screens.home.HomeScreen
 import com.estholon.firebaseauthentication.ui.screens.splash.SplashScreen
 

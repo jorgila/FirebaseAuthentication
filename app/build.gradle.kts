@@ -1,9 +1,16 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
-    id("com.google.gms.google-services")
-    id("com.google.dagger.hilt.android")
+    // GOOGLE SERVICES
+    alias(libs.plugins.google.services)
+    // HILT
+    alias(libs.plugins.hilt)
+    // KSP
     alias(libs.plugins.ksp)
+    // FIREBASE
+    alias(libs.plugins.crashlytics)
+    // COMPOSE
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
@@ -59,14 +66,20 @@ android {
 
 dependencies {
 
-    //Firebase
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-authentication-ktx")
-    implementation("com.google.android.gms:play-services-authentication:20.7.0")
-    implementation("com.facebook.android:facebook-login:16.2.0")
-    // Hilt
+    // FIREBASE
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.firestore)
 
+    // GOOGLE
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+
+    // FACEBOOK
+    implementation("com.facebook.android:facebook-login:16.2.0")
+
+    // Hilt
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.6")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.6")
 

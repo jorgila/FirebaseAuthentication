@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.data.managers.AuthRes
 import com.estholon.firebaseauthentication.data.managers.AuthService
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInEmailUseCase
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +20,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val signInEmailUseCase: SignInEmailUseCase
 ): ViewModel() {
 
     // Progress Indicator Variable
@@ -66,24 +68,18 @@ class SignInViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
 
-            val signIn = authService.signInWithEmail(email,password)
+            val result = signInEmailUseCase(email,password)
 
-            when(val result = withContext(Dispatchers.IO){
-                signIn
-            }) {
-                is AuthRes.Success -> {
+            result.fold(
+                onSuccess = {
                     navigateToHome()
-                }
-                is AuthRes.Error -> {
-
-                    signIn.let {
-                        val string = it.toString().substringAfter("errorMessage=")
-                        message = string.substring( 0 , string.length - 1 )
-                    }
-
+                },
+                onFailure = { exception ->
+                    message = exception.message.toString()
                     communicateError(message)
                 }
-            }
+            )
+
             isLoading = false
         }
     }

@@ -43,4 +43,24 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         }
     }
 
+    //// SIGN IN
+
+    override suspend fun signInEmail(email: String, password: String): Result<UserDto?> {
+        return suspendCancellableCoroutine { cancellableContinuation ->
+            firebaseAuth.signInWithEmailAndPassword(email,password)
+                .addOnSuccessListener {
+                    val result = if (it.user != null) {
+                        Result.success(it.user!!.toUserDto())
+                    } else {
+                        Result.failure(Exception("Error al iniciar sesión"))
+                    }
+                    cancellableContinuation.resume(result)
+                }
+                .addOnFailureListener {
+                    val result = Result.failure<UserDto?>(Exception(it.message.toString()))
+                    cancellableContinuation.resume(result)
+                }
+        }
+    }
+
 }

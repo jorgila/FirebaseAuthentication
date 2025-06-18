@@ -6,5 +6,5 @@ import com.google.firebase.auth.FirebaseUser
 interface AuthenticationDataSource {
 
     suspend fun signUpEmail( email: String, password: String) : Result<UserDto?>
-
+    suspend fun signInEmail( email: String, password: String) : Result<UserDto?>
 }

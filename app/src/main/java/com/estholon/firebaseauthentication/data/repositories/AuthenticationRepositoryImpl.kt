@@ -16,4 +16,9 @@ class AuthenticationRepositoryImpl @Inject constructor(
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
+    override suspend fun signInEmail(email: String, password: String): Result<UserModel?> {
+        return authenticationDataSource.signInEmail( email, password )
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
 }

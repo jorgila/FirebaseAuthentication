@@ -50,25 +50,6 @@ class AuthService @Inject constructor(
         getGoogleClient().signOut()
     }
 
-    // Anonymously Sign In and Sign Up
-    suspend fun signInAnonymously() : AuthRes<FirebaseUser?> {
-        return suspendCancellableCoroutine { cancellableContinuation ->
-            firebaseAuth.signInAnonymously()
-                .addOnSuccessListener {
-                    val result = if (it.user != null) {
-                        AuthRes.Success(it.user)
-                    } else {
-                        AuthRes.Error("Error al iniciar sesión")
-                    }
-                    cancellableContinuation.resume(result)
-                }
-                .addOnFailureListener {
-                    val result = AuthRes.Error("Error al iniciar sesión")
-                    cancellableContinuation.resume(result)
-                }
-        }
-    }
-
     // Email Recover
 
     suspend fun resetPassword(email: String): AuthRes<Unit> {

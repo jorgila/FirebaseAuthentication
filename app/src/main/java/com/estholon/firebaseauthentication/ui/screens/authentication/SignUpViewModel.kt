@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.data.managers.AuthRes
 import com.estholon.firebaseauthentication.data.managers.AuthService
 import com.estholon.firebaseauthentication.domain.usecases.analytics.SendEventUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignUpEmailUseCase
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -23,7 +24,8 @@ import javax.inject.Inject
 class SignUpViewModel @Inject constructor(
     private val authService: AuthService,
     private val sendEventUseCase: SendEventUseCase,
-    private val signUpEmailUseCase: SignUpEmailUseCase
+    private val signUpEmailUseCase: SignUpEmailUseCase,
+    private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase
 ): ViewModel() {
 
     // Progress Indicator Variable
@@ -44,22 +46,19 @@ class SignUpViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
 
-            val signUp = authService.signInAnonymously()
+            val result = withContext(Dispatchers.IO){
+                signInAnonymouslyUseCase()
+            }
 
-            when(withContext(Dispatchers.IO){
-                signUp
-            }) {
-                is AuthRes.Success -> {
-                    navigateToHome()
-                }
-                is AuthRes.Error -> {
-                    signUp.let {
-                        val string = it.toString().substringAfter("errorMessage=")
-                        message = string.substring( 0 , string.length - 1 )
-                    }
+            result.fold(
+                onSuccess = {
+                    navigateToHome
+                },
+                onFailure = { exception ->
+                    message = exception.message.toString()
                     communicateError()
                 }
-            }
+            )
 
             isLoading = false
         }
@@ -77,7 +76,10 @@ class SignUpViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
 
-            val result = signUpEmailUseCase(email,password)
+            val result = withContext(Dispatchers.IO){
+                signUpEmailUseCase(email,password)
+            }
+
             result.fold(
                 onSuccess = {
                     navigateToHome()

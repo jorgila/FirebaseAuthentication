@@ -130,7 +130,7 @@ fun SignInScreen(
 
 
         OtherMethods(
-            onAnonymously = { signInViewModel.signinAnonymously(
+            onAnonymously = { signInViewModel.signInAnonymously(
                 navigateToHome = { navController.navigate(HomeScreen.route) },
                 communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() })
             },

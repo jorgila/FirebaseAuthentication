@@ -1,7 +1,9 @@
 package com.estholon.firebaseauthentication.ui.screens.authentication
 
 import android.app.Activity
+import android.content.Context
 import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -9,10 +11,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.data.managers.AuthRes
 import com.estholon.firebaseauthentication.data.managers.AuthService
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInEmailUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGoogleUseCase
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -21,7 +26,10 @@ import javax.inject.Inject
 @HiltViewModel
 class SignInViewModel @Inject constructor(
     private val authService: AuthService,
-    private val signInEmailUseCase: SignInEmailUseCase
+    private val signInEmailUseCase: SignInEmailUseCase,
+    private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase,
+    private val signInGoogleUseCase: SignInGoogleUseCase,
+    @ApplicationContext private val context: Context
 ): ViewModel() {
 
     // Progress Indicator Variable
@@ -38,22 +46,29 @@ class SignInViewModel @Inject constructor(
 
     // Anonymously Sign In
 
-    fun signinAnonymously(navigateToHome: () -> Unit, communicateError: () -> Unit) {
+    fun signInAnonymously(navigateToHome: () -> Unit, communicateError: () -> Unit) {
+
         viewModelScope.launch {
+
             isLoading = true
 
-            when(val result = withContext(Dispatchers.IO){
-                authService.signInAnonymously()
-            }) {
-                is AuthRes.Success -> {
+            val result = withContext(Dispatchers.IO){
+                signInAnonymouslyUseCase()
+            }
+
+            result.fold(
+                onSuccess = {
                     navigateToHome()
-                }
-                is AuthRes.Error -> {
+                },
+                onFailure = { exception ->
+                    message = exception.message.toString()
                     communicateError()
                 }
-            }
+            )
+
             isLoading = false
         }
+
     }
 
 
@@ -94,24 +109,20 @@ class SignInViewModel @Inject constructor(
 
             isLoading = true
 
-            val signIn = authService.signInWithGoogle(idToken)
+            val result = signInGoogleUseCase(idToken)
 
-            when(val result = withContext(Dispatchers.IO){
-                signIn
-            }) {
-                is AuthRes.Success -> {
+            result.fold(
+                onSuccess = {
                     navigateToHome()
-                }
-                is AuthRes.Error -> {
+                },
+                onFailure = { exception ->
 
-                    signIn.let {
-                        val string = it.toString().substringAfter("errorMessage=")
-                        message = string.substring( 0 , string.length - 1 )
-                    }
+                    Toast.makeText(context, exception.message.toString(), Toast.LENGTH_LONG).show()
 
-                    communicateError(message)
+                    communicateError(exception.message.toString())
                 }
-            }
+            )
+
             isLoading = false
 
         }

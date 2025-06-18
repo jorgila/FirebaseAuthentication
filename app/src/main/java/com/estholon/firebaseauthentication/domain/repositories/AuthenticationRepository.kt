@@ -6,5 +6,7 @@ interface AuthenticationRepository {
 
     suspend fun signUpEmail( email: String, password: String ) : Result<UserModel?>
     suspend fun signInEmail( email: String, password: String ) : Result<UserModel?>
+    suspend fun signInAnonymously () : Result<UserModel?>
+    suspend fun signInGoogle(idToken: String?) : Result<UserModel?>
 
 }

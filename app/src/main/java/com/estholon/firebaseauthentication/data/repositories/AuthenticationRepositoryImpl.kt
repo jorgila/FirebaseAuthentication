@@ -21,4 +21,14 @@ class AuthenticationRepositoryImpl @Inject constructor(
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
+    override suspend fun signInAnonymously(): Result<UserModel?> {
+        return authenticationDataSource.signInAnonymously()
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
+    override suspend fun signInGoogle(idToken: String?): Result<UserModel?> {
+        return authenticationDataSource.signInGoogle(idToken)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
 }

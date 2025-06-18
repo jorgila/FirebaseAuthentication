@@ -7,4 +7,12 @@ interface AuthenticationDataSource {
 
     suspend fun signUpEmail( email: String, password: String) : Result<UserDto?>
     suspend fun signInEmail( email: String, password: String) : Result<UserDto?>
+    suspend fun signInAnonymously() : Result<UserDto?>
+    suspend fun signInGoogle(idToken: String?) : Result<UserDto?>
+    suspend fun signInFacebook() : Result<UserDto?>
+    suspend fun signInWithGitHub() : Result<UserDto?>
+    suspend fun signInWithMicrosoft() : Result<UserDto?>
+    suspend fun signInWithTwitter() : Result<UserDto?>
+    suspend fun signInWithYahoo() : Result<UserDto?>
+
 }

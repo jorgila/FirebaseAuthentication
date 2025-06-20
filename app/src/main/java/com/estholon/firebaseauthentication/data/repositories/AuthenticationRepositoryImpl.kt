@@ -4,6 +4,7 @@ import com.estholon.firebaseauthentication.data.datasources.AuthenticationDataSo
 import com.estholon.firebaseauthentication.data.mapper.UserMapper
 import com.estholon.firebaseauthentication.domain.models.UserModel
 import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
+import com.facebook.AccessToken
 import javax.inject.Inject
 
 class AuthenticationRepositoryImpl @Inject constructor(
@@ -28,6 +29,11 @@ class AuthenticationRepositoryImpl @Inject constructor(
 
     override suspend fun signInGoogle(idToken: String?): Result<UserModel?> {
         return authenticationDataSource.signInGoogle(idToken)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
+    override suspend fun signInFacebook(accessToken: AccessToken): Result<UserModel?> {
+        return authenticationDataSource.signInFacebook(accessToken)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 

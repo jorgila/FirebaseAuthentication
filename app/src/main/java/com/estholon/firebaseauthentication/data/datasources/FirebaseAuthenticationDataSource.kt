@@ -3,7 +3,9 @@ package com.estholon.firebaseauthentication.data.datasources
 import com.estholon.firebaseauthentication.data.dtos.UserDto
 import com.estholon.firebaseauthentication.data.managers.AuthRes
 import com.estholon.firebaseauthentication.data.mapper.UserMapper
+import com.facebook.AccessToken
 import com.google.firebase.auth.AuthCredential
+import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -94,8 +96,9 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         return completeRegisterWithCredential(credential)
     }
 
-    override suspend fun signInFacebook(): Result<UserDto?> {
-        TODO("Not yet implemented")
+    override suspend fun signInFacebook(accessToken: AccessToken): Result<UserDto?> {
+        val credential = FacebookAuthProvider.getCredential(accessToken.token)
+        return completeRegisterWithCredential(credential)
     }
 
     override suspend fun signInWithGitHub(): Result<UserDto?> {

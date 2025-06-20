@@ -13,6 +13,7 @@ import com.estholon.firebaseauthentication.data.managers.AuthRes
 import com.estholon.firebaseauthentication.data.managers.AuthService
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInEmailUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInFacebookUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGoogleUseCase
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -29,6 +30,7 @@ class SignInViewModel @Inject constructor(
     private val signInEmailUseCase: SignInEmailUseCase,
     private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase,
     private val signInGoogleUseCase: SignInGoogleUseCase,
+    private val signInFacebookUseCase: SignInFacebookUseCase,
     @ApplicationContext private val context: Context
 ): ViewModel() {
 
@@ -46,7 +48,10 @@ class SignInViewModel @Inject constructor(
 
     // Anonymously Sign In
 
-    fun signInAnonymously(navigateToHome: () -> Unit, communicateError: () -> Unit) {
+    fun signInAnonymously(
+        navigateToHome: () -> Unit,
+        communicateError: () -> Unit
+    ) {
 
         viewModelScope.launch {
 
@@ -133,21 +138,16 @@ class SignInViewModel @Inject constructor(
 
             isLoading = true
 
-            val signIn = authService.signInWithFacebook(accessToken)
-            when(val result = withContext(Dispatchers.IO){
-                signIn
-            }) {
-                is AuthRes.Success -> {
+            val result = signInFacebookUseCase(accessToken)
+            result.fold(
+                onSuccess = {
                     navigateToHome()
-                }
-                is AuthRes.Error -> {
-                    signIn.let {
-                        val string = it.toString().substringAfter("errorMessage=")
-                        message = string.substring( 0 , string.length - 1 )
-                    }
+                },
+                onFailure = { exception ->
+                    message = exception.message.toString()
                     communicateError()
                 }
-            }
+            )
 
             isLoading = false
 

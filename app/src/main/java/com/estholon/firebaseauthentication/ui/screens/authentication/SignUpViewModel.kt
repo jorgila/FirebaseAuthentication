@@ -11,6 +11,7 @@ import com.estholon.firebaseauthentication.data.managers.AuthRes
 import com.estholon.firebaseauthentication.data.managers.AuthService
 import com.estholon.firebaseauthentication.domain.usecases.analytics.SendEventUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInFacebookUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignUpEmailUseCase
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -25,7 +26,8 @@ class SignUpViewModel @Inject constructor(
     private val authService: AuthService,
     private val sendEventUseCase: SendEventUseCase,
     private val signUpEmailUseCase: SignUpEmailUseCase,
-    private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase
+    private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase,
+    private val signInFacebookUseCase: SignInFacebookUseCase
 ): ViewModel() {
 
     // Progress Indicator Variable
@@ -42,7 +44,11 @@ class SignUpViewModel @Inject constructor(
 
     // Anonymously Sign In
 
-    fun signUpAnonymously(navigateToHome: () -> Unit, communicateError: () -> Unit) {
+    fun signUpAnonymously(
+        navigateToHome: () -> Unit,
+        communicateError: () -> Unit
+    ) {
+
         viewModelScope.launch {
             isLoading = true
 
@@ -52,7 +58,7 @@ class SignUpViewModel @Inject constructor(
 
             result.fold(
                 onSuccess = {
-                    navigateToHome
+                    navigateToHome()
                 },
                 onFailure = { exception ->
                     message = exception.message.toString()
@@ -61,6 +67,7 @@ class SignUpViewModel @Inject constructor(
             )
 
             isLoading = false
+
         }
     }
 
@@ -167,23 +174,21 @@ class SignUpViewModel @Inject constructor(
     fun signUpWithFacebook(accessToken: AccessToken, navigateToHome: () -> Unit, communicateError: () -> Unit) {
         viewModelScope.launch {
 
-            val signUp = authService.signInWithFacebook(accessToken)
             isLoading = true
-            when(withContext(Dispatchers.IO){
-                signUp
-            }) {
-                is AuthRes.Success -> {
+
+            val result = signInFacebookUseCase(accessToken)
+            result.fold(
+                onSuccess = {
                     navigateToHome()
-                }
-                is AuthRes.Error -> {
-                    signUp.let {
-                        val string = it.toString().substringAfter("errorMessage=")
-                        message = string.substring( 0 , string.length - 1 )
-                    }
+                },
+                onFailure = { exception ->
+                    message = exception.message.toString()
                     communicateError()
                 }
-            }
+            )
+
             isLoading = false
+
         }
     }
 }

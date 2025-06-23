@@ -6,14 +6,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.firebaseauthentication.data.managers.AuthService
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignOutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor(val authService: AuthService) : ViewModel() {
+class HomeViewModel @Inject constructor(
+    private val signOutUseCase: SignOutUseCase
+) : ViewModel() {
 
     // Progress Indicator Variable
 
@@ -23,7 +25,7 @@ class HomeViewModel @Inject constructor(val authService: AuthService) : ViewMode
 
     fun logout(navigateToLogin:()-> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            authService.logout()
+            signOutUseCase()
         }
         navigateToLogin()
     }

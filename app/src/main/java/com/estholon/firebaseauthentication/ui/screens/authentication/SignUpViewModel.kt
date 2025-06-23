@@ -7,11 +7,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.firebaseauthentication.data.managers.AuthRes
-import com.estholon.firebaseauthentication.data.managers.AuthService
-import com.estholon.firebaseauthentication.domain.usecases.analytics.SendEventUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInFacebookUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGitHubUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGoogleUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInMicrosoftUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInTwitterUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInYahooUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignUpEmailUseCase
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -23,11 +25,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
-    private val authService: AuthService,
-    private val sendEventUseCase: SendEventUseCase,
     private val signUpEmailUseCase: SignUpEmailUseCase,
     private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase,
-    private val signInFacebookUseCase: SignInFacebookUseCase
+    private val signInFacebookUseCase: SignInFacebookUseCase,
+    private val signInGoogleUseCase: SignInGoogleUseCase,
+    private val signInYahooUseCase: SignInYahooUseCase,
+    private val signInMicrosoftUseCase: SignInMicrosoftUseCase,
+    private val signInGitHubUseCase: SignInGitHubUseCase,
+    private val signInTwitterUseCase: SignInTwitterUseCase
 ): ViewModel() {
 
     // Progress Indicator Variable
@@ -103,29 +108,28 @@ class SignUpViewModel @Inject constructor(
     }
 
     fun onGoogleSignUpSelected(googleLauncherSignIn:(GoogleSignInClient)->Unit) {
-        val gsc = authService.getGoogleClient()
-        googleLauncherSignIn(gsc)
+
+        viewModelScope.launch {
+            val gsc = signInGoogleUseCase.getGoogleClient()
+            googleLauncherSignIn(gsc)
+        }
+
     }
 
     fun signUpGoogle(idToken: String?, navigateToHome: () -> Unit, communicateError: () -> Unit) {
         viewModelScope.launch {
 
-            val signUp = authService.signInWithGoogle(idToken)
+            val result = signInGoogleUseCase(idToken)
             isLoading = true
-            when(withContext(Dispatchers.IO){
-                signUp
-            }) {
-                is AuthRes.Success -> {
+            result.fold(
+                onSuccess = {
                     navigateToHome()
-                }
-                is AuthRes.Error -> {
-                    signUp.let {
-                        val string = it.toString().substringAfter("errorMessage=")
-                        message = string.substring( 0 , string.length - 1 )
-                    }
+                },
+                onFailure = { exception ->
+                    message = exception.message.toString()
                     communicateError()
                 }
-            }
+            )
             isLoading = false
 
         }
@@ -141,28 +145,25 @@ class SignUpViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            val signUp = when (oath) {
-                OathLogin.GitHub -> authService.signInWithGitHub(activity)
-                OathLogin.Microsoft -> authService.signInWithMicrosoft(activity)
-                OathLogin.Twitter -> authService.signInWithTwitter(activity)
-                OathLogin.Yahoo -> authService.signInWithYahoo(activity)
+            val result = when (oath) {
+                OathLogin.GitHub -> signInGitHubUseCase(activity)
+                OathLogin.Microsoft -> signInMicrosoftUseCase(activity)
+                OathLogin.Twitter -> signInTwitterUseCase(activity)
+                OathLogin.Yahoo -> signInYahooUseCase(activity)
             }
 
             isLoading = true
 
-            when(withContext(Dispatchers.IO){
-                signUp
-            }) {
-                is AuthRes.Success -> {
-                    navigateToHome()
-                }
-                is AuthRes.Error -> {
-                    signUp.let{
-                        val string = it.toString().substringAfter("errorMessage=")
-                        message = string.substring( 0 , string.length - 1 )
+            withContext(Dispatchers.IO){
+                result.fold(
+                    onSuccess = {
+                        navigateToHome()
+                    },
+                    onFailure = { exception ->
+                        message = exception.message.toString()
+                        communicateError()
                     }
-                    communicateError()
-                }
+                )
             }
 
             isLoading = false

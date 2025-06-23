@@ -1,15 +1,17 @@
 package com.estholon.firebaseauthentication.ui.screens.splash
 
 import androidx.lifecycle.ViewModel
-import com.estholon.firebaseauthentication.data.managers.AuthService
+import com.estholon.firebaseauthentication.domain.usecases.authentication.IsUserLoggedUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class SplashViewModel @Inject constructor(val authService: AuthService): ViewModel() {
+class SplashViewModel @Inject constructor(
+    private val isUserLoggedUseCase: IsUserLoggedUseCase
+): ViewModel() {
 
     fun isUserLogged():Boolean{
-        return authService.isUserLogged()
+        return isUserLoggedUseCase()
     }
 
 

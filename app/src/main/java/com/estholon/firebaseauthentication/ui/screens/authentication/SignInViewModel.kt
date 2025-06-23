@@ -9,12 +9,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.firebaseauthentication.data.managers.AuthRes
-import com.estholon.firebaseauthentication.data.managers.AuthService
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInEmailUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInFacebookUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGitHubUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGoogleUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInMicrosoftUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInTwitterUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInYahooUseCase
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,11 +28,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
-    private val authService: AuthService,
     private val signInEmailUseCase: SignInEmailUseCase,
     private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase,
     private val signInGoogleUseCase: SignInGoogleUseCase,
     private val signInFacebookUseCase: SignInFacebookUseCase,
+    private val signInGitHubUseCase : SignInGitHubUseCase,
+    private val signInMicrosoftUseCase: SignInMicrosoftUseCase,
+    private val signInTwitterUseCase: SignInTwitterUseCase,
+    private val signInYahooUseCase: SignInYahooUseCase,
     @ApplicationContext private val context: Context
 ): ViewModel() {
 
@@ -105,8 +110,12 @@ class SignInViewModel @Inject constructor(
     }
 
     fun onGoogleSignInSelected(googleLauncherSignIn:(GoogleSignInClient)->Unit) {
-        val gsc = authService.getGoogleClient()
-        googleLauncherSignIn(gsc)
+
+        viewModelScope.launch {
+            val gsc = signInGoogleUseCase.getGoogleClient()
+            googleLauncherSignIn(gsc)
+        }
+
     }
 
     fun signInWithGoogle(idToken: String?, navigateToHome: () -> Unit, communicateError: (String) -> Unit) {
@@ -167,27 +176,21 @@ class SignInViewModel @Inject constructor(
             isLoading = true
 
             val signIn = when (oath) {
-                OathLogin.GitHub -> authService.signInWithGitHub(activity)
-                OathLogin.Microsoft -> authService.signInWithMicrosoft(activity)
-                OathLogin.Twitter -> authService.signInWithTwitter(activity)
-                OathLogin.Yahoo -> authService.signInWithYahoo(activity)
+                OathLogin.GitHub -> signInGitHubUseCase(activity)
+                OathLogin.Microsoft -> signInMicrosoftUseCase(activity)
+                OathLogin.Twitter -> signInTwitterUseCase(activity)
+                OathLogin.Yahoo -> signInYahooUseCase(activity)
             }
 
-
-            when(val result = withContext(Dispatchers.IO){
-                signIn
-            }) {
-                is AuthRes.Success -> {
+            signIn.fold(
+                onSuccess = {
                     navigateToHome()
-                }
-                is AuthRes.Error -> {
-                    signIn.let {
-                        val string = it.toString().substringAfter("errorMessage=")
-                        message = string.substring( 0 , string.length - 1 )
-                    }
+                },
+                onFailure = { exception ->
+                    message = exception.message.toString()
                     communicateError()
                 }
-            }
+            )
 
             isLoading = false
 
@@ -197,7 +200,7 @@ class SignInViewModel @Inject constructor(
 
 }
 
-sealed class OathLogin() {
+sealed class OathLogin {
     object GitHub:OathLogin()
     object Microsoft:OathLogin()
     object Twitter:OathLogin()

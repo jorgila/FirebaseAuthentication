@@ -5,8 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.firebaseauthentication.data.managers.AuthRes
-import com.estholon.firebaseauthentication.data.managers.AuthService
+import com.estholon.firebaseauthentication.domain.usecases.authentication.ResetPasswordUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -15,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RecoverViewModel @Inject constructor(
-    private val authService: AuthService
+    private val resetPasswordUseCase: ResetPasswordUseCase
 ): ViewModel() {
 
     // Progress Indicator Variable
@@ -26,16 +25,18 @@ class RecoverViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
 
-            when(val result = withContext(Dispatchers.IO){
-                authService.resetPassword(email)
-            }) {
-                is AuthRes.Success -> {
-                    navigateToSignIn()
-                }
-                is AuthRes.Error -> {
-                    communicateError()
-                }
+            withContext(Dispatchers.IO){
+                val result = resetPasswordUseCase(email)
+                result.fold(
+                    onSuccess = {
+                        navigateToSignIn()
+                    },
+                    onFailure = { exception ->
+                        communicateError()
+                    }
+                )
             }
+
             isLoading = false
         }
     }

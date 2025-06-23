@@ -1,19 +1,34 @@
 package com.estholon.firebaseauthentication.data.datasources
 
+import android.app.Activity
 import com.estholon.firebaseauthentication.data.dtos.UserDto
 import com.facebook.AccessToken
-import com.google.firebase.auth.FirebaseUser
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.firebase.auth.PhoneAuthProvider
 
 interface AuthenticationDataSource {
 
+    fun isUserLogged() : Boolean
     suspend fun signUpEmail( email: String, password: String) : Result<UserDto?>
     suspend fun signInEmail( email: String, password: String) : Result<UserDto?>
     suspend fun signInAnonymously() : Result<UserDto?>
+    suspend fun signInPhone(
+        phoneNumber:String,
+        activity: Activity,
+        callback: PhoneAuthProvider.OnVerificationStateChangedCallbacks
+    )
+    suspend fun verifyCode(
+        verificationCode: String,
+        phoneCode: String
+    ) : Result<UserDto?>
+    suspend fun getGoogleClient() : GoogleSignInClient
     suspend fun signInGoogle(idToken: String?) : Result<UserDto?>
     suspend fun signInFacebook(accessToken: AccessToken) : Result<UserDto?>
-    suspend fun signInWithGitHub() : Result<UserDto?>
-    suspend fun signInWithMicrosoft() : Result<UserDto?>
-    suspend fun signInWithTwitter() : Result<UserDto?>
-    suspend fun signInWithYahoo() : Result<UserDto?>
+    suspend fun signInGitHub(activity: Activity) : Result<UserDto?>
+    suspend fun signInMicrosoft(activity: Activity) : Result<UserDto?>
+    suspend fun signInTwitter(activity: Activity) : Result<UserDto?>
+    suspend fun signInYahoo(activity: Activity) : Result<UserDto?>
+    suspend fun signOut()
+    suspend fun resetPassword( email : String ) : Result<Unit>
 
 }

@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -62,6 +63,7 @@ fun SignInScreen(
 
     val context = LocalContext.current
     val activity = LocalContext.current as Activity
+    val uiState = signInViewModel.uiState.collectAsState()
     val callbackManager = CallbackManager.Factory.create()
     val googleLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
@@ -69,10 +71,10 @@ fun SignInScreen(
                 val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
                 try {
                     val account = task.getResult(ApiException::class.java)!!
-                    signInViewModel.signInWithGoogle(
+                    signInViewModel.signInGoogle(
                         idToken = account.idToken!!,
                         navigateToHome = { navController.navigate(HomeScreen.route) },
-                        communicateError = {message -> Toast.makeText(context,message,Toast.LENGTH_LONG).show()})
+                    )
                 } catch (e: ApiException){
                     Toast.makeText(context,"Ha ocurrido un error: ${e.message}",Toast.LENGTH_SHORT).show()
                 }
@@ -98,7 +100,6 @@ fun SignInScreen(
                 email = user,
                 password = password,
                 navigateToHome = { navController.navigate(HomeScreen.route) },
-                communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
             ) },
             onForgotPassword = { navController.navigate(RecoverScreen.route)})
         Spacer(modifier = Modifier.height(30.dp))
@@ -116,10 +117,9 @@ fun SignInScreen(
                 }
 
                 override fun onSuccess(result: LoginResult) {
-                    signInViewModel.signInWithFacebook(
+                    signInViewModel.signInFacebook(
                         result.accessToken,
                         navigateToHome = { navController.navigate(HomeScreen.route) },
-                        communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
                     )
                 }
 
@@ -127,12 +127,11 @@ fun SignInScreen(
 
         // Facebook End
 
-
-
         OtherMethods(
+            onPhoneSignIn = {  }, //TODO
             onAnonymously = { signInViewModel.signInAnonymously(
                 navigateToHome = { navController.navigate(HomeScreen.route) },
-                communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() })
+            )
             },
             onGoogleSignIn = {
                 signInViewModel.onGoogleSignInSelected{
@@ -149,7 +148,6 @@ fun SignInScreen(
                     oath = OathLogin.GitHub,
                     activity = activity,
                     navigateToHome = { navController.navigate(HomeScreen.route) },
-                    communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             },
             onMicrosoftSignIn = {
@@ -158,7 +156,6 @@ fun SignInScreen(
                     oath = OathLogin.Microsoft,
                     activity = activity,
                     navigateToHome = { navController.navigate(HomeScreen.route) },
-                    communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             },
             onTwitterSignIn = {
@@ -166,7 +163,6 @@ fun SignInScreen(
                     oath = OathLogin.Twitter,
                     activity = activity,
                     navigateToHome = { navController.navigate(HomeScreen.route) },
-                    communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             },
             onYahooSignIn = {
@@ -174,15 +170,12 @@ fun SignInScreen(
                     oath = OathLogin.Yahoo,
                     activity = activity,
                     navigateToHome = { navController.navigate(HomeScreen.route)},
-                    communicateError = { Toast.makeText(context,signInViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             }
-
-
         )
     }
 
-    if(signInViewModel.isLoading){
+    if(uiState.value.isLoading){
         Box(modifier = Modifier.fillMaxSize()){
             CircularProgressIndicator(modifier = Modifier
                 .size(100.dp)
@@ -311,6 +304,7 @@ fun SignInByMail(
 
 @Composable
 fun OtherMethods(
+    onPhoneSignIn: () -> Unit,
     onAnonymously : () -> Unit,
     onGoogleSignIn : () -> Unit,
     onFacebookSignIn : () -> Unit,
@@ -324,7 +318,7 @@ fun OtherMethods(
     Column {
         Row {
             FloatingActionButton(
-                onClick = {  }
+                onClick = { onPhoneSignIn() }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_phone),

@@ -16,7 +16,7 @@ class SignInGoogleUseCase @Inject constructor(
     suspend operator fun invoke(idToken: String?) : Result<Unit> {
         return try {
             withContext(Dispatchers.IO){
-                val result = authenticationRepository.signInAnonymously()
+                val result = authenticationRepository.signInGoogle(idToken)
 
                 result.fold(
                     onSuccess = {

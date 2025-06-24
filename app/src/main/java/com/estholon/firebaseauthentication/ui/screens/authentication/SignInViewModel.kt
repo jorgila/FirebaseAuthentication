@@ -4,9 +4,6 @@ import android.app.Activity
 import android.content.Context
 import android.util.Patterns
 import android.widget.Toast
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
@@ -22,6 +19,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -39,12 +39,9 @@ class SignInViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ): ViewModel() {
 
-    // Progress Indicator Variable
-
-    var isLoading: Boolean by mutableStateOf(false)
-
-    // Error message
-    var message : String by mutableStateOf("")
+    // UI State
+    private val _uiState = MutableStateFlow(SignInUiState())
+    val uiState : StateFlow<SignInUiState> = _uiState.asStateFlow()
 
     // Check to see if the text entered is an email
     fun isEmail(user: String) : Boolean {
@@ -55,12 +52,11 @@ class SignInViewModel @Inject constructor(
 
     fun signInAnonymously(
         navigateToHome: () -> Unit,
-        communicateError: () -> Unit
     ) {
 
         viewModelScope.launch {
 
-            isLoading = true
+            _uiState.value.isLoading = true
 
             val result = withContext(Dispatchers.IO){
                 signInAnonymouslyUseCase()
@@ -71,12 +67,13 @@ class SignInViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    message = exception.message.toString()
-                    communicateError()
+                    viewModelScope.launch(Dispatchers.Main) {
+                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    }
                 }
             )
 
-            isLoading = false
+            _uiState.value.isLoading = false
         }
 
     }
@@ -88,10 +85,9 @@ class SignInViewModel @Inject constructor(
         email: String,
         password: String,
         navigateToHome: () -> Unit,
-        communicateError: (String) -> Unit
     ) {
         viewModelScope.launch {
-            isLoading = true
+            _uiState.value.isLoading = true
 
             val result = signInEmailUseCase(email,password)
 
@@ -100,12 +96,13 @@ class SignInViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    message = exception.message.toString()
-                    communicateError(message)
+                    viewModelScope.launch(Dispatchers.Main) {
+                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    }
                 }
             )
 
-            isLoading = false
+            _uiState.value.isLoading = false
         }
     }
 
@@ -118,10 +115,13 @@ class SignInViewModel @Inject constructor(
 
     }
 
-    fun signInWithGoogle(idToken: String?, navigateToHome: () -> Unit, communicateError: (String) -> Unit) {
+    fun signInGoogle(
+        idToken: String?,
+        navigateToHome: () -> Unit
+    ) {
         viewModelScope.launch {
 
-            isLoading = true
+            _uiState.value.isLoading = true
 
             val result = signInGoogleUseCase(idToken)
 
@@ -130,22 +130,24 @@ class SignInViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-
-                    Toast.makeText(context, exception.message.toString(), Toast.LENGTH_LONG).show()
-
-                    communicateError(exception.message.toString())
+                    viewModelScope.launch(Dispatchers.Main) {
+                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    }
                 }
             )
 
-            isLoading = false
+            _uiState.value.isLoading = false
 
         }
     }
 
-    fun signInWithFacebook(accessToken: AccessToken, navigateToHome: () -> Unit, communicateError: () -> Unit) {
+    fun signInFacebook(
+        accessToken: AccessToken,
+        navigateToHome: () -> Unit,
+    ) {
         viewModelScope.launch {
 
-            isLoading = true
+            _uiState.value.isLoading = true
 
             val result = signInFacebookUseCase(accessToken)
             result.fold(
@@ -153,12 +155,13 @@ class SignInViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    message = exception.message.toString()
-                    communicateError()
+                    viewModelScope.launch(Dispatchers.Main) {
+                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    }
                 }
             )
 
-            isLoading = false
+            _uiState.value.isLoading = false
 
         }
     }
@@ -167,13 +170,12 @@ class SignInViewModel @Inject constructor(
         oath: OathLogin,
         activity: Activity,
         navigateToHome: () -> Unit,
-        communicateError: () -> Unit
     )
     {
 
         viewModelScope.launch {
 
-            isLoading = true
+            _uiState.value.isLoading = true
 
             val signIn = when (oath) {
                 OathLogin.GitHub -> signInGitHubUseCase(activity)
@@ -187,12 +189,13 @@ class SignInViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    message = exception.message.toString()
-                    communicateError()
+                    viewModelScope.launch(Dispatchers.Main) {
+                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    }
                 }
             )
 
-            isLoading = false
+            _uiState.value.isLoading = false
 
         }
 

@@ -123,6 +123,7 @@ fun SignUpScreen(
 
         Spacer(modifier = Modifier.height(30.dp))
         OtherMethods(
+            onPhoneSignIn = {}, //TODO
             onAnonymously = { signUpViewModel.signUpAnonymously(
                 navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
             )

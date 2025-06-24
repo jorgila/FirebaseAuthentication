@@ -1,7 +1,9 @@
 package com.estholon.firebaseauthentication.ui.screens.authentication
 
 import android.app.Activity
+import android.content.Context
 import android.util.Patterns
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -18,6 +20,7 @@ import com.estholon.firebaseauthentication.domain.usecases.authentication.SignUp
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,15 +35,13 @@ class SignUpViewModel @Inject constructor(
     private val signInYahooUseCase: SignInYahooUseCase,
     private val signInMicrosoftUseCase: SignInMicrosoftUseCase,
     private val signInGitHubUseCase: SignInGitHubUseCase,
-    private val signInTwitterUseCase: SignInTwitterUseCase
+    private val signInTwitterUseCase: SignInTwitterUseCase,
+    @ApplicationContext private val context: Context
 ): ViewModel() {
 
     // Progress Indicator Variable
 
     var isLoading: Boolean by mutableStateOf(false)
-
-    // Error message
-    var message : String by mutableStateOf("")
 
     // Check to see if the text entered is an email
     fun isEmail(user: String) : Boolean {
@@ -50,8 +51,7 @@ class SignUpViewModel @Inject constructor(
     // Anonymously Sign In
 
     fun signUpAnonymously(
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
+        navigateToHome: () -> Unit
     ) {
 
         viewModelScope.launch {
@@ -66,8 +66,9 @@ class SignUpViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    message = exception.message.toString()
-                    communicateError()
+                    viewModelScope.launch(Dispatchers.Main) {
+                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    }
                 }
             )
 
@@ -81,8 +82,7 @@ class SignUpViewModel @Inject constructor(
     fun signUpEmail(
         email: String,
         password: String,
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
+        navigateToHome: () -> Unit
     ) {
 
         viewModelScope.launch {
@@ -97,8 +97,9 @@ class SignUpViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    message = exception.message.toString()
-                    communicateError()
+                    viewModelScope.launch(Dispatchers.Main) {
+                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    }
                 }
             )
 
@@ -116,7 +117,10 @@ class SignUpViewModel @Inject constructor(
 
     }
 
-    fun signUpGoogle(idToken: String?, navigateToHome: () -> Unit, communicateError: () -> Unit) {
+    fun signUpGoogle(
+        idToken: String?,
+        navigateToHome: () -> Unit
+    ) {
         viewModelScope.launch {
 
             val result = signInGoogleUseCase(idToken)
@@ -126,8 +130,9 @@ class SignUpViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    message = exception.message.toString()
-                    communicateError()
+                    viewModelScope.launch(Dispatchers.Main) {
+                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    }
                 }
             )
             isLoading = false
@@ -139,7 +144,6 @@ class SignUpViewModel @Inject constructor(
         oath: OathLogin,
         activity: Activity,
         navigateToHome: () -> Unit,
-        communicateError: () -> Unit
     )
     {
 
@@ -160,8 +164,9 @@ class SignUpViewModel @Inject constructor(
                         navigateToHome()
                     },
                     onFailure = { exception ->
-                        message = exception.message.toString()
-                        communicateError()
+                        viewModelScope.launch(Dispatchers.Main) {
+                            Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                        }
                     }
                 )
             }
@@ -172,7 +177,10 @@ class SignUpViewModel @Inject constructor(
 
     }
 
-    fun signUpWithFacebook(accessToken: AccessToken, navigateToHome: () -> Unit, communicateError: () -> Unit) {
+    fun signUpFacebook(
+        accessToken: AccessToken,
+        navigateToHome: () -> Unit
+    ) {
         viewModelScope.launch {
 
             isLoading = true
@@ -183,8 +191,9 @@ class SignUpViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    message = exception.message.toString()
-                    communicateError()
+                    viewModelScope.launch(Dispatchers.Main) {
+                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    }
                 }
             )
 

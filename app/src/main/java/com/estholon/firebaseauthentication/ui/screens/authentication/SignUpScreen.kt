@@ -68,7 +68,7 @@ fun SignUpScreen(
                     signUpViewModel.signUpGoogle(
                         idToken = account.idToken!!,
                         navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                        communicateError = {Toast.makeText(context,signUpViewModel.message,Toast.LENGTH_LONG).show()})
+                    )
                 } catch (e: ApiException){
                     Toast.makeText(context,"Ha ocurrido un error: ${e.message}",Toast.LENGTH_SHORT).show()
                 }
@@ -90,7 +90,6 @@ fun SignUpScreen(
                     email = user,
                     password = password,
                     navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                    communicateError = { Toast.makeText(context,signUpViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             }
         )
@@ -111,10 +110,9 @@ fun SignUpScreen(
                 }
 
                 override fun onSuccess(result: LoginResult) {
-                    signUpViewModel.signUpWithFacebook(
+                    signUpViewModel.signUpFacebook(
                         result.accessToken,
                         navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                        communicateError = { Toast.makeText(context,signUpViewModel.message,Toast.LENGTH_LONG).show() }
                     )
                 }
 
@@ -127,7 +125,6 @@ fun SignUpScreen(
         OtherMethods(
             onAnonymously = { signUpViewModel.signUpAnonymously(
                 navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                communicateError = { Toast.makeText(context,signUpViewModel.message, Toast.LENGTH_LONG).show() }
             )
             },
             onGoogleSignIn = {
@@ -143,8 +140,7 @@ fun SignUpScreen(
                 signUpViewModel.onOathLoginSelected(
                     oath = OathLogin.GitHub,
                     activity = activity,
-                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
-                    communicateError = { Toast.makeText(context,signUpViewModel.message, Toast.LENGTH_LONG).show() }
+                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)}
                 )
             },
             onMicrosoftSignIn = {
@@ -152,7 +148,6 @@ fun SignUpScreen(
                     oath = OathLogin.Microsoft,
                     activity = activity,
                     navigateToHome = { navController.navigate(Routes.HomeScreen.route)  },
-                    communicateError = { Toast.makeText(context,signUpViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             },
             onTwitterSignIn = {
@@ -160,7 +155,6 @@ fun SignUpScreen(
                     oath = OathLogin.Twitter,
                     activity = activity,
                     navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                    communicateError = { Toast.makeText(context,signUpViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             },
             onYahooSignIn = {
@@ -168,7 +162,6 @@ fun SignUpScreen(
                     oath = OathLogin.Yahoo,
                     activity = activity,
                     navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
-                    communicateError = { Toast.makeText(context,signUpViewModel.message,Toast.LENGTH_LONG).show() }
                 )
             }
         )

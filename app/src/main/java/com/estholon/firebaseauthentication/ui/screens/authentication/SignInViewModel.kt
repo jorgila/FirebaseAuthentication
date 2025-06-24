@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -51,11 +52,19 @@ class SignInViewModel @Inject constructor(
         val result = isEmailValidUseCase(email)
         result.fold(
             onSuccess = {
-                _uiState.value.isEmailValid = true
+                _uiState.update { uiState ->
+                    uiState.copy(
+                        isEmailValid = true
+                    )
+                }
             },
             onFailure = { exception ->
-                _uiState.value.error = exception.message.toString()
-                _uiState.value.isEmailValid = false
+                _uiState.update { uiState ->
+                    uiState.copy(
+                        isEmailValid = false,
+                        error = exception.message.toString()
+                    )
+                }
             }
         )
     }
@@ -64,11 +73,19 @@ class SignInViewModel @Inject constructor(
         val result = isPasswordValidUseCase(password)
         result.fold(
             onSuccess = {
-                _uiState.value.isPasswordValid = true
+                _uiState.update { uiState ->
+                    uiState.copy(
+                        isPasswordValid = true
+                    )
+                }
             },
             onFailure = { exception ->
-                _uiState.value.error = exception.message.toString()
-                _uiState.value.isPasswordValid = false
+                _uiState.update { uiState ->
+                    uiState.copy(
+                        isPasswordValid = false,
+                        error = exception.message.toString()
+                    )
+                }
             }
         )
     }
@@ -81,7 +98,11 @@ class SignInViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            _uiState.value.isLoading = true
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = true
+                )
+            }
 
             val result = withContext(Dispatchers.IO){
                 signInAnonymouslyUseCase()
@@ -98,7 +119,11 @@ class SignInViewModel @Inject constructor(
                 }
             )
 
-            _uiState.value.isLoading = false
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = false
+                )
+            }
         }
 
     }
@@ -112,7 +137,11 @@ class SignInViewModel @Inject constructor(
         navigateToHome: () -> Unit,
     ) {
         viewModelScope.launch {
-            _uiState.value.isLoading = true
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = true
+                )
+            }
 
             val result = signInEmailUseCase(email,password)
 
@@ -127,7 +156,11 @@ class SignInViewModel @Inject constructor(
                 }
             )
 
-            _uiState.value.isLoading = false
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = false
+                )
+            }
         }
     }
 
@@ -146,7 +179,11 @@ class SignInViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
 
-            _uiState.value.isLoading = true
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = true
+                )
+            }
 
             val result = signInGoogleUseCase(idToken)
 
@@ -161,7 +198,11 @@ class SignInViewModel @Inject constructor(
                 }
             )
 
-            _uiState.value.isLoading = false
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = false
+                )
+            }
 
         }
     }
@@ -172,7 +213,11 @@ class SignInViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
 
-            _uiState.value.isLoading = true
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = true
+                )
+            }
 
             val result = signInFacebookUseCase(accessToken)
             result.fold(
@@ -186,7 +231,11 @@ class SignInViewModel @Inject constructor(
                 }
             )
 
-            _uiState.value.isLoading = false
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = false
+                )
+            }
 
         }
     }
@@ -200,7 +249,11 @@ class SignInViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            _uiState.value.isLoading = true
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = true
+                )
+            }
 
             val signIn = when (oath) {
                 OathLogin.GitHub -> signInGitHubUseCase(activity)
@@ -220,7 +273,11 @@ class SignInViewModel @Inject constructor(
                 }
             )
 
-            _uiState.value.isLoading = false
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = false
+                )
+            }
 
         }
 

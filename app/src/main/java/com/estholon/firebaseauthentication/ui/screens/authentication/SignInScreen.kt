@@ -214,10 +214,6 @@ fun SignInByMail(
         mutableStateOf("")
     }
 
-    var isError by rememberSaveable {
-        mutableStateOf(false)
-    }
-
     var password by rememberSaveable {
         mutableStateOf("")
     }
@@ -226,19 +222,17 @@ fun SignInByMail(
         mutableStateOf(false)
     }
 
+    val uiState = signInViewModel.uiState.collectAsState()
+
     TextField(
         label = { Text(text="Usuario")},
         value = user,
-        isError = isError,
+        isError = uiState.value.isEmailValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email
         ),
         onValueChange = {
-            if(signInViewModel.isEmail(it)){
-                isError = false
-            } else {
-                isError = true
-            }
+            signInViewModel.isEmail(it)
             user = it
         },
         singleLine = true,
@@ -278,13 +272,13 @@ fun SignInByMail(
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
         Button(
             onClick = {
-                if(isError){
-                    Toast.makeText(context, "El usuario introducido debe ser un email",Toast.LENGTH_LONG).show()
+                if(uiState.value.isEmailValid){
+                    Toast.makeText(context, uiState.value.error,Toast.LENGTH_LONG).show()
                 } else {
                     onSignInEmail(user, password)
                 }
             },
-            enabled = (user != null && password.length >= 6),
+            enabled = (uiState.value.isEmailValid && password.length >= 6),
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .width(250.dp)

@@ -6,6 +6,7 @@ import android.util.Patterns
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.estholon.firebaseauthentication.domain.usecases.authentication.IsEmailValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInEmailUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInFacebookUseCase
@@ -36,6 +37,7 @@ class SignInViewModel @Inject constructor(
     private val signInMicrosoftUseCase: SignInMicrosoftUseCase,
     private val signInTwitterUseCase: SignInTwitterUseCase,
     private val signInYahooUseCase: SignInYahooUseCase,
+    private val isEmailValidUseCase: IsEmailValidUseCase,
     @ApplicationContext private val context: Context
 ): ViewModel() {
 
@@ -44,8 +46,17 @@ class SignInViewModel @Inject constructor(
     val uiState : StateFlow<SignInUiState> = _uiState.asStateFlow()
 
     // Check to see if the text entered is an email
-    fun isEmail(user: String) : Boolean {
-        return Patterns.EMAIL_ADDRESS.matcher(user).matches()
+    fun isEmail(email: String) {
+        val result = isEmailValidUseCase(email)
+        result.fold(
+            onSuccess = {
+                _uiState.value.isEmailValid = false
+            },
+            onFailure = { exception ->
+                _uiState.value.error = exception.message.toString()
+                _uiState.value.isEmailValid = false
+            }
+        )
     }
 
     // Anonymously Sign In

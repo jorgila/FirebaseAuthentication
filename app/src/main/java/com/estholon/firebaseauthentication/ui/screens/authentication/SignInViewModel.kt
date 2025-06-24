@@ -2,11 +2,11 @@ package com.estholon.firebaseauthentication.ui.screens.authentication
 
 import android.app.Activity
 import android.content.Context
-import android.util.Patterns
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.domain.usecases.authentication.IsEmailValidUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.IsPasswordValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInEmailUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInFacebookUseCase
@@ -38,6 +38,7 @@ class SignInViewModel @Inject constructor(
     private val signInTwitterUseCase: SignInTwitterUseCase,
     private val signInYahooUseCase: SignInYahooUseCase,
     private val isEmailValidUseCase: IsEmailValidUseCase,
+    private val isPasswordValidUseCase: IsPasswordValidUseCase,
     @ApplicationContext private val context: Context
 ): ViewModel() {
 
@@ -46,15 +47,28 @@ class SignInViewModel @Inject constructor(
     val uiState : StateFlow<SignInUiState> = _uiState.asStateFlow()
 
     // Check to see if the text entered is an email
-    fun isEmail(email: String) {
+    fun isEmailValid(email: String) {
         val result = isEmailValidUseCase(email)
         result.fold(
             onSuccess = {
-                _uiState.value.isEmailValid = false
+                _uiState.value.isEmailValid = true
             },
             onFailure = { exception ->
                 _uiState.value.error = exception.message.toString()
                 _uiState.value.isEmailValid = false
+            }
+        )
+    }
+
+    fun isPasswordValid(password: String) {
+        val result = isPasswordValidUseCase(password)
+        result.fold(
+            onSuccess = {
+                _uiState.value.isPasswordValid = true
+            },
+            onFailure = { exception ->
+                _uiState.value.error = exception.message.toString()
+                _uiState.value.isPasswordValid = false
             }
         )
     }
@@ -211,6 +225,8 @@ class SignInViewModel @Inject constructor(
         }
 
     }
+
+
 
 }
 

@@ -227,12 +227,12 @@ fun SignInByMail(
     TextField(
         label = { Text(text="Usuario")},
         value = user,
-        isError = uiState.value.isEmailValid,
+        isError = !uiState.value.isEmailValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email
         ),
         onValueChange = {
-            signInViewModel.isEmail(it)
+            signInViewModel.isEmailValid(it)
             user = it
         },
         singleLine = true,
@@ -247,7 +247,10 @@ fun SignInByMail(
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password
         ),
-        onValueChange = {password = it},
+        onValueChange = {
+            signInViewModel.isPasswordValid(it)
+            password = it
+        },
         singleLine = true,
         maxLines = 1,
         trailingIcon = {
@@ -272,13 +275,13 @@ fun SignInByMail(
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
         Button(
             onClick = {
-                if(uiState.value.isEmailValid){
+                if(!uiState.value.isEmailValid){
                     Toast.makeText(context, uiState.value.error,Toast.LENGTH_LONG).show()
                 } else {
                     onSignInEmail(user, password)
                 }
             },
-            enabled = (uiState.value.isEmailValid && password.length >= 6),
+            enabled = (uiState.value.isEmailValid && uiState.value.isPasswordValid),
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .width(250.dp)

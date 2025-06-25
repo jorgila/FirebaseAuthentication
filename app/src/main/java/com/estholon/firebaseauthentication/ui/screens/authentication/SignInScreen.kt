@@ -67,12 +67,14 @@ fun SignInScreen(
     val uiState = signInViewModel.uiState.collectAsState()
     val callbackManager = CallbackManager.Factory.create()
 
-    LaunchedEffect(Unit) {
-        signInViewModel.signInGoogleCredentialManager(
-            activity = activity,
-            navigateToHome = { navController.navigate(HomeScreen.route) }
-        )
-    }
+// AUTOMATIC LAUNCH FOR SIGN IN WITH GOOGLE
+//    LaunchedEffect(Unit) {
+//        signInViewModel.signInGoogleCredentialManager(
+//            activity = activity,
+//            navigateToHome = { navController.navigate(HomeScreen.route) }
+//        )
+//    }
+
 
     Column(
         modifier = Modifier.fillMaxSize(),

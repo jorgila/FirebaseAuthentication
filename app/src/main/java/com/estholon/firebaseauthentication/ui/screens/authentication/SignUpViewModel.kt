@@ -23,6 +23,10 @@ import com.facebook.AccessToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -41,9 +45,9 @@ class SignUpViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ): ViewModel() {
 
-    // Progress Indicator Variable
-
-    var isLoading: Boolean by mutableStateOf(false)
+    // UI STATE
+    private val _uiState = MutableStateFlow(SignUpUiState())
+    val uiState : StateFlow<SignUpUiState> get() = _uiState.asStateFlow()
 
     // Check to see if the text entered is an email
     fun isEmail(user: String) : Boolean {
@@ -57,7 +61,12 @@ class SignUpViewModel @Inject constructor(
     ) {
 
         viewModelScope.launch {
-            isLoading = true
+
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = true
+                )
+            }
 
             val result = withContext(Dispatchers.IO){
                 signInAnonymouslyUseCase()
@@ -74,7 +83,12 @@ class SignUpViewModel @Inject constructor(
                 }
             )
 
-            isLoading = false
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = false
+                )
+            }
+
 
         }
     }
@@ -88,7 +102,12 @@ class SignUpViewModel @Inject constructor(
     ) {
 
         viewModelScope.launch {
-            isLoading = true
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = true
+                )
+            }
+
 
             val result = withContext(Dispatchers.IO){
                 signUpEmailUseCase(email,password)
@@ -105,7 +124,12 @@ class SignUpViewModel @Inject constructor(
                 }
             )
 
-            isLoading = false
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = false
+                )
+            }
+
         }
 
     }
@@ -118,7 +142,11 @@ class SignUpViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
 
-            isLoading = true
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = true
+                )
+            }
 
             val result = signInGoogleUseCase(activity)
 
@@ -133,7 +161,11 @@ class SignUpViewModel @Inject constructor(
                 }
             )
 
-            isLoading = false
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = false
+                )
+            }
 
         }
     }
@@ -162,7 +194,11 @@ class SignUpViewModel @Inject constructor(
                 OathLogin.Yahoo -> signInYahooUseCase(activity)
             }
 
-            isLoading = true
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = true
+                )
+            }
 
             withContext(Dispatchers.IO){
                 result.fold(
@@ -177,7 +213,11 @@ class SignUpViewModel @Inject constructor(
                 )
             }
 
-            isLoading = false
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = false
+                )
+            }
 
         }
 
@@ -189,7 +229,11 @@ class SignUpViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
 
-            isLoading = true
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = true
+                )
+            }
 
             val result = signInFacebookUseCase(accessToken)
             result.fold(
@@ -203,7 +247,11 @@ class SignUpViewModel @Inject constructor(
                 }
             )
 
-            isLoading = false
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = false
+                )
+            }
 
         }
     }

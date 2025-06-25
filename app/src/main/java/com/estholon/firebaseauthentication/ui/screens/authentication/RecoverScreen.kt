@@ -15,12 +15,15 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -39,6 +42,7 @@ fun RecoverScreen(
 
     val context = LocalContext.current
 
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -55,7 +59,6 @@ fun RecoverScreen(
                 recoverViewModel.resetPassword(
                     email = user,
                     navigateToSignIn = { navController.navigate(Routes.SignInScreen.route) },
-                    communicateError = { Toast.makeText(context,"Failed recovery",Toast.LENGTH_LONG).show()}
                 )
             }
         )
@@ -65,8 +68,11 @@ fun RecoverScreen(
 
 @Composable
 fun RecoverPassword(
-    onRecoverPassword: (email: String) -> Unit
+    onRecoverPassword: (email: String) -> Unit,
+    recoverViewModel: RecoverViewModel = hiltViewModel()
 ){
+
+    val uiState = recoverViewModel.uiState.collectAsState()
 
     var user by rememberSaveable {
         mutableStateOf("")
@@ -78,11 +84,18 @@ fun RecoverPassword(
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email
         ),
-        onValueChange = { user = it},
+        onValueChange = {
+            recoverViewModel.isEmailValid(it)
+            user = it
+        },
         singleLine = true,
-        maxLines = 1
+        maxLines = 1,
+        isError = !uiState.value.isEmailValid
     )
 
+    if(!uiState.value.isEmailValid) {
+        Text("Introduce un email", color = Color.Red)
+    }
     Spacer(modifier = Modifier.height(10.dp))
 
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
@@ -90,7 +103,7 @@ fun RecoverPassword(
             onClick = {
                 onRecoverPassword(user)
             },
-            enabled = (user != null),
+            enabled = (uiState.value.isEmailValid),
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .width(250.dp)

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -27,6 +29,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -60,6 +63,9 @@ fun SignUpScreen(
 
     val context = LocalContext.current
     val activity = LocalContext.current as Activity
+    val uiState = signUpViewModel.uiState.collectAsState()
+
+
     lateinit var callbackManager: CallbackManager
 
     Column(
@@ -155,6 +161,14 @@ fun SignUpScreen(
             }
         )
 
+    }
+
+    if(uiState.value.isLoading){
+        Box(modifier = Modifier.fillMaxSize()){
+            CircularProgressIndicator(modifier = Modifier
+                .size(100.dp)
+                .align(Alignment.Center))
+        }
     }
 }
 
@@ -256,7 +270,7 @@ fun SignUpByMail(
                     onSignUpEmail(user, password)
                 }
             },
-            enabled = (user != null && password.length >= 6),
+            enabled = ( user != null && password.length >= 6 ),
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .width(250.dp)

@@ -15,7 +15,7 @@ plugins {
 
 android {
     namespace = "com.estholon.firebaseauthentication"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.estholon.firebaseauthentication"

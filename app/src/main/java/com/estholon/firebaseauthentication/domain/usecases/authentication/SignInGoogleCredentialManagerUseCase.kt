@@ -4,20 +4,19 @@ import android.app.Activity
 import com.estholon.firebaseauthentication.domain.models.AnalyticsModel
 import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
 import com.estholon.firebaseauthentication.domain.usecases.analytics.SendEventUseCase
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class SignInGoogleUseCase @Inject constructor(
+class SignInGoogleCredentialManagerUseCase @Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
     private val sendEventUseCase: SendEventUseCase
-)  {
+) {
 
     suspend operator fun invoke(activity: Activity) : Result<Unit> {
         return try {
             withContext(Dispatchers.IO){
-                val result = authenticationRepository.signInGoogle(activity)
+                val result = authenticationRepository.signInGoogleCredentialManager(activity)
 
                 result.fold(
                     onSuccess = {

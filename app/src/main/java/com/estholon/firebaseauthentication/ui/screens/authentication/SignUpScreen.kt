@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -42,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.ui.navigation.Routes
+import com.estholon.firebaseauthentication.ui.navigation.Routes.HomeScreen
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
@@ -59,21 +61,6 @@ fun SignUpScreen(
     val context = LocalContext.current
     val activity = LocalContext.current as Activity
     lateinit var callbackManager: CallbackManager
-    val googleLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            if(result.resultCode== Activity.RESULT_OK){
-                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                try {
-                    val account = task.getResult(ApiException::class.java)!!
-                    signUpViewModel.signUpGoogle(
-                        idToken = account.idToken!!,
-                        navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                    )
-                } catch (e: ApiException){
-                    Toast.makeText(context,"Ha ocurrido un error: ${e.message}",Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -129,9 +116,10 @@ fun SignUpScreen(
             )
             },
             onGoogleSignIn = {
-                signUpViewModel.onGoogleSignUpSelected{
-                    googleLauncher.launch(it.signInIntent)
-                }
+                signUpViewModel.signInGoogle(
+                    activity = activity,
+                    navigateToHome = { navController.navigate(HomeScreen.route) }
+                )
             },
             onFacebookSignIn = {
                 LoginManager.getInstance()

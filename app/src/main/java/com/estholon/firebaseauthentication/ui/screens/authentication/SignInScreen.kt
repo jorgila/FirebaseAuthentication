@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,24 +66,13 @@ fun SignInScreen(
     val activity = LocalContext.current as Activity
     val uiState = signInViewModel.uiState.collectAsState()
     val callbackManager = CallbackManager.Factory.create()
-    val googleLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
-            if(result.resultCode== Activity.RESULT_OK){
-                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-                try {
-                    val account = task.getResult(ApiException::class.java)!!
-                    signInViewModel.signInGoogle(
-                        idToken = account.idToken!!,
-                        navigateToHome = { navController.navigate(HomeScreen.route) },
-                    )
-                } catch (e: ApiException){
-                    Toast.makeText(context,"Ha ocurrido un error: ${e.message}",Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
 
-
-
+    LaunchedEffect(Unit) {
+        signInViewModel.signInGoogleCredentialManager(
+            activity = activity,
+            navigateToHome = { navController.navigate(HomeScreen.route) }
+        )
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -134,9 +124,10 @@ fun SignInScreen(
             )
             },
             onGoogleSignIn = {
-                signInViewModel.onGoogleSignInSelected{
-                    googleLauncher.launch(it.signInIntent)
-                }
+                signInViewModel.signInGoogle(
+                    activity = activity,
+                    navigateToHome = { navController.navigate(HomeScreen.route)}
+                )
             },
             onFacebookSignIn = {
                 LoginManager.getInstance()

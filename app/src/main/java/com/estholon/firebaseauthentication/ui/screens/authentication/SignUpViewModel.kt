@@ -9,16 +9,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.estholon.firebaseauthentication.domain.usecases.authentication.ClearCredentialStateUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInFacebookUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGitHubUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGoogleCredentialManagerUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGoogleUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInMicrosoftUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInTwitterUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInYahooUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignUpEmailUseCase
 import com.facebook.AccessToken
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +33,7 @@ class SignUpViewModel @Inject constructor(
     private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase,
     private val signInFacebookUseCase: SignInFacebookUseCase,
     private val signInGoogleUseCase: SignInGoogleUseCase,
+    private val clearCredentialStateUseCase: ClearCredentialStateUseCase,
     private val signInYahooUseCase: SignInYahooUseCase,
     private val signInMicrosoftUseCase: SignInMicrosoftUseCase,
     private val signInGitHubUseCase: SignInGitHubUseCase,
@@ -108,23 +110,18 @@ class SignUpViewModel @Inject constructor(
 
     }
 
-    fun onGoogleSignUpSelected(googleLauncherSignIn:(GoogleSignInClient)->Unit) {
+    // GOOGLE
 
-        viewModelScope.launch {
-            val gsc = signInGoogleUseCase.getGoogleClient()
-            googleLauncherSignIn(gsc)
-        }
-
-    }
-
-    fun signUpGoogle(
-        idToken: String?,
+    fun signInGoogle(
+        activity: Activity,
         navigateToHome: () -> Unit
     ) {
         viewModelScope.launch {
 
-            val result = signInGoogleUseCase(idToken)
             isLoading = true
+
+            val result = signInGoogleUseCase(activity)
+
             result.fold(
                 onSuccess = {
                     navigateToHome()
@@ -135,10 +132,19 @@ class SignUpViewModel @Inject constructor(
                     }
                 }
             )
+
             isLoading = false
 
         }
     }
+
+    fun clearCredentialState(){
+        viewModelScope.launch {
+            clearCredentialStateUseCase()
+        }
+    }
+
+    // OTHER METHODS
 
     fun onOathLoginSelected(
         oath: OathLogin,

@@ -1,6 +1,7 @@
 package com.estholon.firebaseauthentication.data.repositories
 
 import android.app.Activity
+import androidx.credentials.GetCredentialResponse
 import com.estholon.firebaseauthentication.data.datasources.AuthenticationDataSource
 import com.estholon.firebaseauthentication.data.mapper.UserMapper
 import com.estholon.firebaseauthentication.domain.models.UserModel
@@ -50,12 +51,19 @@ class AuthenticationRepositoryImpl @Inject constructor(
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
-    override suspend fun getGoogleClient(): GoogleSignInClient {
-        return authenticationDataSource.getGoogleClient()
+    override suspend fun signInGoogleCredentialManager(activity: Activity): Result<UserModel?> {
+        return authenticationDataSource.signInGoogleCredentialManager(activity)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
-    override suspend fun signInGoogle(idToken: String?): Result<UserModel?> {
-        return authenticationDataSource.signInGoogle(idToken)
+
+    override suspend fun signInGoogle(activity: Activity): Result<UserModel?> {
+        return authenticationDataSource.signInGoogle(activity)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
+    override suspend fun handleCredentialResponse(result: GetCredentialResponse): Result<UserModel?> {
+        return authenticationDataSource.handleCredentialResponse(result)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
@@ -90,6 +98,10 @@ class AuthenticationRepositoryImpl @Inject constructor(
 
     override suspend fun resetPassword ( email : String) : Result<Unit> {
         return authenticationDataSource.resetPassword(email)
+    }
+
+    override suspend fun clearCredentialState() {
+        return authenticationDataSource.clearCredentialState()
     }
 
 }

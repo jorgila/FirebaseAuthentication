@@ -1,6 +1,7 @@
 package com.estholon.firebaseauthentication.domain.repositories
 
 import android.app.Activity
+import androidx.credentials.GetCredentialResponse
 import com.estholon.firebaseauthentication.data.dtos.UserDto
 import com.estholon.firebaseauthentication.domain.models.UserModel
 import com.facebook.AccessToken
@@ -22,8 +23,12 @@ interface AuthenticationRepository {
         verificationCode: String,
         phoneCode: String
     ) : Result<UserModel?>
-    suspend fun getGoogleClient() : GoogleSignInClient
-    suspend fun signInGoogle(idToken: String?) : Result<UserModel?>
+
+    suspend fun signInGoogleCredentialManager(activity: Activity): Result<UserModel?>
+    suspend fun signInGoogle(activity: Activity) : Result<UserModel?>
+    suspend fun handleCredentialResponse(result: GetCredentialResponse):Result<UserModel?>
+    suspend fun clearCredentialState()
+
     suspend fun signInFacebook(accessToken: AccessToken) : Result<UserModel?>
     suspend fun signInGitHub(activity: Activity) : Result<UserModel?>
     suspend fun signInMicrosoft(activity: Activity) : Result<UserModel?>

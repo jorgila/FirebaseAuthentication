@@ -5,18 +5,19 @@ import android.content.Context
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.estholon.firebaseauthentication.domain.usecases.authentication.ClearCredentialStateUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.IsEmailValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.IsPasswordValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInEmailUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInFacebookUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGitHubUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGoogleCredentialManagerUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGoogleUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInMicrosoftUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInTwitterUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInYahooUseCase
 import com.facebook.AccessToken
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -32,12 +33,14 @@ import javax.inject.Inject
 class SignInViewModel @Inject constructor(
     private val signInEmailUseCase: SignInEmailUseCase,
     private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase,
+    private val signInGoogleCredentialManagerUseCase: SignInGoogleCredentialManagerUseCase,
     private val signInGoogleUseCase: SignInGoogleUseCase,
     private val signInFacebookUseCase: SignInFacebookUseCase,
     private val signInGitHubUseCase : SignInGitHubUseCase,
     private val signInMicrosoftUseCase: SignInMicrosoftUseCase,
     private val signInTwitterUseCase: SignInTwitterUseCase,
     private val signInYahooUseCase: SignInYahooUseCase,
+    private val clearCredentialStateUseCase: ClearCredentialStateUseCase,
     private val isEmailValidUseCase: IsEmailValidUseCase,
     private val isPasswordValidUseCase: IsPasswordValidUseCase,
     @ApplicationContext private val context: Context
@@ -164,17 +167,35 @@ class SignInViewModel @Inject constructor(
         }
     }
 
-    fun onGoogleSignInSelected(googleLauncherSignIn:(GoogleSignInClient)->Unit) {
+    // GOOGLE
 
+    fun signInGoogleCredentialManager(activity: Activity, navigateToHome: () -> Unit) {
         viewModelScope.launch {
-            val gsc = signInGoogleUseCase.getGoogleClient()
-            googleLauncherSignIn(gsc)
-        }
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = true
+                )
+            }
 
+            val result = signInGoogleCredentialManagerUseCase(activity)
+
+            result.fold(
+                onSuccess = { navigateToHome() },
+                onFailure = { exception ->
+                    android.util.Log.d("SignInViewModel", "Credential Manager no disponible: ${exception.message}")
+                }
+            )
+
+            _uiState.update { uiState ->
+                uiState.copy(
+                    isLoading = false
+                )
+            }
+        }
     }
 
     fun signInGoogle(
-        idToken: String?,
+        activity: Activity,
         navigateToHome: () -> Unit
     ) {
         viewModelScope.launch {
@@ -185,7 +206,7 @@ class SignInViewModel @Inject constructor(
                 )
             }
 
-            val result = signInGoogleUseCase(idToken)
+            val result = signInGoogleUseCase(activity)
 
             result.fold(
                 onSuccess = {
@@ -206,6 +227,14 @@ class SignInViewModel @Inject constructor(
 
         }
     }
+
+    fun clearCredentialState(){
+        viewModelScope.launch {
+            clearCredentialStateUseCase()
+        }
+    }
+
+
 
     fun signInFacebook(
         accessToken: AccessToken,
@@ -282,8 +311,6 @@ class SignInViewModel @Inject constructor(
         }
 
     }
-
-
 
 }
 

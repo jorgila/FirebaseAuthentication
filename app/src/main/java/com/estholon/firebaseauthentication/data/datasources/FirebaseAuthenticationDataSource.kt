@@ -2,6 +2,15 @@ package com.estholon.firebaseauthentication.data.datasources
 
 import android.app.Activity
 import android.content.Context
+import android.util.Log
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.GetCredentialResponse
+import androidx.credentials.PasswordCredential
+import androidx.credentials.PublicKeyCredential
+import androidx.credentials.exceptions.GetCredentialException
 import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.data.dtos.UserDto
 import com.estholon.firebaseauthentication.data.mapper.UserMapper
@@ -10,6 +19,10 @@ import com.facebook.login.LoginManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
@@ -22,6 +35,7 @@ import com.google.firebase.auth.PhoneAuthProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.security.SecureRandom
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -31,6 +45,12 @@ class FirebaseAuthenticationDataSource @Inject constructor(
     private val userMapper: UserMapper,
     @ApplicationContext private val context: Context
 ) : AuthenticationDataSource {
+
+    private val credentialManager = CredentialManager.create(context)
+
+    companion object {
+        private const val TAG = "FirebaseAuthDS"
+    }
 
     private fun FirebaseUser.toUserDto() = UserDto(
         uid = uid,
@@ -145,8 +165,126 @@ class FirebaseAuthenticationDataSource @Inject constructor(
 
     // SIGN IN GOOGLE
 
-    override suspend fun signInGoogle(idToken: String?): Result<UserDto?> {
-        val credential = GoogleAuthProvider.getCredential(idToken,null)
+    override suspend fun signInGoogleCredentialManager(activity: Activity): Result<UserDto?> {
+        return try {
+            val nonce = generateNonce()
+
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(true)
+                .setServerClientId(context.getString(R.string.default_web_client_id))
+                .setAutoSelectEnabled(true)
+                .setNonce(nonce)
+                .build()
+
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+
+            try {
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = activity
+                )
+                handleCredentialResponse(result)
+            } catch (e: GetCredentialException) {
+                signUpWithCredentialManager(activity, nonce)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error en signInWithCredentialManager", e)
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun signUpWithCredentialManager(activity: Activity, nonce: String): Result<UserDto?> {
+        return try {
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(context.getString(R.string.default_web_client_id))
+                .setNonce(nonce)
+                .build()
+
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+
+            val result = credentialManager.getCredential(
+                request = request,
+                context = activity
+            )
+            handleCredentialResponse(result)
+        } catch (e: GetCredentialException) {
+            Result.failure(Exception("Error al registrarse: ${e.message}"))
+        }
+    }
+
+
+    override suspend fun signInGoogle(activity: Activity): Result<UserDto?> {
+        return try {
+            val nonce = generateNonce()
+
+            val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(
+                    serverClientId = context.getString(R.string.default_web_client_id)
+                )
+                .setNonce(nonce)
+                .build()
+
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(signInWithGoogleOption)
+                .build()
+
+            val result = credentialManager.getCredential(
+                request = request,
+                context = activity
+            )
+            handleCredentialResponse(result)
+        } catch (e: GetCredentialException) {
+            Result.failure(Exception("Error al iniciar sesión con Google: ${e.message}"))
+        }
+    }
+
+    override suspend fun handleCredentialResponse(result: GetCredentialResponse): Result<UserDto?> {
+        val credential = result.credential
+
+        return when (credential) {
+            is PublicKeyCredential -> {
+                Result.failure(Exception("Passkeys no implementadas aún"))
+            }
+
+            is PasswordCredential -> {
+                signInEmail(credential.id, credential.password)
+            }
+
+            is CustomCredential -> {
+                if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                    try {
+                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                        val idToken = googleIdTokenCredential.idToken
+
+                        val userInfo = """
+                            ID: ${googleIdTokenCredential.id}
+                            Name: ${googleIdTokenCredential.displayName}
+                            Email: ${googleIdTokenCredential.givenName}
+                        """.trimIndent()
+                        Log.d(TAG, "Información del usuario: $userInfo")
+
+                        signInWithGoogleIdToken(idToken)
+
+                    } catch (e: GoogleIdTokenParsingException) {
+                        Result.failure(Exception("Token de Google inválido"))
+                    }
+                } else {
+                    Result.failure(Exception("Tipo de credencial no soportada"))
+                }
+            }
+
+            else -> {
+                Result.failure(Exception("Tipo de credencial no reconocida"))
+            }
+        }
+    }
+
+    private suspend fun signInWithGoogleIdToken(idToken: String): Result<UserDto?> {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
         return completeRegisterWithCredential(credential)
     }
 
@@ -194,7 +332,7 @@ class FirebaseAuthenticationDataSource @Inject constructor(
     override suspend fun signOut() {
         firebaseAuth.signOut()
         LoginManager.getInstance().logOut()
-        getGoogleClient().signOut()
+        clearCredentialState()
     }
 
     // RESET PASSWORD
@@ -271,7 +409,7 @@ class FirebaseAuthenticationDataSource @Inject constructor(
             }
     }
 
-    override suspend fun getGoogleClient(): GoogleSignInClient {
+    private fun getGoogleClient(): GoogleSignInClient {
         val gso = GoogleSignInOptions
             .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(context.getString(R.string.default_web_client_id))
@@ -281,7 +419,21 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         return GoogleSignIn.getClient(context,gso)
     }
 
+    override suspend fun clearCredentialState() {
+        try {
+            val request = ClearCredentialStateRequest()
+            credentialManager.clearCredentialState(request)
+            Log.d(TAG, "Estado de credenciales limpiado exitosamente")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error al limpiar estado de credenciales", e)
+        }
+    }
 
-
+    private fun generateNonce(): String {
+        val random = SecureRandom()
+        val bytes = ByteArray(32)
+        random.nextBytes(bytes)
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
 
 }

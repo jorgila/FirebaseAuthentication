@@ -23,8 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class RecoverViewModel @Inject constructor(
     private val resetPasswordUseCase: ResetPasswordUseCase,
-    private val isEmailValidUseCase: IsEmailValidUseCase,
-    @ApplicationContext private val context: Context
+    private val isEmailValidUseCase: IsEmailValidUseCase
 ): ViewModel() {
 
     // UI State
@@ -55,7 +54,11 @@ class RecoverViewModel @Inject constructor(
 
     // Progress Indicator Variable
 
-    fun resetPassword(email: String, navigateToSignIn: () -> Unit) {
+    fun resetPassword(
+        email: String,
+        navigateToSignIn: () -> Unit,
+        communicateError: () -> Unit
+    ) {
         viewModelScope.launch {
 
             _uiState.update { uiState ->
@@ -70,9 +73,15 @@ class RecoverViewModel @Inject constructor(
                     navigateToSignIn()
                 },
                 onFailure = { exception ->
-                    viewModelScope.launch(Dispatchers.Main) {
-                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            error = exception.message.toString()
+                        )
                     }
+
+                    communicateError()
+
                 }
             )
 

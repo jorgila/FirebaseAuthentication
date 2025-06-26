@@ -41,7 +41,7 @@ fun RecoverScreen(
 ) {
 
     val context = LocalContext.current
-
+    val uiState by recoverViewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -59,6 +59,7 @@ fun RecoverScreen(
                 recoverViewModel.resetPassword(
                     email = user,
                     navigateToSignIn = { navController.navigate(Routes.SignInScreen.route) },
+                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() },
                 )
             }
         )
@@ -94,7 +95,7 @@ fun RecoverPassword(
     )
 
     if(!uiState.value.isEmailValid) {
-        Text("Introduce un email", color = Color.Red)
+        Text("Introduce un email válido", color = Color.Red)
     }
     Spacer(modifier = Modifier.height(10.dp))
 
@@ -112,4 +113,5 @@ fun RecoverPassword(
             Text(text = "Recuperar Cuenta".uppercase())
         }
     }
+
 }

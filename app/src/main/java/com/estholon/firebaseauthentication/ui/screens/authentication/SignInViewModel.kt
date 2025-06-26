@@ -42,8 +42,7 @@ class SignInViewModel @Inject constructor(
     private val signInYahooUseCase: SignInYahooUseCase,
     private val clearCredentialStateUseCase: ClearCredentialStateUseCase,
     private val isEmailValidUseCase: IsEmailValidUseCase,
-    private val isPasswordValidUseCase: IsPasswordValidUseCase,
-    @ApplicationContext private val context: Context
+    private val isPasswordValidUseCase: IsPasswordValidUseCase
 ): ViewModel() {
 
     // UI State
@@ -97,6 +96,7 @@ class SignInViewModel @Inject constructor(
 
     fun signInAnonymously(
         navigateToHome: () -> Unit,
+        communicateError: () -> Unit
     ) {
 
         viewModelScope.launch {
@@ -116,9 +116,12 @@ class SignInViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    viewModelScope.launch(Dispatchers.Main) {
-                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            error = exception.message.toString()
+                        )
                     }
+                    communicateError()
                 }
             )
 
@@ -138,6 +141,7 @@ class SignInViewModel @Inject constructor(
         email: String,
         password: String,
         navigateToHome: () -> Unit,
+        communicateError: () -> Unit
     ) {
         viewModelScope.launch {
             _uiState.update { uiState ->
@@ -153,9 +157,12 @@ class SignInViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    viewModelScope.launch(Dispatchers.Main) {
-                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            error = exception.message.toString()
+                        )
                     }
+                    communicateError()
                 }
             )
 
@@ -196,7 +203,8 @@ class SignInViewModel @Inject constructor(
 
     fun signInGoogle(
         activity: Activity,
-        navigateToHome: () -> Unit
+        navigateToHome: () -> Unit,
+        communicateError: () -> Unit
     ) {
         viewModelScope.launch {
 
@@ -213,9 +221,12 @@ class SignInViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    viewModelScope.launch(Dispatchers.Main) {
-                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            error = exception.message.toString()
+                        )
                     }
+                    communicateError()
                 }
             )
 
@@ -239,6 +250,7 @@ class SignInViewModel @Inject constructor(
     fun signInFacebook(
         accessToken: AccessToken,
         navigateToHome: () -> Unit,
+        communicateError: () -> Unit
     ) {
         viewModelScope.launch {
 
@@ -254,9 +266,12 @@ class SignInViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    viewModelScope.launch(Dispatchers.Main) {
-                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            error = exception.message.toString()
+                        )
                     }
+                    communicateError()
                 }
             )
 
@@ -273,6 +288,7 @@ class SignInViewModel @Inject constructor(
         oath: OathLogin,
         activity: Activity,
         navigateToHome: () -> Unit,
+        communicateError: () -> Unit
     )
     {
 
@@ -296,9 +312,12 @@ class SignInViewModel @Inject constructor(
                     navigateToHome()
                 },
                 onFailure = { exception ->
-                    viewModelScope.launch(Dispatchers.Main) {
-                        Toast.makeText(context,exception.message.toString(), Toast.LENGTH_LONG).show()
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            error = exception.message.toString()
+                        )
                     }
+                    communicateError()
                 }
             )
 

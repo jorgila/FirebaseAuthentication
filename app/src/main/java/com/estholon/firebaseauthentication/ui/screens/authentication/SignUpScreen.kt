@@ -2,6 +2,7 @@ package com.estholon.firebaseauthentication.ui.screens.authentication
 
 import android.app.Activity
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultRegistryOwner
@@ -62,8 +63,8 @@ fun SignUpScreen(
 ) {
 
     val context = LocalContext.current
-    val activity = LocalContext.current as Activity
-    val uiState = signUpViewModel.uiState.collectAsState()
+    val activity = LocalActivity.current as Activity
+    val uiState by signUpViewModel.uiState.collectAsState()
 
 
     lateinit var callbackManager: CallbackManager
@@ -79,10 +80,13 @@ fun SignUpScreen(
             contentDescription = "Firebase Authentication"
         )
         Spacer(modifier = Modifier.height(30.dp))
-        SignUpByMail( onSignUpEmail = { user, password -> signUpViewModel.signUpEmail(
+        SignUpByMail(
+            onSignUpEmail = { user, password ->
+                signUpViewModel.signUpEmail(
                     email = user,
                     password = password,
                     navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                 )
             }
         )
@@ -106,6 +110,7 @@ fun SignUpScreen(
                     signUpViewModel.signUpFacebook(
                         result.accessToken,
                         navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                        communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                     )
                 }
 
@@ -119,12 +124,14 @@ fun SignUpScreen(
             onPhoneSignIn = {}, //TODO
             onAnonymously = { signUpViewModel.signUpAnonymously(
                 navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
             )
             },
             onGoogleSignIn = {
                 signUpViewModel.signInGoogle(
                     activity = activity,
-                    navigateToHome = { navController.navigate(HomeScreen.route) }
+                    navigateToHome = { navController.navigate(HomeScreen.route) },
+                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                 )
             },
             onFacebookSignIn = {
@@ -135,7 +142,8 @@ fun SignUpScreen(
                 signUpViewModel.onOathLoginSelected(
                     oath = OathLogin.GitHub,
                     activity = activity,
-                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)}
+                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
+                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                 )
             },
             onMicrosoftSignIn = {
@@ -143,6 +151,7 @@ fun SignUpScreen(
                     oath = OathLogin.Microsoft,
                     activity = activity,
                     navigateToHome = { navController.navigate(Routes.HomeScreen.route)  },
+                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                 )
             },
             onTwitterSignIn = {
@@ -150,6 +159,7 @@ fun SignUpScreen(
                     oath = OathLogin.Twitter,
                     activity = activity,
                     navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                 )
             },
             onYahooSignIn = {
@@ -157,13 +167,14 @@ fun SignUpScreen(
                     oath = OathLogin.Yahoo,
                     activity = activity,
                     navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
+                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                 )
             }
         )
 
     }
 
-    if(uiState.value.isLoading){
+    if(uiState.isLoading){
         Box(modifier = Modifier.fillMaxSize()){
             CircularProgressIndicator(modifier = Modifier
                 .size(100.dp)

@@ -1,5 +1,6 @@
 package com.estholon.firebaseauthentication.domain.usecases.authentication
 
+import android.util.Log
 import com.estholon.firebaseauthentication.domain.models.AnalyticsModel
 import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
 import com.estholon.firebaseauthentication.domain.usecases.analytics.SendEventUseCase
@@ -32,7 +33,7 @@ class SignUpEmailUseCase @Inject constructor(
                             title = "Sign Up", analyticsString = listOf(Pair("Email", "Failed Sign Up"))
                         )
                         sendEventUseCase(analyticsModel)
-                        Result.failure(Exception(exception.message))
+                        Result.failure(exception)
                     }
                 )
 

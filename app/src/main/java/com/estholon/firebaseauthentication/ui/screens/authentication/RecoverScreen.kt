@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -26,6 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -91,12 +95,18 @@ fun RecoverPassword(
         },
         singleLine = true,
         maxLines = 1,
-        isError = !uiState.value.isEmailValid
+        isError = !uiState.value.isEmailValid,
+        modifier = Modifier.semantics {
+            contentDescription = "Campo de correo electrónico"
+            if (!uiState.value.isEmailValid && uiState.value.emailError != null) {
+                stateDescription = uiState.value.emailError!!
+            }
+        },
+        supportingText = if (!uiState.value.isEmailValid && uiState.value.emailError != null) {
+            { Text(uiState.value.emailError!!, color = MaterialTheme.colorScheme.error) }
+        } else null
     )
 
-    if(!uiState.value.isEmailValid) {
-        Text("Introduce un email válido", color = Color.Red)
-    }
     Spacer(modifier = Modifier.height(10.dp))
 
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {

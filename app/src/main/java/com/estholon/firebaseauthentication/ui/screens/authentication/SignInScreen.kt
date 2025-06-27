@@ -24,6 +24,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -37,6 +38,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -50,8 +54,6 @@ import com.facebook.FacebookCallback
 import com.facebook.FacebookException
 import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun SignInScreen(
@@ -221,12 +223,12 @@ fun SignInByMail(
         mutableStateOf(false)
     }
 
-    val uiState = signInViewModel.uiState.collectAsState()
+    val uiState by signInViewModel.uiState.collectAsState()
 
     TextField(
         label = { Text(text="Usuario")},
         value = user,
-        isError = !uiState.value.isEmailValid,
+        isError = !uiState.isEmailValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email
         ),
@@ -235,7 +237,16 @@ fun SignInByMail(
             user = it
         },
         singleLine = true,
-        maxLines = 1
+        maxLines = 1,
+        modifier = Modifier.semantics {
+            contentDescription = "Campo de correo electrónico"
+            if (!uiState.isEmailValid && uiState.emailError != null) {
+                stateDescription = uiState.emailError!!
+            }
+        },
+        supportingText = if (!uiState.isEmailValid && uiState.emailError != null) {
+            { Text(uiState.emailError!!, color = MaterialTheme.colorScheme.error) }
+        } else null
     )
 
     Spacer(modifier = Modifier.height(10.dp))
@@ -243,6 +254,7 @@ fun SignInByMail(
     TextField(
         label = { Text(text = "Contraseña") },
         value = password,
+        isError = !uiState.isPasswordValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password
         ),
@@ -259,28 +271,37 @@ fun SignInByMail(
                 Icons.Filled.Visibility
             }
             IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
-                Icon(imageVector = image, contentDescription = "Show password")
+                Icon(imageVector = image, contentDescription = "Mostrar contraseña")
             }
         },
         visualTransformation = if(passwordVisibility){
             VisualTransformation.None
         } else {
             PasswordVisualTransformation()
-        }
-        )
+        },
+        modifier = Modifier.semantics {
+            contentDescription = "Campo de contraseña"
+            if (!uiState.isPasswordValid && uiState.passwordError != null) {
+                stateDescription = uiState.passwordError!!
+            }
+        },
+        supportingText = if (!uiState.isPasswordValid && uiState.passwordError != null) {
+            { Text(uiState.passwordError!!, color = MaterialTheme.colorScheme.error) }
+        } else null
+    )
 
     Spacer(modifier = Modifier.height(10.dp))
 
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
         Button(
             onClick = {
-                if(!uiState.value.isEmailValid){
-                    Toast.makeText(context, uiState.value.error,Toast.LENGTH_LONG).show()
+                if(!uiState.isEmailValid){
+                    Toast.makeText(context, uiState.error,Toast.LENGTH_LONG).show()
                 } else {
                     onSignInEmail(user, password)
                 }
             },
-            enabled = (uiState.value.isEmailValid && uiState.value.isPasswordValid),
+            enabled = (uiState.isEmailValid && uiState.isPasswordValid),
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .width(250.dp)

@@ -2,6 +2,7 @@ package com.estholon.firebaseauthentication.ui.screens.authentication
 
 import android.app.Activity
 import android.content.Context
+import android.util.Log
 import android.util.Patterns
 import android.widget.Toast
 import androidx.compose.runtime.getValue
@@ -10,6 +11,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.domain.usecases.authentication.ClearCredentialStateUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.IsEmailValidUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.IsPasswordValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInFacebookUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignInGitHubUseCase
@@ -23,6 +26,7 @@ import com.facebook.AccessToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,6 +46,8 @@ class SignUpViewModel @Inject constructor(
     private val signInMicrosoftUseCase: SignInMicrosoftUseCase,
     private val signInGitHubUseCase: SignInGitHubUseCase,
     private val signInTwitterUseCase: SignInTwitterUseCase,
+    private val isEmailValidUseCase: IsEmailValidUseCase,
+    private val isPasswordValidUseCase: IsPasswordValidUseCase
 ): ViewModel() {
 
     // UI STATE
@@ -49,9 +55,48 @@ class SignUpViewModel @Inject constructor(
     val uiState : StateFlow<SignUpUiState> get() = _uiState.asStateFlow()
 
     // Check to see if the text entered is an email
-    fun isEmail(user: String) : Boolean {
-        return Patterns.EMAIL_ADDRESS.matcher(user).matches()
+    fun isEmailValid(email: String) {
+        val result = isEmailValidUseCase(email)
+        result.fold(
+            onSuccess = {
+                _uiState.update { uiState ->
+                    uiState.copy(
+                        isEmailValid = true
+                    )
+                }
+            },
+            onFailure = { exception ->
+                _uiState.update { uiState ->
+                    uiState.copy(
+                        isEmailValid = false,
+                        emailError = exception.message.toString()
+                    )
+                }
+            }
+        )
     }
+
+    fun isPasswordValid(password: String) {
+        val result = isPasswordValidUseCase(password)
+        result.fold(
+            onSuccess = {
+                _uiState.update { uiState ->
+                    uiState.copy(
+                        isPasswordValid = true
+                    )
+                }
+            },
+            onFailure = { exception ->
+                _uiState.update { uiState ->
+                    uiState.copy(
+                        isPasswordValid = false,
+                        passwordError = exception.message.toString()
+                    )
+                }
+            }
+        )
+    }
+
 
     // Anonymously Sign In
 
@@ -82,6 +127,7 @@ class SignUpViewModel @Inject constructor(
                             error = exception.message.toString()
                         )
                     }
+                    delay(1000)
                     communicateError()
                 }
             )
@@ -127,6 +173,7 @@ class SignUpViewModel @Inject constructor(
                             error = exception.message.toString()
                         )
                     }
+                    delay(1000)
                     communicateError()
                 }
             )

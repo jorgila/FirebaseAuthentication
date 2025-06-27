@@ -12,6 +12,7 @@ import com.estholon.firebaseauthentication.domain.usecases.authentication.ResetP
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,7 +46,7 @@ class RecoverViewModel @Inject constructor(
                 _uiState.update { uiState ->
                     uiState.copy(
                         isEmailValid = false,
-                        error = exception.message.toString()
+                        emailError = exception.message.toString()
                     )
                 }
             }
@@ -80,6 +81,7 @@ class RecoverViewModel @Inject constructor(
                         )
                     }
 
+                    delay(1000)
                     communicateError()
 
                 }

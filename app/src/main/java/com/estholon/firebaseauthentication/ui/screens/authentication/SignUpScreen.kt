@@ -25,11 +25,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +39,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -53,8 +56,6 @@ import com.facebook.FacebookCallback
 import com.facebook.FacebookException
 import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun SignUpScreen(
@@ -86,7 +87,7 @@ fun SignUpScreen(
                     email = user,
                     password = password,
                     navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
+                    communicateError = { Toast.makeText(context,uiState.error ?: "Error desconocido",Toast.LENGTH_LONG).show()  }
                 )
             }
         )
@@ -99,7 +100,7 @@ fun SignUpScreen(
         LoginManager.getInstance()
             .registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
                 override fun onCancel() {
-                    Toast.makeText(context,"Probamos otra red social?",Toast.LENGTH_LONG).show()
+                    Toast.makeText(context,"¿Probamos otra red social?",Toast.LENGTH_LONG).show()
                 }
 
                 override fun onError(error: FacebookException) {
@@ -207,12 +208,10 @@ fun SignUpByMail(
 
     val context = LocalContext.current
 
+    val uiState by signUpViewModel.uiState.collectAsState()
+
     var user by rememberSaveable {
         mutableStateOf("")
-    }
-
-    var isError by rememberSaveable {
-        mutableStateOf(false)
     }
 
     var password by rememberSaveable {
@@ -226,20 +225,25 @@ fun SignUpByMail(
     TextField(
         label = { Text(text="Usuario") },
         value = user,
-        isError = isError,
+        isError = !uiState.isEmailValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email
         ),
         onValueChange = {
-            if(signUpViewModel.isEmail(it)){
-                isError = false
-            } else {
-                isError = true
-            }
+            signUpViewModel.isEmailValid(it)
             user = it
         },
         singleLine = true,
-        maxLines = 1
+        maxLines = 1,
+        modifier = Modifier.semantics {
+            contentDescription = "Campo de correo electrónico"
+            if (!uiState.isEmailValid && uiState.emailError != null) {
+                stateDescription = uiState.emailError!!
+            }
+        },
+        supportingText = if (!uiState.isEmailValid && uiState.emailError != null) {
+            { Text(uiState.emailError!!, color = MaterialTheme.colorScheme.error) }
+        } else null
     )
 
     Spacer(modifier = Modifier.height(10.dp))
@@ -247,10 +251,14 @@ fun SignUpByMail(
     TextField(
         label = { Text(text = "Contraseña") },
         value = password,
+        isError = !uiState.isPasswordValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password
         ),
-        onValueChange = {password = it},
+        onValueChange = {
+            signUpViewModel.isPasswordValid(it)
+            password = it
+        },
         singleLine = true,
         maxLines = 1,
         trailingIcon = {
@@ -260,14 +268,23 @@ fun SignUpByMail(
                 Icons.Filled.Visibility
             }
             IconButton(onClick = { passwordVisibility = !passwordVisibility }) {
-                Icon(imageVector = image, contentDescription = "Show password")
+                Icon(imageVector = image, contentDescription = "Mostrar contraseña")
             }
         },
         visualTransformation = if(passwordVisibility){
             VisualTransformation.None
         } else {
             PasswordVisualTransformation()
-        }
+        },
+        modifier = Modifier.semantics {
+            contentDescription = "Campo de contraseña"
+            if (!uiState.isPasswordValid && uiState.passwordError != null) {
+                stateDescription = uiState.passwordError!!
+            }
+        },
+        supportingText = if (!uiState.isPasswordValid && uiState.passwordError != null) {
+            { Text(uiState.passwordError!!, color = MaterialTheme.colorScheme.error) }
+        } else null
     )
 
     Spacer(modifier = Modifier.height(10.dp))
@@ -275,13 +292,9 @@ fun SignUpByMail(
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
         Button(
             onClick = {
-                if(isError){
-                    Toast.makeText(context, "El usuario introducido debe ser un email",Toast.LENGTH_LONG).show()
-                } else {
-                    onSignUpEmail(user, password)
-                }
+                onSignUpEmail(user, password)
             },
-            enabled = ( user != null && password.length >= 6 ),
+            enabled = ( uiState.isEmailValid && uiState.isPasswordValid ),
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .width(250.dp)

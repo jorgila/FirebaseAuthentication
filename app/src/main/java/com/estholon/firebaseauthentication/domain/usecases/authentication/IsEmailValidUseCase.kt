@@ -9,7 +9,7 @@ class IsEmailValidUseCase @Inject constructor(
 
     operator fun invoke( email : String ) : Result<Unit> {
         return when {
-            email.isEmpty() -> Result.failure(Exception("El email esta vacío"))
+            email.isEmpty() -> Result.failure(Exception("El email es requerido"))
             !Patterns.EMAIL_ADDRESS.matcher( email ).matches() -> Result.failure(Exception("El formato del email no es válido"))
             else -> Result.success(Unit)
         }

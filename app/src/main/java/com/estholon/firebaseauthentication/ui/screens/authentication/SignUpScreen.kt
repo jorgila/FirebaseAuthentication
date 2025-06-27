@@ -8,6 +8,7 @@ import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -37,11 +39,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -176,10 +186,16 @@ fun SignUpScreen(
     }
 
     if(uiState.isLoading){
-        Box(modifier = Modifier.fillMaxSize()){
+        Box(modifier = Modifier.fillMaxSize().semantics {
+            contentDescription = "Creando cuenta, por favor espere"
+            liveRegion = LiveRegionMode.Polite
+        }){
             CircularProgressIndicator(modifier = Modifier
                 .size(100.dp)
-                .align(Alignment.Center))
+                .align(Alignment.Center)
+                .semantics {
+                    contentDescription = "Cargando"
+                })
         }
     }
 }
@@ -208,6 +224,9 @@ fun SignUpByMail(
 
     val context = LocalContext.current
 
+    val focusManager = LocalFocusManager.current
+    val hapticFeedback = LocalHapticFeedback.current
+
     val uiState by signUpViewModel.uiState.collectAsState()
 
     var user by rememberSaveable {
@@ -227,7 +246,11 @@ fun SignUpByMail(
         value = user,
         isError = !uiState.isEmailValid,
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Email
+            keyboardType = KeyboardType.Email,
+            imeAction = ImeAction.Next
+        ),
+        keyboardActions = KeyboardActions(
+            onNext = { focusManager.moveFocus(FocusDirection.Down)}
         ),
         onValueChange = {
             signUpViewModel.isEmailValid(it)
@@ -253,12 +276,19 @@ fun SignUpByMail(
         value = password,
         isError = !uiState.isPasswordValid,
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Password
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done
         ),
         onValueChange = {
             signUpViewModel.isPasswordValid(it)
             password = it
         },
+        keyboardActions = KeyboardActions(
+            onDone = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                onSignUpEmail(user,password)
+            }
+        ),
         singleLine = true,
         maxLines = 1,
         trailingIcon = {
@@ -292,6 +322,7 @@ fun SignUpByMail(
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
         Button(
             onClick = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 onSignUpEmail(user, password)
             },
             enabled = ( uiState.isEmailValid && uiState.isPasswordValid ),
@@ -299,6 +330,12 @@ fun SignUpByMail(
             modifier = Modifier
                 .width(250.dp)
                 .height(50.dp)
+                .semantics {
+                    contentDescription = "Crear cuenta con correo electrónico"
+                    if(!uiState.isEmailValid && !uiState.isPasswordValid){
+                        disabled()
+                    }
+                }
         ) {
             Text(text = "Crear Cuenta".uppercase())
         }

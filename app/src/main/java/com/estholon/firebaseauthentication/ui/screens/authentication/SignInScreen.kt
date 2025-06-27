@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -36,11 +37,21 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -177,10 +188,16 @@ fun SignInScreen(
     }
 
     if(uiState.isLoading){
-        Box(modifier = Modifier.fillMaxSize()){
+        Box(modifier = Modifier.fillMaxSize().semantics {
+            contentDescription = "Iniciando sesión, por favor espere"
+            liveRegion = LiveRegionMode.Polite
+        }){
             CircularProgressIndicator(modifier = Modifier
                 .size(100.dp)
-                .align(Alignment.Center))
+                .align(Alignment.Center)
+                .semantics {
+                    contentDescription = "Cargando"
+                })
         }
     }
 
@@ -210,6 +227,8 @@ fun SignInByMail(
 ){
 
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val hapticFeedback = LocalHapticFeedback.current
 
     var user by rememberSaveable {
         mutableStateOf("")
@@ -230,7 +249,11 @@ fun SignInByMail(
         value = user,
         isError = !uiState.isEmailValid,
         keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Email
+            keyboardType = KeyboardType.Email,
+            imeAction = ImeAction.Next
+        ),
+        keyboardActions = KeyboardActions(
+            onNext = { focusManager.moveFocus(FocusDirection.Down)}
         ),
         onValueChange = {
             signInViewModel.isEmailValid(it)
@@ -254,14 +277,21 @@ fun SignInByMail(
     TextField(
         label = { Text(text = "Contraseña") },
         value = password,
-        isError = !uiState.isPasswordValid,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Password
-        ),
         onValueChange = {
             signInViewModel.isPasswordValid(it)
             password = it
         },
+        isError = !uiState.isPasswordValid,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Password,
+            imeAction = ImeAction.Done
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                onSignInEmail(user, password)
+            }
+        ),
         singleLine = true,
         maxLines = 1,
         trailingIcon = {
@@ -295,17 +325,20 @@ fun SignInByMail(
     Box(modifier = Modifier.padding(40.dp, 0.dp, 40.dp, 0.dp)) {
         Button(
             onClick = {
-                if(!uiState.isEmailValid){
-                    Toast.makeText(context, uiState.error,Toast.LENGTH_LONG).show()
-                } else {
-                    onSignInEmail(user, password)
-                }
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                onSignInEmail(user, password)
             },
             enabled = (uiState.isEmailValid && uiState.isPasswordValid),
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .width(250.dp)
                 .height(50.dp)
+                .semantics {
+                    contentDescription = "Iniciar sesión con correo electrónico"
+                    if(!uiState.isEmailValid && !uiState.isPasswordValid){
+                        disabled()
+                    }
+                }
         ) {
             Text(text = "Iniciar Sesión".uppercase())
         }
@@ -330,54 +363,94 @@ fun OtherMethods(
     onTwitterSignIn : () -> Unit,
     onYahooSignIn : () -> Unit
 ){
+
+    val hapticFeedback = LocalHapticFeedback.current
+
     Text(text = "Otros métodos")
     Spacer(modifier = Modifier.height(30.dp))
     Column {
         Row {
             FloatingActionButton(
-                onClick = { onPhoneSignIn() }
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onPhoneSignIn()
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .semantics {
+                    contentDescription = "Iniciar sesión o crear cuenta con el teléfono"
+                    role = Role.Button
+                }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_phone),
-                    contentDescription = "Phone",
+                    contentDescription = null,
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(45.dp)
                         .padding(8.dp)
                 )
             }
             Spacer(modifier = Modifier.width(20.dp))
             FloatingActionButton(
-                onClick = { onGoogleSignIn() }
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onGoogleSignIn()
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .semantics {
+                    contentDescription = "Iniciar sesión o crear cuenta con Google"
+                    role = Role.Button
+                }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_google),
-                    contentDescription = "Google",
+                    contentDescription = null,
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(45.dp)
                         .padding(8.dp)
                 )
             }
             Spacer(modifier = Modifier.width(20.dp))
             FloatingActionButton(
-                onClick = { onFacebookSignIn() }
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onFacebookSignIn()
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .semantics {
+                    contentDescription = "Iniciar sesión o crear cuenta con Facebook"
+                    role = Role.Button
+                }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_fb),
-                    contentDescription = "Facebook",
+                    contentDescription = null,
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(45.dp)
                         .padding(8.dp)
+
                 )
             }
             Spacer(modifier = Modifier.width(20.dp))
             FloatingActionButton(
-                onClick = { onGitHubSignIn() }
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onGitHubSignIn()
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .semantics {
+                    contentDescription = "Iniciar sesión o crear cuenta con GitHub"
+                    role = Role.Button
+                }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_github),
-                    contentDescription = "GitHub",
+                    contentDescription = null,
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(45.dp)
                         .padding(8.dp)
                 )
             }
@@ -386,51 +459,85 @@ fun OtherMethods(
         Spacer(modifier = Modifier.height(30.dp))
         Row {
             FloatingActionButton(
-                onClick = { onMicrosoftSignIn() }
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onMicrosoftSignIn()
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .semantics {
+                    contentDescription = "Iniciar sesión o crear cuenta con Microsoft"
+                    role = Role.Button
+                }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_microsoft),
-                    contentDescription = "Microsoft",
+                    contentDescription = null,
                     modifier = Modifier
-                        .size(50.dp)
-                        .padding(8.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(20.dp))
-            FloatingActionButton(
-                onClick = { onTwitterSignIn() }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_twitter),
-                    contentDescription = "Twitter",
-                    modifier = Modifier
-                        .size(50.dp)
-                        .padding(8.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(20.dp))
-            FloatingActionButton(
-                onClick = { onYahooSignIn() }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_yahoo),
-                    contentDescription = "Yahoo",
-                    modifier = Modifier
-                        .size(50.dp)
+                        .size(45.dp)
                         .padding(8.dp)
                 )
             }
             Spacer(modifier = Modifier.width(20.dp))
             FloatingActionButton(
                 onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onTwitterSignIn()
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .semantics {
+                    contentDescription = "Iniciar sesión o crear cuenta con Twitter"
+                    role = Role.Button
+                }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_twitter),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(45.dp)
+                        .padding(8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+            FloatingActionButton(
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onYahooSignIn()
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .semantics {
+                    contentDescription = "Iniciar sesión o crear cuenta con Yahoo"
+                    role = Role.Button
+                }
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_yahoo),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(45.dp)
+                        .padding(8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(20.dp))
+            FloatingActionButton(
+                onClick = {
+                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                     onAnonymously()
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .semantics {
+                    contentDescription = "Iniciar sesión con Anonymously"
+                    role = Role.Button
                 }
             ) {
                 Icon(
                     painter = painterResource(id = R.drawable.ic_anonymously),
-                    contentDescription = "Anonymously",
+                    contentDescription = null,
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(45.dp)
                         .padding(8.dp)
                 )
             }

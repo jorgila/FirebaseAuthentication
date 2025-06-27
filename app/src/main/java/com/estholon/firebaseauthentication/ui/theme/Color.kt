@@ -19,3 +19,6 @@ val Orange1 = Color(0xFFF1701F)
 val Orange2 = Color(0xFFFDC33F)
 val Accent = Color(0xFFFFFFFF)
 val BlueLink = Color(0xFF00B3FF)
+
+val Purple = Color(0xFF6200EE)
+val Red = Color(0xFFB00020)

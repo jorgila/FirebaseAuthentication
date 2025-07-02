@@ -30,6 +30,11 @@ class AuthenticationRepositoryImpl @Inject constructor(
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
+    override suspend fun linkEmail(email: String, password: String): Result<UserModel?> {
+        return authenticationDataSource.linkEmail(email, password)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
     override suspend fun signInAnonymously(): Result<UserModel?> {
         return authenticationDataSource.signInAnonymously()
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }

@@ -109,6 +109,37 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         }
     }
 
+    //// LINK
+
+    override suspend fun linkEmail(email: String, password: String): Result<UserDto?> {
+        return suspendCancellableCoroutine { cancellableContinuation ->
+            val currentUser = getCurrentUser()
+            if (currentUser == null) {
+                val result = Result.failure<UserDto?>(Exception("No hay usuario autenticado"))
+                cancellableContinuation.resume(result)
+                return@suspendCancellableCoroutine
+            }
+
+            // Create credential of email and password
+            val credential = com.google.firebase.auth.EmailAuthProvider.getCredential(email, password)
+
+            // Link credential to current user
+            currentUser.linkWithCredential(credential)
+                .addOnSuccessListener { authResult ->
+                    val result = if (authResult.user != null) {
+                        Result.success(authResult.user!!.toUserDto())
+                    } else {
+                        Result.failure(Exception("Error al vincular cuenta de email"))
+                    }
+                    cancellableContinuation.resume(result)
+                }
+                .addOnFailureListener { exception ->
+                    val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
+                    cancellableContinuation.resume(result)
+                }
+        }
+    }
+
     // ANONYMOUSLY
 
     //// SIGN IN & SIGN UP

@@ -54,7 +54,8 @@ class SignUpViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState : StateFlow<SignUpUiState> get() = _uiState.asStateFlow()
 
-    // Check to see if the text entered is an email
+    // EMAIL VALIDATOR
+
     fun isEmailValid(email: String) {
         val result = isEmailValidUseCase(email)
         result.fold(
@@ -75,6 +76,8 @@ class SignUpViewModel @Inject constructor(
             }
         )
     }
+
+    // PASSWORD VALIDATOR
 
     fun isPasswordValid(password: String) {
         val result = isPasswordValidUseCase(password)

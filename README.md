@@ -9,11 +9,11 @@ Una aplicación Android nativa avanzada para autenticarse con Firebase con cualq
 ## Screenshots
 
   <div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; padding: 20px;">
-      <img src="https://imgur.com/a/uo6Vf3r.png" alt="Imagen 1" style="width: 150px; height: 300px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-      <img src="https://imgur.com/a/zNzVLtm.png" alt="Imagen 1" style="width: 150px; height: 300px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-      <img src="https://imgur.com/a/3f7AmQ7.png" alt="Imagen 1" style="width: 150px; height: 300px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-      <img src="https://imgur.com/a/jynBufw.png" alt="Imagen 1" style="width: 150px; height: 300px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-      <img src="https://imgur.com/a/iJC1p17.png" alt="Imagen 1" style="width: 150px; height: 300px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <img src="https://imgur.com/uo6Vf3r.png" alt="Imagen 1" style="width: 150px; height: 300px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <img src="https://imgur.com/zNzVLtm.png" alt="Imagen 1" style="width: 150px; height: 300px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <img src="https://imgur.com/3f7AmQ7.png" alt="Imagen 1" style="width: 150px; height: 300px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <img src="https://imgur.com/jynBufw.png" alt="Imagen 1" style="width: 150px; height: 300px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+      <img src="https://imgur.com/iJC1p17.png" alt="Imagen 1" style="width: 150px; height: 300px; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
 
   </div>
 

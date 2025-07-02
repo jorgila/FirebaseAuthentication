@@ -17,3 +17,45 @@ Una aplicación Android nativa avanzada para autenticarse con Firebase con cualq
 
   </div>
 
+## Características Principales
+
+📱 Autenticación
+
+* Sistema de autenticacion seguro
+* Registro e inicio de sesión por Email y Contraseña
+* Registro e inicio de sesión por Teléfono
+* Registro e inicio de sesión por Google
+* Registro e inicio de sesión por Facebook
+* Registro e inicio de sesión por GitHub
+* Registro e inicio de sesión por Microsoft
+* Registro e inicio de sesión por Twitter
+* Registro e inicio de sesión por Yahoo
+* Registro e inicio de sesión anónimo
+* Sistema de restablecimiento de contraseña
+* Vinculación de otras cuentas
+
+## Technology Stack
+
+<div style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; padding: 20px;">
+
+<img src="https://img.shields.io/badge/Kotlin-8A2BE2">
+<img src="https://img.shields.io/badge/Jetpack%20Compose-8A2BE2">
+<img src="https://img.shields.io/badge/Material%203-8A2BE2">
+
+<img src="https://img.shields.io/badge/MVVM-8A2BE2">
+<img src="https://img.shields.io/badge/Clean%20Architecture-8A2BE2">
+<img src="https://img.shields.io/badge/Repository%20Pattern-8A2BE2">
+<img src="https://img.shields.io/badge/Domain%20Pattern-8A2BE2">
+<img src="https://img.shields.io/badge/Hilt%20Dagger-8A2BE2">
+
+<img src="https://img.shields.io/badge/Kotlin%20Coroutines-8A2BE2">
+<img src="https://img.shields.io/badge/StateFlow-8A2BE2">
+<img src="https://img.shields.io/badge/Kotlin%20Gradle%20DSL-8A2BE2">
+  
+<img src="https://img.shields.io/badge/Firebase-8A2BE2">
+<img src="https://img.shields.io/badge/Authentication-8A2BE2">  
+<img src="https://img.shields.io/badge/Crashlytics-8A2BE2">
+
+<img src="https://img.shields.io/badge/Claude%20AI-8A2BE2">
+
+</div>

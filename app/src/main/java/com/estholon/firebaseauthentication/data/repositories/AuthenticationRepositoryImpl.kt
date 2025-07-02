@@ -7,7 +7,7 @@ import com.estholon.firebaseauthentication.data.mapper.UserMapper
 import com.estholon.firebaseauthentication.domain.models.UserModel
 import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
 import com.facebook.AccessToken
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.PhoneAuthProvider
 import javax.inject.Inject
 
@@ -107,6 +107,11 @@ class AuthenticationRepositoryImpl @Inject constructor(
 
     override suspend fun clearCredentialState() {
         return authenticationDataSource.clearCredentialState()
+    }
+
+    override suspend fun linkGoogle(activity: Activity): Result<UserModel?> {
+        return authenticationDataSource.linkGoogle(activity)
+            .map { dto -> dto?.let{ userMapper.userDtoToDomain(it) } }
     }
 
 }

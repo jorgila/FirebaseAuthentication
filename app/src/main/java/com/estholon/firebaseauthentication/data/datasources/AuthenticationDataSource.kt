@@ -32,6 +32,8 @@ interface AuthenticationDataSource {
     suspend fun signInGoogle(activity: Activity) : Result<UserDto?>
     suspend fun handleCredentialResponse(result: GetCredentialResponse):Result<UserDto?>
     suspend fun clearCredentialState()
+    suspend fun linkGoogle( activity: Activity ) : Result<UserDto?>
+
     // FACEBOOK
     suspend fun signInFacebook(accessToken: AccessToken) : Result<UserDto?>
     // GITHUB

@@ -273,7 +273,7 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         }
     }
 
-    override suspend fun handleCredentialResponse(result: GetCredentialResponse): Result<UserDto?> {
+    override suspend fun handleCredentialResponse(result: GetCredentialResponse) : Result<UserDto?> {
         val credential = result.credential
 
         return when (credential) {
@@ -318,6 +318,138 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         return completeRegisterWithCredential(credential)
     }
+
+    override suspend fun linkGoogle(activity: Activity): Result<UserDto?> {
+        return try {
+            val currentUser = getCurrentUser()
+            if (currentUser == null) {
+                return Result.failure(Exception("No hay usuario autenticado"))
+            }
+
+            val nonce = generateNonce()
+
+            // Try with allowed accounts
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(true)
+                .setServerClientId(context.getString(R.string.default_web_client_id))
+                .setAutoSelectEnabled(false) // No auto-seleccionar para permitir elegir cuenta
+                .setNonce(nonce)
+                .build()
+
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+
+            try {
+                val result = credentialManager.getCredential(
+                    request = request,
+                    context = activity
+                )
+                handleCredentialResponseForLinking(result, currentUser)
+            } catch (e: GetCredentialException) {
+                // Try with all accounts
+                linkWithCredentialManagerAllAccounts(activity, currentUser, nonce)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error en linkGoogle", e)
+            Result.failure(Exception("Error al vincular con Google: ${e.message}"))
+        }
+    }
+
+    private suspend fun linkWithCredentialManagerAllAccounts(
+        activity: Activity,
+        currentUser: FirebaseUser,
+        nonce: String
+    ): Result<UserDto?> {
+        return try {
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false) // Permitir todas las cuentas
+                .setServerClientId(context.getString(R.string.default_web_client_id))
+                .setNonce(nonce)
+                .build()
+
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+
+            val result = credentialManager.getCredential(
+                request = request,
+                context = activity
+            )
+            handleCredentialResponseForLinking(result, currentUser)
+        } catch (e: GetCredentialException) {
+            Result.failure(Exception("Error al vincular con Google: ${e.message}"))
+        }
+    }
+
+    private suspend fun handleCredentialResponseForLinking(
+        result: GetCredentialResponse,
+        currentUser: FirebaseUser
+    ): Result<UserDto?> {
+        val credential = result.credential
+
+        return when (credential) {
+            is CustomCredential -> {
+                if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                    try {
+                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                        val idToken = googleIdTokenCredential.idToken
+
+                        val userInfo = """
+                            ID: ${googleIdTokenCredential.id}
+                            Name: ${googleIdTokenCredential.displayName}
+                            Email: ${googleIdTokenCredential.givenName}
+                        """.trimIndent()
+                        Log.d(TAG, "Vinculando usuario de Google: $userInfo")
+
+                        linkWithGoogleIdToken(currentUser, idToken)
+
+                    } catch (e: GoogleIdTokenParsingException) {
+                        Result.failure(Exception("Token de Google inválido"))
+                    }
+                } else {
+                    Result.failure(Exception("Tipo de credencial no soportada para vinculación"))
+                }
+            }
+            else -> {
+                Result.failure(Exception("Tipo de credencial no reconocida para vinculación"))
+            }
+        }
+    }
+
+    private suspend fun linkWithGoogleIdToken(currentUser: FirebaseUser, idToken: String): Result<UserDto?> {
+        return suspendCancellableCoroutine { cancellableContinuation ->
+            // Create credential with token
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+
+            // Link credential to current user
+            currentUser.linkWithCredential(credential)
+                .addOnSuccessListener { authResult ->
+                    val result = if (authResult.user != null) {
+                        Log.d(TAG, "Cuenta de Google vinculada exitosamente")
+                        Result.success(authResult.user!!.toUserDto())
+                    } else {
+                        Result.failure(Exception("Error al vincular cuenta de Google"))
+                    }
+                    cancellableContinuation.resume(result)
+                }
+                .addOnFailureListener { exception ->
+                    Log.e(TAG, "Error al vincular con Google", exception)
+                    val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
+                    cancellableContinuation.resume(result)
+                }
+        }
+    }
+
+    // Additional method to link with token
+    suspend fun linkWithGoogleIdTokenDirect(idToken: String): Result<UserDto?> {
+        val currentUser = getCurrentUser()
+        if (currentUser == null) {
+            return Result.failure(Exception("No hay usuario autenticado"))
+        }
+        return linkWithGoogleIdToken(currentUser, idToken)
+    }
+
 
     // SIGN IN FACEBOOK
 

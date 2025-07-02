@@ -1,6 +1,8 @@
 package com.estholon.firebaseauthentication.ui.screens.home
 
+import android.app.Activity
 import android.widget.Toast
+import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,7 +61,7 @@ fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
     navController: NavHostController
 ){
-
+    val activity = LocalActivity.current!!
     val context = LocalContext.current
     val uiState by homeViewModel.uiState.collectAsState()
 
@@ -88,7 +90,8 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(30.dp))
 
             LinkWithOtherMethods(
-                onGoogleLink = { homeViewModel.onLinkWithGoogle(
+                onGoogleLink = { homeViewModel.onLinkGoogle(
+                    activity = activity,
                     communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
                     communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
                 ) },

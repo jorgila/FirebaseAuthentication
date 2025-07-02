@@ -36,6 +36,7 @@ interface AuthenticationRepository {
     suspend fun signInGoogle(activity: Activity) : Result<UserModel?>
     suspend fun handleCredentialResponse(result: GetCredentialResponse):Result<UserModel?>
     suspend fun clearCredentialState()
+    suspend fun linkGoogle(activity: Activity): Result<UserModel?>
 
     // FACEBOOK
     suspend fun signInFacebook(accessToken: AccessToken) : Result<UserModel?>

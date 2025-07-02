@@ -1,5 +1,5 @@
 <div align="center">
-<h1 align="center">📱 Firebase Authentication</h1>
+<h1 align="center">🔐 Firebase Authentication</h1>
 </div>
 
 ## Descripción

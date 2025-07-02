@@ -4,7 +4,7 @@
 
 ## Descripción
 
-Una aplicación Android nativa avanzada para autenticarse con Firebase con cualquier proveedor ya sea con un teléfono, con Google, con Facebook, con GitHub, con Windows, con Twitter, con Yahoo o de forma incognita. Con la posibilidad de vincular una vez logeado las distintas cuentas.
+Una aplicación Android nativa avanzada para autenticarse con Firebase con cualquier proveedor ya sea con un teléfono, con Google, con Facebook, con GitHub, con Windows, con Twitter, con Yahoo o de forma incognita. Con la posibilidad de vincular una vez logeado las distintas cuentas para iniciar sesión con otro tipo de cuenta.
 
 ## Screenshots
 

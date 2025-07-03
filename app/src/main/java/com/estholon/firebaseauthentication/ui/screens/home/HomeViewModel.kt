@@ -222,7 +222,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun onLinkWithGitHub(
+    fun onLinkGitHub(
         communicateSuccess: () -> Unit,
         communicateError: () -> Unit
     ) {
@@ -238,7 +238,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun onLinkWithMicrosoft(
+    fun onLinkMicrosoft(
         communicateSuccess: () -> Unit,
         communicateError: () -> Unit
     ) {
@@ -254,7 +254,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun onLinkWithTwitter(
+    fun onLinkTwitter(
         communicateSuccess: () -> Unit,
         communicateError: () -> Unit
     ) {
@@ -270,7 +270,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun onLinkWithYahoo(
+    fun onLinkYahoo(
         communicateSuccess: () -> Unit,
         communicateError: () -> Unit
     ) {

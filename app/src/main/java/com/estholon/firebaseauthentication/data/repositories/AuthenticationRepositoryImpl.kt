@@ -110,10 +110,20 @@ class AuthenticationRepositoryImpl @Inject constructor(
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
+    override suspend fun linkGitHub(activity: Activity): Result<UserModel?> {
+        return authenticationDataSource.linkGitHub(activity)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
     // MICROSOFT
 
     override suspend fun signInMicrosoft(activity: Activity): Result<UserModel?> {
         return authenticationDataSource.signInMicrosoft(activity)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
+    override suspend fun linkMicrosoft(activity: Activity): Result<UserModel?> {
+        return authenticationDataSource.linkMicrosoft(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
@@ -124,10 +134,20 @@ class AuthenticationRepositoryImpl @Inject constructor(
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
+    override suspend fun linkTwitter(activity: Activity): Result<UserModel?> {
+        return authenticationDataSource.linkTwitter(activity)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
     // YAHOO
 
     override suspend fun signInYahoo(activity: Activity): Result<UserModel?> {
         return authenticationDataSource.signInYahoo(activity)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
+    override suspend fun linkYahoo(activity: Activity): Result<UserModel?> {
+        return authenticationDataSource.linkYahoo(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 

@@ -498,6 +498,20 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         return initRegisterWithProvider(activity,provider)
     }
 
+    // LINK WITH GITHUB
+    override suspend fun linkGitHub(activity: Activity): Result<UserDto?> {
+        val currentUser = getCurrentUser()
+        if (currentUser == null) {
+            return Result.failure(Exception("No hay usuario autenticado"))
+        }
+
+        val provider = OAuthProvider.newBuilder("github.com").apply {
+            scopes = listOf("user:email")
+        }.build()
+
+        return initLinkWithProvider(activity, provider, currentUser)
+    }
+
     // SIGN IN MICROSOFT
 
     override suspend fun signInMicrosoft(activity: Activity): Result<UserDto?> {
@@ -507,6 +521,20 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         return initRegisterWithProvider(activity,provider)
     }
 
+    // LINK WITH MICROSOFT
+    override suspend fun linkMicrosoft(activity: Activity): Result<UserDto?> {
+        val currentUser = getCurrentUser()
+        if (currentUser == null) {
+            return Result.failure(Exception("No hay usuario autenticado"))
+        }
+
+        val provider = OAuthProvider.newBuilder("microsoft.com").apply {
+            scopes = listOf("mail.read", "calendars.read")
+        }.build()
+
+        return initLinkWithProvider(activity, provider, currentUser)
+    }
+
     // SIGN IN TWITTER
 
     override suspend fun signInTwitter(activity: Activity): Result<UserDto?> {
@@ -514,11 +542,35 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         return initRegisterWithProvider(activity,provider)
     }
 
+    // LINK WITH TWITTER
+    override suspend fun linkTwitter(activity: Activity): Result<UserDto?> {
+        val currentUser = getCurrentUser()
+        if (currentUser == null) {
+            return Result.failure(Exception("No hay usuario autenticado"))
+        }
+
+        val provider = OAuthProvider.newBuilder("twitter.com").build()
+
+        return initLinkWithProvider(activity, provider, currentUser)
+    }
+
     // SIGN IN YAHOO
 
     override suspend fun signInYahoo(activity: Activity): Result<UserDto?> {
         val provider = OAuthProvider.newBuilder("yahoo.com").build()
         return initRegisterWithProvider(activity,provider)
+    }
+
+    // LINK WITH YAHOO
+    override suspend fun linkYahoo(activity: Activity): Result<UserDto?> {
+        val currentUser = getCurrentUser()
+        if (currentUser == null) {
+            return Result.failure(Exception("No hay usuario autenticado"))
+        }
+
+        val provider = OAuthProvider.newBuilder("yahoo.com").build()
+
+        return initLinkWithProvider(activity, provider, currentUser)
     }
 
     // SIGN OUT OR LOGOUT
@@ -629,5 +681,79 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         random.nextBytes(bytes)
         return bytes.joinToString("") { "%02x".format(it) }
     }
+
+    // AUXILIARY METHOD TO LINK WITH PROVIDERS OAUTH
+    private suspend fun initLinkWithProvider(
+        activity: Activity,
+        provider: OAuthProvider,
+        currentUser: FirebaseUser
+    ): Result<UserDto?> {
+        return suspendCancellableCoroutine { cancellableContinuation ->
+            // Verify if there is a pending result
+            firebaseAuth.pendingAuthResult
+                ?.addOnSuccessListener { authResult ->
+                    // Try to link if there is a pending result
+                    if (authResult.user != null && authResult.credential != null) {
+                        linkCredentialToCurrentUser(currentUser, authResult.credential!!, cancellableContinuation)
+                    } else {
+                        val result = Result.failure<UserDto?>(Exception("Error: resultado de autenticación incompleto"))
+                        cancellableContinuation.resume(result)
+                    }
+                }
+                ?.addOnFailureListener { exception ->
+                    Log.e(TAG, "Error en resultado pendiente", exception)
+                    val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
+                    cancellableContinuation.resume(result)
+                } ?: completeLinkWithProvider(activity, provider, currentUser, cancellableContinuation)
+        }
+    }
+
+    // AUXILIARY METHOD TO COMPLETE LINK WITH PROVIDER
+    private fun completeLinkWithProvider(
+        activity: Activity,
+        provider: OAuthProvider,
+        currentUser: FirebaseUser,
+        cancellableContinuation: CancellableContinuation<Result<UserDto?>>
+    ) {
+        firebaseAuth.startActivityForSignInWithProvider(activity, provider)
+            .addOnSuccessListener { authResult ->
+                if (authResult.user != null && authResult.credential != null) {
+                    // En lugar de crear un nuevo usuario, vincular la credencial al usuario actual
+                    linkCredentialToCurrentUser(currentUser, authResult.credential!!, cancellableContinuation)
+                } else {
+                    val result = Result.failure<UserDto?>(Exception("Error: credencial no disponible"))
+                    cancellableContinuation.resume(result)
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.e(TAG, "Error al vincular con proveedor OAuth", exception)
+                val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
+                cancellableContinuation.resume(result)
+            }
+    }
+
+    // AUXILIARY METHOD TO LINK CREDENTIAL TO CURRENT USER
+    private fun linkCredentialToCurrentUser(
+        currentUser: FirebaseUser,
+        credential: AuthCredential,
+        cancellableContinuation: CancellableContinuation<Result<UserDto?>>
+    ) {
+        currentUser.linkWithCredential(credential)
+            .addOnSuccessListener { authResult ->
+                val result = if (authResult.user != null) {
+                    Log.d(TAG, "Proveedor OAuth vinculado exitosamente")
+                    Result.success(authResult.user!!.toUserDto())
+                } else {
+                    Result.failure(Exception("Error al vincular proveedor OAuth"))
+                }
+                cancellableContinuation.resume(result)
+            }
+            .addOnFailureListener { exception ->
+                Log.e(TAG, "Error al vincular credencial OAuth", exception)
+                val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
+                cancellableContinuation.resume(result)
+            }
+    }
+
 
 }

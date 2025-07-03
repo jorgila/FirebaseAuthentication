@@ -7,6 +7,7 @@ import com.estholon.firebaseauthentication.domain.models.UserModel
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.firebase.auth.PhoneAuthProvider
+import com.google.firebase.firestore.auth.User
 
 interface AuthenticationRepository {
 
@@ -44,15 +45,19 @@ interface AuthenticationRepository {
 
     // GITHUB
     suspend fun signInGitHub(activity: Activity) : Result<UserModel?>
+    suspend fun linkGitHub( activity: Activity ) : Result<UserModel?>
 
     // MICROSOFT
     suspend fun signInMicrosoft(activity: Activity) : Result<UserModel?>
+    suspend fun linkMicrosoft( activity: Activity ) : Result<UserModel?>
 
     // TWITTER
     suspend fun signInTwitter(activity: Activity) : Result<UserModel?>
+    suspend fun linkTwitter( activity: Activity ) : Result<UserModel?>
 
     // YAHOO
     suspend fun signInYahoo(activity: Activity) : Result<UserModel?>
+    suspend fun linkYahoo( activity: Activity ) : Result<UserModel?>
 
     // SIGN OUT
     suspend fun signOut()

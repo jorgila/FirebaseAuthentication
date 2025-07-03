@@ -40,12 +40,20 @@ interface AuthenticationDataSource {
 
     // GITHUB
     suspend fun signInGitHub(activity: Activity) : Result<UserDto?>
+    suspend fun linkGitHub( activity: Activity ) : Result<UserDto?>
+
     // MICROSOFT
     suspend fun signInMicrosoft(activity: Activity) : Result<UserDto?>
+    suspend fun linkMicrosoft( activity: Activity ) : Result<UserDto?>
+
     // TWITTER
     suspend fun signInTwitter(activity: Activity) : Result<UserDto?>
+    suspend fun linkTwitter( activity: Activity ) : Result<UserDto?>
+
     // YAHOO
     suspend fun signInYahoo(activity: Activity) : Result<UserDto?>
+    suspend fun linkYahoo( activity: Activity ) : Result<UserDto?>
+
     // SIGN OUT
     suspend fun signOut()
 

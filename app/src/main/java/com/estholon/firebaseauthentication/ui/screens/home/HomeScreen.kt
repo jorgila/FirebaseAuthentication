@@ -54,7 +54,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.estholon.firebaseauthentication.R
-import com.estholon.firebaseauthentication.ui.navigation.Routes
 import com.estholon.firebaseauthentication.ui.navigation.Routes.*
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
@@ -134,19 +133,19 @@ fun HomeScreen(
                     LoginManager.getInstance()
                         .logInWithReadPermissions(context as ActivityResultRegistryOwner, callbackManager, listOf("email", "public_profile"))
                 },
-                onGitHubLink = { homeViewModel.onLinkWithGitHub(
+                onGitHubLink = { homeViewModel.onLinkGitHub(
                     communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
                     communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
                 ) },
-                onMicrosoftLink = { homeViewModel.onLinkWithMicrosoft(
+                onMicrosoftLink = { homeViewModel.onLinkMicrosoft(
                     communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
                     communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
                 ) },
-                onTwitterLink = { homeViewModel.onLinkWithTwitter(
+                onTwitterLink = { homeViewModel.onLinkTwitter(
                     communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
                     communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
                 ) },
-                onYahooLink = { homeViewModel.onLinkWithYahoo(
+                onYahooLink = { homeViewModel.onLinkYahoo(
                     communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
                     communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
                 ) }

@@ -136,22 +136,22 @@ fun HomeScreen(
                 onGitHubLink = { homeViewModel.onLinkGitHub(
                     activity = activity,
                     communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
-                    communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
+                    communicateError = { Toast.makeText(context,uiState.error,Toast.LENGTH_LONG).show()},
                 ) },
                 onMicrosoftLink = { homeViewModel.onLinkMicrosoft(
                     activity = activity,
                     communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
-                    communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
+                    communicateError = { Toast.makeText(context,uiState.error,Toast.LENGTH_LONG).show()},
                 ) },
                 onTwitterLink = { homeViewModel.onLinkTwitter(
                     activity = activity,
                     communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
-                    communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
+                    communicateError = { Toast.makeText(context,uiState.error,Toast.LENGTH_LONG).show()},
                 ) },
                 onYahooLink = { homeViewModel.onLinkYahoo(
                     activity = activity,
                     communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
-                    communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
+                    communicateError = { Toast.makeText(context,uiState.error,Toast.LENGTH_LONG).show()},
                 ) }
             )
 

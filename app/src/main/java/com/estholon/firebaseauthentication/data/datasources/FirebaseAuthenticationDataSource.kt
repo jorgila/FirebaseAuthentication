@@ -500,16 +500,34 @@ class FirebaseAuthenticationDataSource @Inject constructor(
 
     // LINK WITH GITHUB
     override suspend fun linkGitHub(activity: Activity): Result<UserDto?> {
-        val currentUser = getCurrentUser()
-        if (currentUser == null) {
-            return Result.failure(Exception("No hay usuario autenticado"))
+        return suspendCancellableCoroutine { cancellableContinuation ->
+            val currentUser = getCurrentUser()
+            if (currentUser == null) {
+                val result = Result.failure<UserDto?>(Exception("No hay usuario autenticado"))
+                cancellableContinuation.resume(result)
+                return@suspendCancellableCoroutine
+            }
+
+            val provider = OAuthProvider.newBuilder("github.com").apply {
+                scopes = listOf("user:email")
+            }.build()
+
+            currentUser.startActivityForLinkWithProvider(activity, provider)
+                .addOnSuccessListener { authResult ->
+                    val result = if (authResult.user != null) {
+                        Log.d(TAG, "GitHub vinculado exitosamente")
+                        Result.success(authResult.user!!.toUserDto())
+                    } else {
+                        Result.failure(Exception("Error al vincular cuenta de GitHub"))
+                    }
+                    cancellableContinuation.resume(result)
+                }
+                .addOnFailureListener { exception ->
+                    Log.e(TAG, "Error al vincular con GitHub", exception)
+                    val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
+                    cancellableContinuation.resume(result)
+                }
         }
-
-        val provider = OAuthProvider.newBuilder("github.com").apply {
-            scopes = listOf("user:email")
-        }.build()
-
-        return initLinkWithProvider(activity, provider, currentUser)
     }
 
     // SIGN IN MICROSOFT
@@ -523,16 +541,54 @@ class FirebaseAuthenticationDataSource @Inject constructor(
 
     // LINK WITH MICROSOFT
     override suspend fun linkMicrosoft(activity: Activity): Result<UserDto?> {
-        val currentUser = getCurrentUser()
-        if (currentUser == null) {
-            return Result.failure(Exception("No hay usuario autenticado"))
+        return suspendCancellableCoroutine { cancellableContinuation ->
+            val currentUser = getCurrentUser()
+            if (currentUser == null) {
+                val result = Result.failure<UserDto?>(Exception("No hay usuario autenticado"))
+                cancellableContinuation.resume(result)
+                return@suspendCancellableCoroutine
+            }
+
+            if (isProviderAlreadyLinked("microsoft.com")) {
+                val result = Result.failure<UserDto?>(Exception("Ya tienes una cuenta de Microsoft vinculada"))
+                cancellableContinuation.resume(result)
+                return@suspendCancellableCoroutine
+            }
+
+            val provider = OAuthProvider.newBuilder("microsoft.com").apply {
+                scopes = listOf("mail.read", "calendars.read")
+            }.build()
+
+            currentUser.startActivityForLinkWithProvider(activity, provider)
+                .addOnSuccessListener { authResult ->
+                    val result = if (authResult.user != null) {
+                        Log.d(TAG, "Microsoft vinculado exitosamente")
+                        Result.success(authResult.user!!.toUserDto())
+                    } else {
+                        Result.failure(Exception("Error al vincular cuenta de Microsoft"))
+                    }
+                    cancellableContinuation.resume(result)
+                }
+                .addOnFailureListener { exception ->
+                    Log.e(TAG, "Error al vincular con Microsoft", exception)
+
+                    // Manejo específico de errores comunes
+                    val errorMessage = when {
+                        exception.message?.contains("already in use") == true ->
+                            "Esta cuenta de Microsoft ya está vinculada a otro usuario"
+                        exception.message?.contains("credential-already-in-use") == true ->
+                            "Estas credenciales de Microsoft ya están siendo usadas"
+                        exception.message?.contains("provider-already-linked") == true ->
+                            "Ya tienes una cuenta de Microsoft vinculada"
+                        exception.message?.contains("cancelled") == true ->
+                            "Operación cancelada por el usuario"
+                        else -> exception.message ?: "Error desconocido al vincular cuenta de Microsoft"
+                    }
+
+                    val result = Result.failure<UserDto?>(Exception(errorMessage))
+                    cancellableContinuation.resume(result)
+                }
         }
-
-        val provider = OAuthProvider.newBuilder("microsoft.com").apply {
-            scopes = listOf("mail.read", "calendars.read")
-        }.build()
-
-        return initLinkWithProvider(activity, provider, currentUser)
     }
 
     // SIGN IN TWITTER
@@ -544,14 +600,54 @@ class FirebaseAuthenticationDataSource @Inject constructor(
 
     // LINK WITH TWITTER
     override suspend fun linkTwitter(activity: Activity): Result<UserDto?> {
-        val currentUser = getCurrentUser()
-        if (currentUser == null) {
-            return Result.failure(Exception("No hay usuario autenticado"))
+        return suspendCancellableCoroutine { cancellableContinuation ->
+            val currentUser = getCurrentUser()
+            if (currentUser == null) {
+                val result = Result.failure<UserDto?>(Exception("No hay usuario autenticado"))
+                cancellableContinuation.resume(result)
+                return@suspendCancellableCoroutine
+            }
+
+            if (isProviderAlreadyLinked("twitter.com")) {
+                val result = Result.failure<UserDto?>(Exception("Ya tienes una cuenta de Twitter vinculada"))
+                cancellableContinuation.resume(result)
+                return@suspendCancellableCoroutine
+            }
+
+            val provider = OAuthProvider.newBuilder("twitter.com").build()
+
+            currentUser.startActivityForLinkWithProvider(activity, provider)
+                .addOnSuccessListener { authResult ->
+                    val result = if (authResult.user != null) {
+                        Log.d(TAG, "Twitter vinculado exitosamente")
+                        Result.success(authResult.user!!.toUserDto())
+                    } else {
+                        Result.failure(Exception("Error al vincular cuenta de Twitter"))
+                    }
+                    cancellableContinuation.resume(result)
+                }
+                .addOnFailureListener { exception ->
+                    Log.e(TAG, "Error al vincular con Twitter", exception)
+
+                    // Manejo específico de errores comunes
+                    val errorMessage = when {
+                        exception.message?.contains("already in use") == true ->
+                            "Esta cuenta de Twitter ya está vinculada a otro usuario"
+                        exception.message?.contains("credential-already-in-use") == true ->
+                            "Estas credenciales de Twitter ya están siendo usadas"
+                        exception.message?.contains("provider-already-linked") == true ->
+                            "Ya tienes una cuenta de Twitter vinculada"
+                        exception.message?.contains("cancelled") == true ->
+                            "Operación cancelada por el usuario"
+                        exception.message?.contains("network") == true ->
+                            "Error de conexión. Verifica tu internet e intenta nuevamente"
+                        else -> exception.message ?: "Error desconocido al vincular cuenta de Twitter"
+                    }
+
+                    val result = Result.failure<UserDto?>(Exception(errorMessage))
+                    cancellableContinuation.resume(result)
+                }
         }
-
-        val provider = OAuthProvider.newBuilder("twitter.com").build()
-
-        return initLinkWithProvider(activity, provider, currentUser)
     }
 
     // SIGN IN YAHOO
@@ -563,14 +659,56 @@ class FirebaseAuthenticationDataSource @Inject constructor(
 
     // LINK WITH YAHOO
     override suspend fun linkYahoo(activity: Activity): Result<UserDto?> {
-        val currentUser = getCurrentUser()
-        if (currentUser == null) {
-            return Result.failure(Exception("No hay usuario autenticado"))
+        return suspendCancellableCoroutine { cancellableContinuation ->
+            val currentUser = getCurrentUser()
+            if (currentUser == null) {
+                val result = Result.failure<UserDto?>(Exception("No hay usuario autenticado"))
+                cancellableContinuation.resume(result)
+                return@suspendCancellableCoroutine
+            }
+
+            if (isProviderAlreadyLinked("yahoo.com")) {
+                val result = Result.failure<UserDto?>(Exception("Ya tienes una cuenta de Yahoo vinculada"))
+                cancellableContinuation.resume(result)
+                return@suspendCancellableCoroutine
+            }
+
+            val provider = OAuthProvider.newBuilder("yahoo.com").build()
+
+            currentUser.startActivityForLinkWithProvider(activity, provider)
+                .addOnSuccessListener { authResult ->
+                    val result = if (authResult.user != null) {
+                        Log.d(TAG, "Yahoo vinculado exitosamente")
+                        Result.success(authResult.user!!.toUserDto())
+                    } else {
+                        Result.failure(Exception("Error al vincular cuenta de Yahoo"))
+                    }
+                    cancellableContinuation.resume(result)
+                }
+                .addOnFailureListener { exception ->
+                    Log.e(TAG, "Error al vincular con Yahoo", exception)
+
+                    // Manejo específico de errores comunes
+                    val errorMessage = when {
+                        exception.message?.contains("already in use") == true ->
+                            "Esta cuenta de Yahoo ya está vinculada a otro usuario"
+                        exception.message?.contains("credential-already-in-use") == true ->
+                            "Estas credenciales de Yahoo ya están siendo usadas"
+                        exception.message?.contains("provider-already-linked") == true ->
+                            "Ya tienes una cuenta de Yahoo vinculada"
+                        exception.message?.contains("cancelled") == true ->
+                            "Operación cancelada por el usuario"
+                        exception.message?.contains("network") == true ->
+                            "Error de conexión. Verifica tu internet e intenta nuevamente"
+                        exception.message?.contains("web-context-cancelled") == true ->
+                            "Proceso de autenticación cancelado"
+                        else -> exception.message ?: "Error desconocido al vincular cuenta de Yahoo"
+                    }
+
+                    val result = Result.failure<UserDto?>(Exception(errorMessage))
+                    cancellableContinuation.resume(result)
+                }
         }
-
-        val provider = OAuthProvider.newBuilder("yahoo.com").build()
-
-        return initLinkWithProvider(activity, provider, currentUser)
     }
 
     // SIGN OUT OR LOGOUT
@@ -655,16 +793,6 @@ class FirebaseAuthenticationDataSource @Inject constructor(
             }
     }
 
-    private fun getGoogleClient(): GoogleSignInClient {
-        val gso = GoogleSignInOptions
-            .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(context.getString(R.string.default_web_client_id))
-            .requestEmail()
-            .build()
-
-        return GoogleSignIn.getClient(context,gso)
-    }
-
     override suspend fun clearCredentialState() {
         try {
             val request = ClearCredentialStateRequest()
@@ -682,78 +810,9 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
-    // AUXILIARY METHOD TO LINK WITH PROVIDERS OAUTH
-    private suspend fun initLinkWithProvider(
-        activity: Activity,
-        provider: OAuthProvider,
-        currentUser: FirebaseUser
-    ): Result<UserDto?> {
-        return suspendCancellableCoroutine { cancellableContinuation ->
-            // Verify if there is a pending result
-            firebaseAuth.pendingAuthResult
-                ?.addOnSuccessListener { authResult ->
-                    // Try to link if there is a pending result
-                    if (authResult.user != null && authResult.credential != null) {
-                        linkCredentialToCurrentUser(currentUser, authResult.credential!!, cancellableContinuation)
-                    } else {
-                        val result = Result.failure<UserDto?>(Exception("Error: resultado de autenticación incompleto"))
-                        cancellableContinuation.resume(result)
-                    }
-                }
-                ?.addOnFailureListener { exception ->
-                    Log.e(TAG, "Error en resultado pendiente", exception)
-                    val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
-                    cancellableContinuation.resume(result)
-                } ?: completeLinkWithProvider(activity, provider, currentUser, cancellableContinuation)
-        }
+    private fun isProviderAlreadyLinked(providerId: String): Boolean {
+        val currentUser = getCurrentUser()
+        return currentUser?.providerData?.any { it.providerId == providerId } ?: false
     }
-
-    // AUXILIARY METHOD TO COMPLETE LINK WITH PROVIDER
-    private fun completeLinkWithProvider(
-        activity: Activity,
-        provider: OAuthProvider,
-        currentUser: FirebaseUser,
-        cancellableContinuation: CancellableContinuation<Result<UserDto?>>
-    ) {
-        firebaseAuth.startActivityForSignInWithProvider(activity, provider)
-            .addOnSuccessListener { authResult ->
-                if (authResult.user != null && authResult.credential != null) {
-                    // En lugar de crear un nuevo usuario, vincular la credencial al usuario actual
-                    linkCredentialToCurrentUser(currentUser, authResult.credential!!, cancellableContinuation)
-                } else {
-                    val result = Result.failure<UserDto?>(Exception("Error: credencial no disponible"))
-                    cancellableContinuation.resume(result)
-                }
-            }
-            .addOnFailureListener { exception ->
-                Log.e(TAG, "Error al vincular con proveedor OAuth", exception)
-                val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
-                cancellableContinuation.resume(result)
-            }
-    }
-
-    // AUXILIARY METHOD TO LINK CREDENTIAL TO CURRENT USER
-    private fun linkCredentialToCurrentUser(
-        currentUser: FirebaseUser,
-        credential: AuthCredential,
-        cancellableContinuation: CancellableContinuation<Result<UserDto?>>
-    ) {
-        currentUser.linkWithCredential(credential)
-            .addOnSuccessListener { authResult ->
-                val result = if (authResult.user != null) {
-                    Log.d(TAG, "Proveedor OAuth vinculado exitosamente")
-                    Result.success(authResult.user!!.toUserDto())
-                } else {
-                    Result.failure(Exception("Error al vincular proveedor OAuth"))
-                }
-                cancellableContinuation.resume(result)
-            }
-            .addOnFailureListener { exception ->
-                Log.e(TAG, "Error al vincular credencial OAuth", exception)
-                val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
-                cancellableContinuation.resume(result)
-            }
-    }
-
 
 }

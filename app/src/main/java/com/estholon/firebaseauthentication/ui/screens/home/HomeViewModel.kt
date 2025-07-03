@@ -1,12 +1,17 @@
 package com.estholon.firebaseauthentication.ui.screens.home
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.domain.usecases.authentication.IsEmailValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.IsPasswordValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.LinkEmailUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.LinkFacebookUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.LinkGitHubUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.LinkGoogleUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.LinkMicrosoftUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.LinkTwitterUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.LinkYahooUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignOutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +30,11 @@ class HomeViewModel @Inject constructor(
     private val isPasswordValidUseCase: IsPasswordValidUseCase,
     private val linkEmailUseCase: LinkEmailUseCase,
     private val linkGoogleUseCase: LinkGoogleUseCase,
-    private val linkFacebookUseCase: LinkFacebookUseCase
+    private val linkFacebookUseCase: LinkFacebookUseCase,
+    private val linkGitHubUseCase: LinkGitHubUseCase,
+    private val linkMicrosoftUseCase: LinkMicrosoftUseCase,
+    private val linkYahooUseCase: LinkYahooUseCase,
+    private val linkTwitterUseCase: LinkTwitterUseCase
 ) : ViewModel() {
 
     // UI STATE
@@ -223,6 +232,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onLinkGitHub(
+        activity: Activity,
         communicateSuccess: () -> Unit,
         communicateError: () -> Unit
     ) {
@@ -231,14 +241,37 @@ class HomeViewModel @Inject constructor(
                 isLoading = true
             )
         }
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = false
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = linkGitHubUseCase(activity)
+            result.fold(
+                onSuccess = { userModel ->
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            isLoading = false
+                        )
+                    }
+                    withContext(Dispatchers.Main){
+                        communicateSuccess()
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Error al vincular cuenta de GitHub"
+                        )
+                    }
+                    withContext(Dispatchers.Main){
+                        communicateError()
+                    }
+                }
             )
         }
     }
 
     fun onLinkMicrosoft(
+        activity: Activity,
         communicateSuccess: () -> Unit,
         communicateError: () -> Unit
     ) {
@@ -247,14 +280,37 @@ class HomeViewModel @Inject constructor(
                 isLoading = true
             )
         }
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = false
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = linkMicrosoftUseCase(activity)
+            result.fold(
+                onSuccess = { userModel ->
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            isLoading = false
+                        )
+                    }
+                    withContext(Dispatchers.Main){
+                        communicateSuccess()
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Error al vincular cuenta de Microsoft"
+                        )
+                    }
+                    withContext(Dispatchers.Main){
+                        communicateError()
+                    }
+                }
             )
         }
     }
 
     fun onLinkTwitter(
+        activity: Activity,
         communicateSuccess: () -> Unit,
         communicateError: () -> Unit
     ) {
@@ -263,14 +319,37 @@ class HomeViewModel @Inject constructor(
                 isLoading = true
             )
         }
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = false
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = linkTwitterUseCase(activity)
+            result.fold(
+                onSuccess = { userModel ->
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            isLoading = false
+                        )
+                    }
+                    withContext(Dispatchers.Main){
+                        communicateSuccess()
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Error al vincular cuenta de Twitter"
+                        )
+                    }
+                    withContext(Dispatchers.Main){
+                        communicateError()
+                    }
+                }
             )
         }
     }
 
     fun onLinkYahoo(
+        activity: Activity,
         communicateSuccess: () -> Unit,
         communicateError: () -> Unit
     ) {
@@ -279,9 +358,31 @@ class HomeViewModel @Inject constructor(
                 isLoading = true
             )
         }
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = false
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = linkYahooUseCase(activity)
+            result.fold(
+                onSuccess = { userModel ->
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            isLoading = false
+                        )
+                    }
+                    withContext(Dispatchers.Main){
+                        communicateSuccess()
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Error al vincular cuenta de Yahoo"
+                        )
+                    }
+                    withContext(Dispatchers.Main){
+                        communicateError()
+                    }
+                }
             )
         }
     }

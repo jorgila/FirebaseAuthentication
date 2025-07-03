@@ -40,6 +40,7 @@ interface AuthenticationRepository {
 
     // FACEBOOK
     suspend fun signInFacebook(accessToken: AccessToken) : Result<UserModel?>
+    suspend fun linkFacebook(accessToken: AccessToken): Result<UserModel?>
 
     // GITHUB
     suspend fun signInGitHub(activity: Activity) : Result<UserModel?>

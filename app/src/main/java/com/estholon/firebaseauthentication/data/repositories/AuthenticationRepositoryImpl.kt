@@ -16,9 +16,13 @@ class AuthenticationRepositoryImpl @Inject constructor(
     private val userMapper: UserMapper
 ): AuthenticationRepository {
 
+    // GENERAL FUNCTIONS
+
     override fun isUserLogged(): Boolean {
         return authenticationDataSource.isUserLogged()
     }
+
+    // EMAIL
 
     override suspend fun signUpEmail(email: String, password: String): Result<UserModel?> {
         return authenticationDataSource.signUpEmail( email, password )
@@ -35,10 +39,14 @@ class AuthenticationRepositoryImpl @Inject constructor(
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
+    // SIGN IN ANONYMOUSLY
+
     override suspend fun signInAnonymously(): Result<UserModel?> {
         return authenticationDataSource.signInAnonymously()
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
+
+    // SIGN IN PHONE
 
     override suspend fun signInPhone(
         phoneNumber: String,
@@ -56,6 +64,8 @@ class AuthenticationRepositoryImpl @Inject constructor(
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
+    // SIGN IN GOOGLE
+
     override suspend fun signInGoogleCredentialManager(activity: Activity): Result<UserModel?> {
         return authenticationDataSource.signInGoogleCredentialManager(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
@@ -72,39 +82,6 @@ class AuthenticationRepositoryImpl @Inject constructor(
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
-    override suspend fun signInFacebook(accessToken: AccessToken): Result<UserModel?> {
-        return authenticationDataSource.signInFacebook(accessToken)
-            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
-    }
-
-    override suspend fun signInGitHub(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.signInGitHub(activity)
-            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
-    }
-
-    override suspend fun signInMicrosoft(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.signInMicrosoft(activity)
-            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
-    }
-
-    override suspend fun signInTwitter(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.signInTwitter(activity)
-            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
-    }
-
-    override suspend fun signInYahoo(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.signInYahoo(activity)
-            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
-    }
-
-    override suspend fun signOut() {
-        authenticationDataSource.signOut()
-    }
-
-    override suspend fun resetPassword ( email : String) : Result<Unit> {
-        return authenticationDataSource.resetPassword(email)
-    }
-
     override suspend fun clearCredentialState() {
         return authenticationDataSource.clearCredentialState()
     }
@@ -112,6 +89,58 @@ class AuthenticationRepositoryImpl @Inject constructor(
     override suspend fun linkGoogle(activity: Activity): Result<UserModel?> {
         return authenticationDataSource.linkGoogle(activity)
             .map { dto -> dto?.let{ userMapper.userDtoToDomain(it) } }
+    }
+
+    // FACEBOOK
+
+    override suspend fun signInFacebook(accessToken: AccessToken): Result<UserModel?> {
+        return authenticationDataSource.signInFacebook(accessToken)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
+    override suspend fun linkFacebook(accessToken: AccessToken): Result<UserModel?> {
+        return authenticationDataSource.linkFacebook(accessToken)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
+    // GITHUB
+
+    override suspend fun signInGitHub(activity: Activity): Result<UserModel?> {
+        return authenticationDataSource.signInGitHub(activity)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
+    // MICROSOFT
+
+    override suspend fun signInMicrosoft(activity: Activity): Result<UserModel?> {
+        return authenticationDataSource.signInMicrosoft(activity)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
+    // TWITTER
+
+    override suspend fun signInTwitter(activity: Activity): Result<UserModel?> {
+        return authenticationDataSource.signInTwitter(activity)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
+    // YAHOO
+
+    override suspend fun signInYahoo(activity: Activity): Result<UserModel?> {
+        return authenticationDataSource.signInYahoo(activity)
+            .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
+    }
+
+    // SIGN OUT
+
+    override suspend fun signOut() {
+        authenticationDataSource.signOut()
+    }
+
+    // RESET PASSWORD
+
+    override suspend fun resetPassword ( email : String) : Result<Unit> {
+        return authenticationDataSource.resetPassword(email)
     }
 
 }

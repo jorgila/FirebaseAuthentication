@@ -458,6 +458,37 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         return completeRegisterWithCredential(credential)
     }
 
+    override suspend fun linkFacebook(accessToken: AccessToken): Result<UserDto?> {
+        return suspendCancellableCoroutine { cancellableContinuation ->
+            val currentUser = getCurrentUser()
+            if (currentUser == null) {
+                val result = Result.failure<UserDto?>(Exception("No hay usuario autenticado"))
+                cancellableContinuation.resume(result)
+                return@suspendCancellableCoroutine
+            }
+
+            // Create Facebook credencial with AccessToken
+            val credential = FacebookAuthProvider.getCredential(accessToken.token)
+
+            // Link credential to current user
+            currentUser.linkWithCredential(credential)
+                .addOnSuccessListener { authResult ->
+                    val result = if (authResult.user != null) {
+                        Log.d(TAG, "Cuenta de Facebook vinculada exitosamente")
+                        Result.success(authResult.user!!.toUserDto())
+                    } else {
+                        Result.failure(Exception("Error al vincular cuenta de Facebook"))
+                    }
+                    cancellableContinuation.resume(result)
+                }
+                .addOnFailureListener { exception ->
+                    Log.e(TAG, "Error al vincular con Facebook", exception)
+                    val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
+                    cancellableContinuation.resume(result)
+                }
+        }
+    }
+
     // SIGN IN GITHUB
 
     override suspend fun signInGitHub(activity: Activity): Result<UserDto?> {

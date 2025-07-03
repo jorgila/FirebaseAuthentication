@@ -36,6 +36,8 @@ interface AuthenticationDataSource {
 
     // FACEBOOK
     suspend fun signInFacebook(accessToken: AccessToken) : Result<UserDto?>
+    suspend fun linkFacebook(accessToken: AccessToken) : Result<UserDto?>
+
     // GITHUB
     suspend fun signInGitHub(activity: Activity) : Result<UserDto?>
     // MICROSOFT

@@ -1,8 +1,8 @@
 package com.estholon.firebaseauthentication.ui.screens.home
 
-import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
+import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,7 +54,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.estholon.firebaseauthentication.R
+import com.estholon.firebaseauthentication.ui.navigation.Routes
 import com.estholon.firebaseauthentication.ui.navigation.Routes.*
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
 
 @Composable
 fun HomeScreen(
@@ -64,6 +70,35 @@ fun HomeScreen(
     val activity = LocalActivity.current!!
     val context = LocalContext.current
     val uiState by homeViewModel.uiState.collectAsState()
+
+    lateinit var callbackManager: CallbackManager
+
+    // Facebook
+
+    callbackManager = CallbackManager.Factory.create()
+
+    LoginManager.getInstance()
+        .registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+            override fun onCancel() {
+                Toast.makeText(context,"¿Probamos otra red social?",Toast.LENGTH_LONG).show()
+            }
+
+            override fun onError(error: FacebookException) {
+                Toast.makeText(context,"Ha ocurrido un error: ${error.message}",Toast.LENGTH_LONG).show()
+            }
+
+            override fun onSuccess(result: LoginResult) {
+                homeViewModel.onLinkFacebook(
+                    result.accessToken,
+                    communicateSuccess = { Toast.makeText(context,"Linked Successfully",Toast.LENGTH_LONG).show() },
+                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
+                )
+            }
+
+        })
+
+    // Facebook End
+
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -95,10 +130,10 @@ fun HomeScreen(
                     communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
                     communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
                 ) },
-                onFacebookLink = { homeViewModel.onLinkWithFacebook(
-                    communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
-                    communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
-                ) },
+                onFacebookLink = {
+                    LoginManager.getInstance()
+                        .logInWithReadPermissions(context as ActivityResultRegistryOwner, callbackManager, listOf("email", "public_profile"))
+                },
                 onGitHubLink = { homeViewModel.onLinkWithGitHub(
                     communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
                     communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},

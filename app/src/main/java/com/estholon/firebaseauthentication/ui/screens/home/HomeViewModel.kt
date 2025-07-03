@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.domain.usecases.authentication.IsEmailValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.IsPasswordValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.LinkEmailUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.LinkFacebookUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.LinkGoogleUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.SignOutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +24,8 @@ class HomeViewModel @Inject constructor(
     private val isEmailValidUseCase: IsEmailValidUseCase,
     private val isPasswordValidUseCase: IsPasswordValidUseCase,
     private val linkEmailUseCase: LinkEmailUseCase,
-    private val linkGoogleUseCase: LinkGoogleUseCase
+    private val linkGoogleUseCase: LinkGoogleUseCase,
+    private val linkFacebookUseCase: LinkFacebookUseCase
 ) : ViewModel() {
 
     // UI STATE
@@ -179,7 +181,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun onLinkWithFacebook(
+    // LINK ACCOUNT WITH FACEBOOK
+
+    fun onLinkFacebook(
+        accessToken: com.facebook.AccessToken,
         communicateSuccess: () -> Unit,
         communicateError: () -> Unit
     ) {
@@ -188,9 +193,31 @@ class HomeViewModel @Inject constructor(
                 isLoading = true
             )
         }
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = false
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = linkFacebookUseCase(accessToken)
+            result.fold(
+                onSuccess = { userModel ->
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            isLoading = false
+                        )
+                    }
+                    withContext(Dispatchers.Main){
+                        communicateSuccess()
+                    }
+                },
+                onFailure = { exception ->
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Error al vincular cuenta de Facebook"
+                        )
+                    }
+                    withContext(Dispatchers.Main){
+                        communicateError()
+                    }
+                }
             )
         }
     }

@@ -14,7 +14,6 @@ class SignInAnonymouslyUseCase @Inject constructor(
 
     suspend operator fun invoke() : Result<Unit> {
         return try {
-            withContext(Dispatchers.IO){
                 val result = authenticationRepository.signInAnonymously()
 
                 result.fold(
@@ -35,7 +34,6 @@ class SignInAnonymouslyUseCase @Inject constructor(
                         Result.failure(Exception(exception.message))
                     }
                 )
-            }
         } catch (e: Exception) {
             Result.failure(e)
         }

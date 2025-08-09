@@ -2,6 +2,7 @@ package com.estholon.firebaseauthentication.data.mapper
 
 import com.estholon.firebaseauthentication.data.dtos.UserDto
 import com.estholon.firebaseauthentication.domain.models.UserModel
+import com.google.firebase.auth.FirebaseUser
 
 class UserMapper {
 
@@ -23,3 +24,10 @@ class UserMapper {
         )
     }
 }
+
+fun FirebaseUser.toUserDto() = UserDto(
+    uid = uid,
+    email = email,
+    displayName = displayName,
+    phoneNumber = phoneNumber
+)

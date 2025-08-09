@@ -9,10 +9,6 @@ import com.google.firebase.auth.PhoneAuthProvider
 interface AuthenticationDataSource {
 
     fun isUserLogged() : Boolean
-    // EMAIL
-    suspend fun signUpEmail( email: String, password: String ) : Result<UserDto?>
-    suspend fun signInEmail( email: String, password: String ) : Result<UserDto?>
-    suspend fun linkEmail( email: String, password: String ) : Result<UserDto?>
 
     // ANONYMOUSLY
     suspend fun signInAnonymously() : Result<UserDto?>

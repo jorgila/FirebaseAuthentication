@@ -12,13 +12,12 @@ import androidx.credentials.PasswordCredential
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.GetCredentialException
 import com.estholon.firebaseauthentication.R
+import com.estholon.firebaseauthentication.data.datasources.authentication.EmailAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.dtos.UserDto
 import com.estholon.firebaseauthentication.data.mapper.UserMapper
+import com.estholon.firebaseauthentication.data.mapper.toUserDto
 import com.facebook.AccessToken
 import com.facebook.login.LoginManager
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -42,6 +41,7 @@ import kotlin.coroutines.resume
 
 class FirebaseAuthenticationDataSource @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
+    private val emailAuthenticationDataSource: EmailAuthenticationDataSource,
     private val userMapper: UserMapper,
     @ApplicationContext private val context: Context
 ) : AuthenticationDataSource {
@@ -52,12 +52,7 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         private const val TAG = "FirebaseAuthDS"
     }
 
-    private fun FirebaseUser.toUserDto() = UserDto(
-        uid = uid,
-        email = email,
-        displayName = displayName,
-        phoneNumber = phoneNumber
-    )
+
 
     // USER STATUS
 
@@ -65,79 +60,6 @@ class FirebaseAuthenticationDataSource @Inject constructor(
 
     override fun isUserLogged(): Boolean {
         return getCurrentUser() != null
-    }
-
-    // EMAIL
-
-    //// SIGN UP
-
-    override suspend fun signUpEmail(email: String, password: String) : Result<UserDto?> {
-        return suspendCancellableCoroutine { cancellableContinuation ->
-            firebaseAuth.createUserWithEmailAndPassword(email,password)
-                .addOnSuccessListener {
-                    val result = if (it.user != null) {
-                        Result.success(it.user!!.toUserDto())
-                    } else {
-                        Result.failure(Exception("Error al iniciar sesión"))
-                    }
-                    cancellableContinuation.resume(result)
-                }
-                .addOnFailureListener {
-                    val result = Result.failure<UserDto?>(Exception(it.message.toString()))
-                    cancellableContinuation.resume(result)
-                }
-        }
-    }
-
-    //// SIGN IN
-
-    override suspend fun signInEmail(email: String, password: String): Result<UserDto?> {
-        return suspendCancellableCoroutine { cancellableContinuation ->
-            firebaseAuth.signInWithEmailAndPassword(email,password)
-                .addOnSuccessListener {
-                    val result = if (it.user != null) {
-                        Result.success(it.user!!.toUserDto())
-                    } else {
-                        Result.failure(Exception("Error al iniciar sesión"))
-                    }
-                    cancellableContinuation.resume(result)
-                }
-                .addOnFailureListener {
-                    val result = Result.failure<UserDto?>(Exception(it.message.toString()))
-                    cancellableContinuation.resume(result)
-                }
-        }
-    }
-
-    //// LINK
-
-    override suspend fun linkEmail(email: String, password: String): Result<UserDto?> {
-        return suspendCancellableCoroutine { cancellableContinuation ->
-            val currentUser = getCurrentUser()
-            if (currentUser == null) {
-                val result = Result.failure<UserDto?>(Exception("No hay usuario autenticado"))
-                cancellableContinuation.resume(result)
-                return@suspendCancellableCoroutine
-            }
-
-            // Create credential of email and password
-            val credential = com.google.firebase.auth.EmailAuthProvider.getCredential(email, password)
-
-            // Link credential to current user
-            currentUser.linkWithCredential(credential)
-                .addOnSuccessListener { authResult ->
-                    val result = if (authResult.user != null) {
-                        Result.success(authResult.user!!.toUserDto())
-                    } else {
-                        Result.failure(Exception("Error al vincular cuenta de email"))
-                    }
-                    cancellableContinuation.resume(result)
-                }
-                .addOnFailureListener { exception ->
-                    val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
-                    cancellableContinuation.resume(result)
-                }
-        }
     }
 
     // ANONYMOUSLY
@@ -282,7 +204,7 @@ class FirebaseAuthenticationDataSource @Inject constructor(
             }
 
             is PasswordCredential -> {
-                signInEmail(credential.id, credential.password)
+                emailAuthenticationDataSource.signInEmail(credential.id, credential.password)
             }
 
             is CustomCredential -> {

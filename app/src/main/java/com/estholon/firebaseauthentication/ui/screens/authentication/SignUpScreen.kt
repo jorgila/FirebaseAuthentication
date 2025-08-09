@@ -134,7 +134,9 @@ fun SignUpScreen(
         OtherMethods(
             onPhoneSignIn = {}, //TODO
             onAnonymously = { signUpViewModel.signUpAnonymously(
-                navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                navigateToHome = {
+                    navController.navigate(Routes.HomeScreen.route)
+                },
                 communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
             )
             },

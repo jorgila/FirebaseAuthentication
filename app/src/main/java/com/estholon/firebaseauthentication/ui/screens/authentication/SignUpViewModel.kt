@@ -25,8 +25,12 @@ import com.estholon.firebaseauthentication.domain.usecases.authentication.SignUp
 import com.facebook.AccessToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -53,6 +57,12 @@ class SignUpViewModel @Inject constructor(
     // UI STATE
     private val _uiState = MutableStateFlow(SignUpUiState())
     val uiState : StateFlow<SignUpUiState> get() = _uiState.asStateFlow()
+
+    // JOBS
+    var signUpEmailJob: Job? = null
+    var signUpGoogleJob: Job? = null
+    var signUpFacebookJob: Job? = null
+    var signUpAnonymouslyJob: Job? = null
 
     // EMAIL VALIDATOR
 
@@ -108,7 +118,13 @@ class SignUpViewModel @Inject constructor(
         communicateError: () -> Unit
     ) {
 
-        viewModelScope.launch {
+        if(_uiState.value.isLoading){
+            return
+        }
+
+        signUpAnonymouslyJob?.cancel()
+
+        signUpAnonymouslyJob = viewModelScope.launch(Dispatchers.Main) {
 
             _uiState.update { uiState ->
                 uiState.copy(
@@ -116,32 +132,50 @@ class SignUpViewModel @Inject constructor(
                 )
             }
 
-            val result = withContext(Dispatchers.IO){
-                signInAnonymouslyUseCase()
-            }
+            try {
 
-            result.fold(
-                onSuccess = {
-                    navigateToHome()
-                },
-                onFailure = { exception ->
+                val result =
+                    withContext(Dispatchers.IO){
+                        ensureActive()
+                        signInAnonymouslyUseCase()
+                    }
+
+                ensureActive()
+
+                result.fold(
+                    onSuccess = {
+                        ensureActive()
+                        _uiState.update { uiState ->
+                            uiState.copy(
+                                isLoading = false
+                            )
+                        }
+                        navigateToHome()
+                    },
+                    onFailure = { e ->
+                        ensureActive()
+                        _uiState.update { uiState ->
+                            uiState.copy(
+                                isLoading = false,
+                                error = e.message.toString()
+                            )
+                        }
+                        delay(1000)
+                        communicateError()
+                    }
+                )
+
+            } catch (e: Exception) {
+                if (e !is CancellationException){
                     _uiState.update { uiState ->
                         uiState.copy(
-                            error = exception.message.toString()
+                            isLoading = false,
+                            error = e.message.toString()
                         )
                     }
-                    delay(1000)
                     communicateError()
                 }
-            )
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
-                )
             }
-
-
         }
     }
 
@@ -155,6 +189,7 @@ class SignUpViewModel @Inject constructor(
     ) {
 
         viewModelScope.launch {
+
             _uiState.update { uiState ->
                 uiState.copy(
                     isLoading = true
@@ -301,27 +336,51 @@ class SignUpViewModel @Inject constructor(
                 )
             }
 
-            val result = signInFacebookUseCase(accessToken)
-            result.fold(
-                onSuccess = {
-                    navigateToHome()
-                },
-                onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            error = exception.message.toString()
-                        )
-                    }
-                    communicateError()
-                }
-            )
+            try {
 
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
+                val result = signInFacebookUseCase(accessToken)
+                result.fold(
+                    onSuccess = {
+                        navigateToHome()
+                    },
+                    onFailure = { exception ->
+                        _uiState.update { uiState ->
+                            uiState.copy(
+                                error = exception.message.toString()
+                            )
+                        }
+                        communicateError()
+                    }
                 )
+
+                _uiState.update { uiState ->
+                    uiState.copy(
+                        isLoading = false
+                    )
+                }
+
+            } catch (e: Exception){
+                _uiState.update { uiState ->
+                    uiState.copy(
+                        isLoading = false,
+                        error = e.message
+                    )
+                }
+                communicateError()
             }
+
+
+
 
         }
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        signUpEmailJob?.cancel()
+        signUpGoogleJob?.cancel()
+        signUpFacebookJob?.cancel()
+        signUpAnonymouslyJob?.cancel()
+    }
+
 }

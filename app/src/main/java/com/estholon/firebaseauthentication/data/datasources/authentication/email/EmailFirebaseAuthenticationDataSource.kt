@@ -1,4 +1,4 @@
-package com.estholon.firebaseauthentication.data.datasources.authentication
+package com.estholon.firebaseauthentication.data.datasources.authentication.email
 
 import android.content.Context
 import com.estholon.firebaseauthentication.data.dtos.UserDto

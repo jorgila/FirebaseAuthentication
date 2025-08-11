@@ -12,7 +12,7 @@ import androidx.credentials.PasswordCredential
 import androidx.credentials.PublicKeyCredential
 import androidx.credentials.exceptions.GetCredentialException
 import com.estholon.firebaseauthentication.R
-import com.estholon.firebaseauthentication.data.datasources.authentication.EmailAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.email.EmailAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.dtos.UserDto
 import com.estholon.firebaseauthentication.data.mapper.UserMapper
 import com.estholon.firebaseauthentication.data.mapper.toUserDto
@@ -62,28 +62,7 @@ class FirebaseAuthenticationDataSource @Inject constructor(
         return getCurrentUser() != null
     }
 
-    // ANONYMOUSLY
 
-    //// SIGN IN & SIGN UP
-
-    override suspend fun signInAnonymously(): Result<UserDto?> {
-        return suspendCancellableCoroutine { cancellableContinuation ->
-            firebaseAuth.signInAnonymously()
-                .addOnSuccessListener {
-                    val result = if (it.user != null) {
-                        Result.success(it.user!!.toUserDto())
-                    } else {
-                        Result.failure(Exception("Error al iniciar sesión"))
-                    }
-                    cancellableContinuation.resume(result)
-                }
-                .addOnFailureListener {
-                    val result = Result.failure<UserDto?>(Exception("Error al iniciar sesión"))
-                    cancellableContinuation.resume(result)
-                }
-        }
-
-    }
 
     // SIGN IN PHONE
 
@@ -373,145 +352,6 @@ class FirebaseAuthenticationDataSource @Inject constructor(
     }
 
 
-    // SIGN IN FACEBOOK
-
-    override suspend fun signInFacebook(accessToken: AccessToken): Result<UserDto?> {
-        val credential = FacebookAuthProvider.getCredential(accessToken.token)
-        return completeRegisterWithCredential(credential)
-    }
-
-    override suspend fun linkFacebook(accessToken: AccessToken): Result<UserDto?> {
-        return suspendCancellableCoroutine { cancellableContinuation ->
-            val currentUser = getCurrentUser()
-            if (currentUser == null) {
-                val result = Result.failure<UserDto?>(Exception("No hay usuario autenticado"))
-                cancellableContinuation.resume(result)
-                return@suspendCancellableCoroutine
-            }
-
-            // Create Facebook credencial with AccessToken
-            val credential = FacebookAuthProvider.getCredential(accessToken.token)
-
-            // Link credential to current user
-            currentUser.linkWithCredential(credential)
-                .addOnSuccessListener { authResult ->
-                    val result = if (authResult.user != null) {
-                        Log.d(TAG, "Cuenta de Facebook vinculada exitosamente")
-                        Result.success(authResult.user!!.toUserDto())
-                    } else {
-                        Result.failure(Exception("Error al vincular cuenta de Facebook"))
-                    }
-                    cancellableContinuation.resume(result)
-                }
-                .addOnFailureListener { exception ->
-                    Log.e(TAG, "Error al vincular con Facebook", exception)
-                    val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
-                    cancellableContinuation.resume(result)
-                }
-        }
-    }
-
-    // SIGN IN GITHUB
-
-    override suspend fun signInGitHub(activity: Activity): Result<UserDto?> {
-        val provider = OAuthProvider.newBuilder("github.com").apply {
-            scopes = listOf("user:email")
-        }.build()
-        return initRegisterWithProvider(activity,provider)
-    }
-
-    // LINK WITH GITHUB
-    override suspend fun linkGitHub(activity: Activity): Result<UserDto?> {
-        return suspendCancellableCoroutine { cancellableContinuation ->
-            val currentUser = getCurrentUser()
-            if (currentUser == null) {
-                val result = Result.failure<UserDto?>(Exception("No hay usuario autenticado"))
-                cancellableContinuation.resume(result)
-                return@suspendCancellableCoroutine
-            }
-
-            val provider = OAuthProvider.newBuilder("github.com").apply {
-                scopes = listOf("user:email")
-            }.build()
-
-            currentUser.startActivityForLinkWithProvider(activity, provider)
-                .addOnSuccessListener { authResult ->
-                    val result = if (authResult.user != null) {
-                        Log.d(TAG, "GitHub vinculado exitosamente")
-                        Result.success(authResult.user!!.toUserDto())
-                    } else {
-                        Result.failure(Exception("Error al vincular cuenta de GitHub"))
-                    }
-                    cancellableContinuation.resume(result)
-                }
-                .addOnFailureListener { exception ->
-                    Log.e(TAG, "Error al vincular con GitHub", exception)
-                    val result = Result.failure<UserDto?>(Exception(exception.message.toString()))
-                    cancellableContinuation.resume(result)
-                }
-        }
-    }
-
-    // SIGN IN MICROSOFT
-
-    override suspend fun signInMicrosoft(activity: Activity): Result<UserDto?> {
-        val provider = OAuthProvider.newBuilder("microsoft.com").apply{
-            scopes = listOf("mail.read","calendars.read")
-        }.build()
-        return initRegisterWithProvider(activity,provider)
-    }
-
-    // LINK WITH MICROSOFT
-    override suspend fun linkMicrosoft(activity: Activity): Result<UserDto?> {
-        return suspendCancellableCoroutine { cancellableContinuation ->
-            val currentUser = getCurrentUser()
-            if (currentUser == null) {
-                val result = Result.failure<UserDto?>(Exception("No hay usuario autenticado"))
-                cancellableContinuation.resume(result)
-                return@suspendCancellableCoroutine
-            }
-
-            if (isProviderAlreadyLinked("microsoft.com")) {
-                val result = Result.failure<UserDto?>(Exception("Ya tienes una cuenta de Microsoft vinculada"))
-                cancellableContinuation.resume(result)
-                return@suspendCancellableCoroutine
-            }
-
-            val provider = OAuthProvider.newBuilder("microsoft.com").apply {
-                scopes = listOf("mail.read", "calendars.read")
-            }.build()
-
-            currentUser.startActivityForLinkWithProvider(activity, provider)
-                .addOnSuccessListener { authResult ->
-                    val result = if (authResult.user != null) {
-                        Log.d(TAG, "Microsoft vinculado exitosamente")
-                        Result.success(authResult.user!!.toUserDto())
-                    } else {
-                        Result.failure(Exception("Error al vincular cuenta de Microsoft"))
-                    }
-                    cancellableContinuation.resume(result)
-                }
-                .addOnFailureListener { exception ->
-                    Log.e(TAG, "Error al vincular con Microsoft", exception)
-
-                    // Manejo específico de errores comunes
-                    val errorMessage = when {
-                        exception.message?.contains("already in use") == true ->
-                            "Esta cuenta de Microsoft ya está vinculada a otro usuario"
-                        exception.message?.contains("credential-already-in-use") == true ->
-                            "Estas credenciales de Microsoft ya están siendo usadas"
-                        exception.message?.contains("provider-already-linked") == true ->
-                            "Ya tienes una cuenta de Microsoft vinculada"
-                        exception.message?.contains("cancelled") == true ->
-                            "Operación cancelada por el usuario"
-                        else -> exception.message ?: "Error desconocido al vincular cuenta de Microsoft"
-                    }
-
-                    val result = Result.failure<UserDto?>(Exception(errorMessage))
-                    cancellableContinuation.resume(result)
-                }
-        }
-    }
 
     // SIGN IN TWITTER
 

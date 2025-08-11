@@ -10,8 +10,6 @@ interface AuthenticationDataSource {
 
     fun isUserLogged() : Boolean
 
-    // ANONYMOUSLY
-    suspend fun signInAnonymously() : Result<UserDto?>
     // PHONE
     suspend fun signInPhone(
         phoneNumber:String,
@@ -29,18 +27,6 @@ interface AuthenticationDataSource {
     suspend fun handleCredentialResponse(result: GetCredentialResponse):Result<UserDto?>
     suspend fun clearCredentialState()
     suspend fun linkGoogle( activity: Activity ) : Result<UserDto?>
-
-    // FACEBOOK
-    suspend fun signInFacebook(accessToken: AccessToken) : Result<UserDto?>
-    suspend fun linkFacebook(accessToken: AccessToken) : Result<UserDto?>
-
-    // GITHUB
-    suspend fun signInGitHub(activity: Activity) : Result<UserDto?>
-    suspend fun linkGitHub( activity: Activity ) : Result<UserDto?>
-
-    // MICROSOFT
-    suspend fun signInMicrosoft(activity: Activity) : Result<UserDto?>
-    suspend fun linkMicrosoft( activity: Activity ) : Result<UserDto?>
 
     // TWITTER
     suspend fun signInTwitter(activity: Activity) : Result<UserDto?>

@@ -3,6 +3,10 @@ package com.estholon.firebaseauthentication.data.repositories
 import android.app.Activity
 import androidx.credentials.GetCredentialResponse
 import com.estholon.firebaseauthentication.data.datasources.AuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.anonymously.AnonymouslyAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.email.EmailAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.facebook.FacebookAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.github.GitHubAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.mapper.UserMapper
 import com.estholon.firebaseauthentication.domain.models.UserModel
 import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
@@ -13,6 +17,10 @@ import javax.inject.Inject
 
 class AuthenticationRepositoryImpl @Inject constructor(
     private val authenticationDataSource: AuthenticationDataSource,
+    private val anonymouslyAuthenticationDataSource: AnonymouslyAuthenticationDataSource,
+    private val emailAuthenticationDataSource: EmailAuthenticationDataSource,
+    private val facebookAuthenticationDataSource: FacebookAuthenticationDataSource,
+    private val gitHubAuthenticationDataSource: GitHubAuthenticationDataSource,
     private val userMapper: UserMapper
 ): AuthenticationRepository {
 
@@ -25,24 +33,24 @@ class AuthenticationRepositoryImpl @Inject constructor(
     // EMAIL
 
     override suspend fun signUpEmail(email: String, password: String): Result<UserModel?> {
-        return authenticationDataSource.signUpEmail( email, password )
+        return emailAuthenticationDataSource.signUpEmail( email, password )
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     override suspend fun signInEmail(email: String, password: String): Result<UserModel?> {
-        return authenticationDataSource.signInEmail( email, password )
+        return emailAuthenticationDataSource.signInEmail( email, password )
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     override suspend fun linkEmail(email: String, password: String): Result<UserModel?> {
-        return authenticationDataSource.linkEmail(email, password)
+        return emailAuthenticationDataSource.linkEmail(email, password)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     // SIGN IN ANONYMOUSLY
 
     override suspend fun signInAnonymously(): Result<UserModel?> {
-        return authenticationDataSource.signInAnonymously()
+        return anonymouslyAuthenticationDataSource.signInAnonymously()
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
@@ -94,24 +102,24 @@ class AuthenticationRepositoryImpl @Inject constructor(
     // FACEBOOK
 
     override suspend fun signInFacebook(accessToken: AccessToken): Result<UserModel?> {
-        return authenticationDataSource.signInFacebook(accessToken)
+        return facebookAuthenticationDataSource.signInFacebook(accessToken)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     override suspend fun linkFacebook(accessToken: AccessToken): Result<UserModel?> {
-        return authenticationDataSource.linkFacebook(accessToken)
+        return facebookAuthenticationDataSource.linkFacebook(accessToken)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     // GITHUB
 
     override suspend fun signInGitHub(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.signInGitHub(activity)
+        return gitHubAuthenticationDataSource.signInGitHub(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     override suspend fun linkGitHub(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.linkGitHub(activity)
+        return gitHubAuthenticationDataSource.linkGitHub(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 

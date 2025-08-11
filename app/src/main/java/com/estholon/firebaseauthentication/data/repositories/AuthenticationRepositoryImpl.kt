@@ -2,34 +2,41 @@ package com.estholon.firebaseauthentication.data.repositories
 
 import android.app.Activity
 import androidx.credentials.GetCredentialResponse
-import com.estholon.firebaseauthentication.data.datasources.AuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.anonymously.AnonymouslyAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.common.CommonAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.email.EmailAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.facebook.FacebookAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.github.GitHubAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.google.GoogleAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.microsoft.MicrosoftAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.phone.PhoneAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.twitter.TwitterAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.yahoo.YahooAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.mapper.UserMapper
 import com.estholon.firebaseauthentication.domain.models.UserModel
 import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
 import com.facebook.AccessToken
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.PhoneAuthProvider
 import javax.inject.Inject
 
 class AuthenticationRepositoryImpl @Inject constructor(
-    private val authenticationDataSource: AuthenticationDataSource,
+    private val commonAuthenticationDataSource: CommonAuthenticationDataSource,
     private val anonymouslyAuthenticationDataSource: AnonymouslyAuthenticationDataSource,
     private val emailAuthenticationDataSource: EmailAuthenticationDataSource,
+    private val googleAuthenticationDataSource: GoogleAuthenticationDataSource,
     private val facebookAuthenticationDataSource: FacebookAuthenticationDataSource,
     private val gitHubAuthenticationDataSource: GitHubAuthenticationDataSource,
     private val microsoftAuthenticationDataSource: MicrosoftAuthenticationDataSource,
+    private val phoneAuthenticationDataSource: PhoneAuthenticationDataSource,
+    private val twitterAuthenticationDataSource: TwitterAuthenticationDataSource,
+    private val yahooAuthenticationDataSource: YahooAuthenticationDataSource,
     private val userMapper: UserMapper
 ): AuthenticationRepository {
 
     // GENERAL FUNCTIONS
 
     override fun isUserLogged(): Boolean {
-        return authenticationDataSource.isUserLogged()
+        return commonAuthenticationDataSource.isUserLogged()
     }
 
     // EMAIL
@@ -63,41 +70,41 @@ class AuthenticationRepositoryImpl @Inject constructor(
         activity: Activity,
         callback: PhoneAuthProvider.OnVerificationStateChangedCallbacks
     ) {
-        authenticationDataSource.signInPhone(phoneNumber,activity,callback)
+        phoneAuthenticationDataSource.signInPhone(phoneNumber,activity,callback)
     }
 
     override suspend fun verifyCode(
         verificationCode: String,
         phoneCode: String
     ): Result<UserModel?> {
-        return authenticationDataSource.verifyCode(verificationCode, phoneCode)
+        return phoneAuthenticationDataSource.verifyCode(verificationCode, phoneCode)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     // SIGN IN GOOGLE
 
     override suspend fun signInGoogleCredentialManager(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.signInGoogleCredentialManager(activity)
+        return googleAuthenticationDataSource.signInGoogleCredentialManager(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
 
     override suspend fun signInGoogle(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.signInGoogle(activity)
+        return googleAuthenticationDataSource.signInGoogle(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     override suspend fun handleCredentialResponse(result: GetCredentialResponse): Result<UserModel?> {
-        return authenticationDataSource.handleCredentialResponse(result)
+        return googleAuthenticationDataSource.handleCredentialResponse(result)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     override suspend fun clearCredentialState() {
-        return authenticationDataSource.clearCredentialState()
+        return googleAuthenticationDataSource.clearCredentialState()
     }
 
     override suspend fun linkGoogle(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.linkGoogle(activity)
+        return googleAuthenticationDataSource.linkGoogle(activity)
             .map { dto -> dto?.let{ userMapper.userDtoToDomain(it) } }
     }
 
@@ -140,37 +147,37 @@ class AuthenticationRepositoryImpl @Inject constructor(
     // TWITTER
 
     override suspend fun signInTwitter(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.signInTwitter(activity)
+        return twitterAuthenticationDataSource.signInTwitter(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     override suspend fun linkTwitter(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.linkTwitter(activity)
+        return twitterAuthenticationDataSource.linkTwitter(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     // YAHOO
 
     override suspend fun signInYahoo(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.signInYahoo(activity)
+        return yahooAuthenticationDataSource.signInYahoo(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     override suspend fun linkYahoo(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.linkYahoo(activity)
+        return yahooAuthenticationDataSource.linkYahoo(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     // SIGN OUT
 
     override suspend fun signOut() {
-        authenticationDataSource.signOut()
+        commonAuthenticationDataSource.signOut()
     }
 
     // RESET PASSWORD
 
     override suspend fun resetPassword ( email : String) : Result<Unit> {
-        return authenticationDataSource.resetPassword(email)
+        return emailAuthenticationDataSource.resetPassword(email)
     }
 
 }

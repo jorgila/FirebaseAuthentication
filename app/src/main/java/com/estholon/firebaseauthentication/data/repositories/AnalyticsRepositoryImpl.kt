@@ -1,6 +1,6 @@
 package com.estholon.firebaseauthentication.data.repositories
 
-import com.estholon.firebaseauthentication.data.datasources.AnalyticsDataSource
+import com.estholon.firebaseauthentication.data.datasources.analytics.AnalyticsDataSource
 import com.estholon.firebaseauthentication.data.mapper.AnalyticsMapper
 import com.estholon.firebaseauthentication.domain.models.AnalyticsModel
 import com.estholon.firebaseauthentication.domain.repositories.AnalyticsRepository

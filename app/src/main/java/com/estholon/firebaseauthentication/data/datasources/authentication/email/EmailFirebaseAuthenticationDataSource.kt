@@ -87,4 +87,20 @@ class EmailFirebaseAuthenticationDataSource @Inject constructor(
         }
     }
 
+//// RESET PASSWORD
+
+    override suspend fun resetPassword( email: String ): Result<Unit> {
+        return suspendCancellableCoroutine { cancellableContinuation ->
+            firebaseAuth.sendPasswordResetEmail(email)
+                .addOnSuccessListener {
+                    val result = Result.success(Unit)
+                    cancellableContinuation.resume(result)
+                }
+                .addOnFailureListener {
+                    val result = Result.failure<Unit>(Exception(it.message ?: "Error al restablecer la contraseña"))
+                    cancellableContinuation.resume(result)
+                }
+        }
+    }
+
 }

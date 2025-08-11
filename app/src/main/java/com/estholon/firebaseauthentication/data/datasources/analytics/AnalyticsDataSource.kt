@@ -1,4 +1,4 @@
-package com.estholon.firebaseauthentication.data.datasources
+package com.estholon.firebaseauthentication.data.datasources.analytics
 
 import com.estholon.firebaseauthentication.data.dtos.AnalyticsDto
 

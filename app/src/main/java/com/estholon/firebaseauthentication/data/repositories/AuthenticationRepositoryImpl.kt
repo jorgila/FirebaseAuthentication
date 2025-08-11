@@ -7,6 +7,7 @@ import com.estholon.firebaseauthentication.data.datasources.authentication.anony
 import com.estholon.firebaseauthentication.data.datasources.authentication.email.EmailAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.facebook.FacebookAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.github.GitHubAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.microsoft.MicrosoftAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.mapper.UserMapper
 import com.estholon.firebaseauthentication.domain.models.UserModel
 import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
@@ -21,6 +22,7 @@ class AuthenticationRepositoryImpl @Inject constructor(
     private val emailAuthenticationDataSource: EmailAuthenticationDataSource,
     private val facebookAuthenticationDataSource: FacebookAuthenticationDataSource,
     private val gitHubAuthenticationDataSource: GitHubAuthenticationDataSource,
+    private val microsoftAuthenticationDataSource: MicrosoftAuthenticationDataSource,
     private val userMapper: UserMapper
 ): AuthenticationRepository {
 
@@ -126,12 +128,12 @@ class AuthenticationRepositoryImpl @Inject constructor(
     // MICROSOFT
 
     override suspend fun signInMicrosoft(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.signInMicrosoft(activity)
+        return microsoftAuthenticationDataSource.signInMicrosoft(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
     override suspend fun linkMicrosoft(activity: Activity): Result<UserModel?> {
-        return authenticationDataSource.linkMicrosoft(activity)
+        return microsoftAuthenticationDataSource.linkMicrosoft(activity)
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 

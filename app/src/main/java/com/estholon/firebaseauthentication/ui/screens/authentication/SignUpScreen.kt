@@ -3,12 +3,8 @@ package com.estholon.firebaseauthentication.ui.screens.authentication
 import android.app.Activity
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultRegistryOwner
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -57,10 +53,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.estholon.firebaseauthentication.R
-import com.estholon.firebaseauthentication.ui.navigation.Routes
-import com.estholon.firebaseauthentication.ui.navigation.Routes.HomeScreen
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
@@ -70,7 +63,8 @@ import com.facebook.login.LoginResult
 @Composable
 fun SignUpScreen(
     signUpViewModel: SignUpViewModel = hiltViewModel(),
-    navController: NavHostController
+    navigateToSignIn: () -> Unit,
+    navigateToHome: () -> Unit,
 ) {
 
     val context = LocalContext.current
@@ -85,7 +79,7 @@ fun SignUpScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
-        SignInLink(onCreateAccount = { navController.navigate(Routes.SignInScreen.route) })
+        SignInLink(onCreateAccount = { navigateToSignIn() })
         Image(
             painter = painterResource(id = R.drawable.firebase),
             contentDescription = "Firebase Authentication"
@@ -96,7 +90,7 @@ fun SignUpScreen(
                 signUpViewModel.signUpEmail(
                     email = user,
                     password = password,
-                    navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                    navigateToHome = { navigateToHome() },
                     communicateError = { Toast.makeText(context,uiState.error ?: "Error desconocido",Toast.LENGTH_LONG).show()  }
                 )
             }
@@ -120,7 +114,7 @@ fun SignUpScreen(
                 override fun onSuccess(result: LoginResult) {
                     signUpViewModel.signUpFacebook(
                         result.accessToken,
-                        navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                        navigateToHome = { navigateToHome() },
                         communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                     )
                 }
@@ -135,7 +129,7 @@ fun SignUpScreen(
             onPhoneSignIn = {}, //TODO
             onAnonymously = { signUpViewModel.signUpAnonymously(
                 navigateToHome = {
-                    navController.navigate(Routes.HomeScreen.route)
+                    navigateToHome()
                 },
                 communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
             )
@@ -143,7 +137,7 @@ fun SignUpScreen(
             onGoogleSignIn = {
                 signUpViewModel.signInGoogle(
                     activity = activity,
-                    navigateToHome = { navController.navigate(HomeScreen.route) },
+                    navigateToHome = { navigateToHome() },
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                 )
             },
@@ -155,7 +149,7 @@ fun SignUpScreen(
                 signUpViewModel.onOathLoginSelected(
                     oath = OathLogin.GitHub,
                     activity = activity,
-                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
+                    navigateToHome = { navigateToHome()},
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                 )
             },
@@ -163,7 +157,7 @@ fun SignUpScreen(
                 signUpViewModel.onOathLoginSelected(
                     oath = OathLogin.Microsoft,
                     activity = activity,
-                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)  },
+                    navigateToHome = { navigateToHome()  },
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                 )
             },
@@ -171,7 +165,7 @@ fun SignUpScreen(
                 signUpViewModel.onOathLoginSelected(
                     oath = OathLogin.Twitter,
                     activity = activity,
-                    navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                    navigateToHome = { navigateToHome() },
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                 )
             },
@@ -179,7 +173,7 @@ fun SignUpScreen(
                 signUpViewModel.onOathLoginSelected(
                     oath = OathLogin.Yahoo,
                     activity = activity,
-                    navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
+                    navigateToHome = { navigateToHome() },
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                 )
             }
@@ -223,8 +217,6 @@ fun SignUpByMail(
     onSignUpEmail: (user: String, password: String) -> Unit,
     signUpViewModel: SignUpViewModel = hiltViewModel()
 ){
-
-    val context = LocalContext.current
 
     val focusManager = LocalFocusManager.current
     val hapticFeedback = LocalHapticFeedback.current

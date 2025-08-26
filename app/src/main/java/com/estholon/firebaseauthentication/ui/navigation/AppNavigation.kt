@@ -1,15 +1,21 @@
 package com.estholon.firebaseauthentication.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.estholon.firebaseauthentication.ui.navigation.Routes.*
 import com.estholon.firebaseauthentication.ui.screens.authentication.RecoverScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.RecoverViewModel
 import com.estholon.firebaseauthentication.ui.screens.authentication.SignInScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.SignInViewModel
 import com.estholon.firebaseauthentication.ui.screens.authentication.SignUpScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.SignUpViewModel
 import com.estholon.firebaseauthentication.ui.screens.home.HomeScreen
+import com.estholon.firebaseauthentication.ui.screens.home.HomeViewModel
 import com.estholon.firebaseauthentication.ui.screens.splash.SplashScreen
+import com.estholon.firebaseauthentication.ui.screens.splash.SplashViewModel
 
 @Composable
 fun AppNavigation(){
@@ -21,19 +27,64 @@ fun AppNavigation(){
         startDestination = SplashScreen.route
     ){
         composable(SplashScreen.route){
-            SplashScreen(navController = navController)
+            val splashViewModel : SplashViewModel = hiltViewModel()
+            SplashScreen(
+                splashViewModel = splashViewModel,
+                navigateToHome = {
+                    navController.popBackStack()
+                    navController.navigate(route=HomeScreen.route)
+                },
+                navigateToSignIn = {
+                    navController.popBackStack()
+                    navController.navigate(route=SignInScreen.route)
+                }
+            )
         }
         composable(SignInScreen.route){
-            SignInScreen(navController = navController)
+            val signInViewModel : SignInViewModel = hiltViewModel()
+            SignInScreen(
+                signInViewModel = signInViewModel,
+                navigateToSignUp = { navController.navigate(route = SignUpScreen.route) },
+                navigateToRecover = { navController.navigate(route=RecoverScreen.route) },
+                navigateToHome = {
+                    navController.popBackStack()
+                    navController.navigate(route = HomeScreen.route)
+                }
+            )
         }
         composable(SignUpScreen.route){
-            SignUpScreen(navController = navController)
+            val signUpViewModel: SignUpViewModel = hiltViewModel()
+            SignUpScreen(
+                signUpViewModel = signUpViewModel,
+                navigateToSignIn = {
+                    navController.popBackStack()
+                    navController.navigate(route = SignInScreen.route)
+                },
+                navigateToHome = {
+                    navController.popBackStack()
+                    navController.navigate(route = HomeScreen.route)
+                },
+            )
         }
         composable(RecoverScreen.route){
-            RecoverScreen(navController = navController)
+            val recoverViewModel: RecoverViewModel = hiltViewModel()
+            RecoverScreen(
+                recoverViewModel = recoverViewModel,
+                navigateToSignIn = {
+                    navController.popBackStack()
+                    navController.navigate(Routes.SignInScreen.route)
+                }
+            )
         }
         composable(HomeScreen.route){
-            HomeScreen(navController = navController)
+            val homeViewModel: HomeViewModel = hiltViewModel()
+            HomeScreen(
+                homeViewModel = homeViewModel,
+                navigateToSignIn = {
+                    navController.popBackStack()
+                    navController.navigate(SignInScreen.route)
+                }
+            )
         }
     }
 

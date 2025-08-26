@@ -63,8 +63,8 @@ import com.facebook.login.LoginResult
 
 @Composable
 fun HomeScreen(
-    homeViewModel: HomeViewModel = hiltViewModel(),
-    navController: NavHostController
+    homeViewModel: HomeViewModel,
+    navigateToSignIn: () -> Unit
 ){
     val activity = LocalActivity.current!!
     val context = LocalContext.current
@@ -158,7 +158,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(30.dp))
             Button(onClick = {
                 homeViewModel.logout {
-                    navController.navigate(SignInScreen.route)
+                    navigateToSignIn()
                 }
             }) {
                 Text(text = "LOGOUT")

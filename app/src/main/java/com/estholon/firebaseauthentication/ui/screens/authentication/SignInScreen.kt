@@ -57,9 +57,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
 import com.estholon.firebaseauthentication.R
-import com.estholon.firebaseauthentication.ui.navigation.Routes.*
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
@@ -68,8 +66,10 @@ import com.facebook.login.LoginResult
 
 @Composable
 fun SignInScreen(
-    signInViewModel: SignInViewModel = hiltViewModel(),
-    navController: NavHostController
+    signInViewModel: SignInViewModel,
+    navigateToSignUp: () -> Unit,
+    navigateToRecover: () -> Unit,
+    navigateToHome: () -> Unit,
 ) {
 
     val context = LocalContext.current
@@ -91,7 +91,7 @@ fun SignInScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
-        SignUpLink(onCreateAccount = { navController.navigate(SignUpScreen.route) })
+        SignUpLink(onCreateAccountPressed = { navigateToSignUp() })
         Image(
             painter = painterResource(id = R.drawable.firebase),
             contentDescription = "Firebase Authentication"
@@ -101,10 +101,10 @@ fun SignInScreen(
             onSignInEmail = { user, password -> signInViewModel.signInEmail(
                 email = user,
                 password = password,
-                navigateToHome = { navController.navigate(HomeScreen.route) },
+                navigateToHome = { navigateToHome() },
                 communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
             ) },
-            onForgotPassword = { navController.navigate(RecoverScreen.route)})
+            onForgotPassword = { navigateToRecover() })
         Spacer(modifier = Modifier.height(30.dp))
 
         // Facebook
@@ -122,7 +122,7 @@ fun SignInScreen(
                 override fun onSuccess(result: LoginResult) {
                     signInViewModel.signInFacebook(
                         result.accessToken,
-                        navigateToHome = { navController.navigate(HomeScreen.route) },
+                        navigateToHome = { navigateToHome() },
                         communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
                     )
                 }
@@ -135,14 +135,14 @@ fun SignInScreen(
             onPhoneSignIn = {  }, //TODO
             onAnonymously = {
                 signInViewModel.signInAnonymously(
-                    navigateToHome = { navController.navigate(HomeScreen.route) },
+                    navigateToHome = { navigateToHome() },
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
                 )
             },
             onGoogleSignIn = {
                 signInViewModel.signInGoogle(
                     activity = activity,
-                    navigateToHome = { navController.navigate(HomeScreen.route)},
+                    navigateToHome = { navigateToHome() },
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
                 )
             },
@@ -155,7 +155,7 @@ fun SignInScreen(
                 signInViewModel.onOathLoginSelected(
                     oath = OathLogin.GitHub,
                     activity = activity,
-                    navigateToHome = { navController.navigate(HomeScreen.route) },
+                    navigateToHome = { navigateToHome() },
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
                 )
             },
@@ -164,7 +164,7 @@ fun SignInScreen(
                 signInViewModel.onOathLoginSelected(
                     oath = OathLogin.Microsoft,
                     activity = activity,
-                    navigateToHome = { navController.navigate(HomeScreen.route) },
+                    navigateToHome = { navigateToHome() },
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
                 )
             },
@@ -172,7 +172,7 @@ fun SignInScreen(
                 signInViewModel.onOathLoginSelected(
                     oath = OathLogin.Twitter,
                     activity = activity,
-                    navigateToHome = { navController.navigate(HomeScreen.route) },
+                    navigateToHome = { navigateToHome() },
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
                 )
             },
@@ -180,7 +180,7 @@ fun SignInScreen(
                 signInViewModel.onOathLoginSelected(
                     oath = OathLogin.Yahoo,
                     activity = activity,
-                    navigateToHome = { navController.navigate(HomeScreen.route)},
+                    navigateToHome = { navigateToHome()},
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
                 )
             }
@@ -204,12 +204,12 @@ fun SignInScreen(
 }
 
 @Composable
-fun SignUpLink(onCreateAccount: () -> Unit){
+fun SignUpLink(onCreateAccountPressed: () -> Unit){
     Box(modifier = Modifier.width(300.dp), contentAlignment = Alignment.TopEnd){
 
         TextButton(
             onClick = {
-                onCreateAccount()
+                onCreateAccountPressed()
             }
         ) {
             Text(
@@ -226,7 +226,6 @@ fun SignInByMail(
     signInViewModel: SignInViewModel = hiltViewModel()
 ){
 
-    val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val hapticFeedback = LocalHapticFeedback.current
 

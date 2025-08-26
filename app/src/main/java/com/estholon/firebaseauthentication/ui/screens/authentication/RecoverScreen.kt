@@ -48,8 +48,8 @@ import com.estholon.firebaseauthentication.ui.navigation.Routes
 
 @Composable
 fun RecoverScreen(
-    recoverViewModel: RecoverViewModel = hiltViewModel(),
-    navController: NavHostController
+    recoverViewModel: RecoverViewModel,
+    navigateToSignIn: () -> Unit
 ) {
 
     val context = LocalContext.current
@@ -60,7 +60,7 @@ fun RecoverScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
 
-        SignInLink(onCreateAccount = { navController.navigate(Routes.SignInScreen.route) })
+        SignInLink(onCreateAccount = { navigateToSignIn() })
         Image(
             painter = painterResource(id = R.drawable.firebase),
             contentDescription = "Firebase Authentication"
@@ -70,7 +70,7 @@ fun RecoverScreen(
             onRecoverPassword = {user ->
                 recoverViewModel.resetPassword(
                     email = user,
-                    navigateToSignIn = { navController.navigate(Routes.SignInScreen.route) },
+                    navigateToSignIn = { navigateToSignIn() },
                     communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() },
                 )
             }

@@ -20,20 +20,20 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    splashViewModel: SplashViewModel = hiltViewModel(),
-    navController: NavHostController
+    splashViewModel: SplashViewModel,
+    navigateToHome: () -> Unit,
+    navigateToSignIn: () -> Unit,
 ) {
 
     // Delay to navigate to other screen
 
     LaunchedEffect(key1 = true) {
         delay(1000)
-        navController.popBackStack()
 
         if(splashViewModel.isUserLogged()){
-            navController.navigate(HomeScreen.route)
+            navigateToHome()
         } else {
-            navController.navigate(SignInScreen.route)
+            navigateToSignIn()
         }
 
     }

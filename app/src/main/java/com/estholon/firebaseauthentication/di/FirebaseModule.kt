@@ -16,6 +16,8 @@ import com.estholon.firebaseauthentication.data.datasources.authentication.googl
 import com.estholon.firebaseauthentication.data.datasources.authentication.google.GoogleFirebaseAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.microsoft.MicrosoftAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.microsoft.MicrosoftFirebaseAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.multifactor.MultifactorAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.multifactor.MultifactorFirebaseAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.phone.PhoneAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.phone.PhoneFirebaseAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.twitter.TwitterAuthenticationDataSource
@@ -101,6 +103,12 @@ abstract class FirebaseModule {
     abstract fun bindPhoneAuthenticationDataSource(
         phoneFirebaseAuthenticationDataSource: PhoneFirebaseAuthenticationDataSource
     ): PhoneAuthenticationDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindMultifactorAuthenticationDataSource(
+        multifactorFirebaseAuthenticationDataSource: MultifactorFirebaseAuthenticationDataSource
+    ): MultifactorAuthenticationDataSource
 
     @Binds
     @Singleton

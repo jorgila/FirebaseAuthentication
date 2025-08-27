@@ -6,12 +6,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.estholon.firebaseauthentication.ui.navigation.Routes.*
-import com.estholon.firebaseauthentication.ui.screens.authentication.RecoverScreen
-import com.estholon.firebaseauthentication.ui.screens.authentication.RecoverViewModel
-import com.estholon.firebaseauthentication.ui.screens.authentication.SignInScreen
-import com.estholon.firebaseauthentication.ui.screens.authentication.SignInViewModel
-import com.estholon.firebaseauthentication.ui.screens.authentication.SignUpScreen
-import com.estholon.firebaseauthentication.ui.screens.authentication.SignUpViewModel
+import com.estholon.firebaseauthentication.ui.screens.authentication.otp.StartEnrollScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.otp.StartEnrollViewModel
+import com.estholon.firebaseauthentication.ui.screens.authentication.recover.RecoverScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.recover.RecoverViewModel
+import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.SignInScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.SignInViewModel
+import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.SignUpScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.SignUpViewModel
 import com.estholon.firebaseauthentication.ui.screens.home.HomeScreen
 import com.estholon.firebaseauthentication.ui.screens.home.HomeViewModel
 import com.estholon.firebaseauthentication.ui.screens.splash.SplashScreen
@@ -29,7 +31,7 @@ fun AppNavigation(){
         composable(SplashScreen.route){
             val splashViewModel : SplashViewModel = hiltViewModel()
             SplashScreen(
-                splashViewModel = splashViewModel,
+                eventCheckUserLogged = { splashViewModel.isUserLogged() },
                 navigateToHome = {
                     navController.popBackStack()
                     navController.navigate(route=HomeScreen.route)
@@ -64,6 +66,12 @@ fun AppNavigation(){
                     navController.popBackStack()
                     navController.navigate(route = HomeScreen.route)
                 },
+            )
+        }
+        composable(StartEnrollScreen.route){
+            val startEnrollViewModel: StartEnrollViewModel = hiltViewModel()
+            StartEnrollScreen(
+                state = startEnrollViewModel.uiState
             )
         }
         composable(RecoverScreen.route){

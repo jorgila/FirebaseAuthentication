@@ -1,7 +1,7 @@
 package com.estholon.firebaseauthentication.ui.screens.splash
 
 import androidx.lifecycle.ViewModel
-import com.estholon.firebaseauthentication.domain.usecases.authentication.IsUserLoggedUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.common.IsUserLoggedUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 

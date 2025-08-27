@@ -9,6 +9,7 @@ import com.estholon.firebaseauthentication.data.datasources.authentication.faceb
 import com.estholon.firebaseauthentication.data.datasources.authentication.github.GitHubAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.google.GoogleAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.microsoft.MicrosoftAuthenticationDataSource
+import com.estholon.firebaseauthentication.data.datasources.authentication.multifactor.MultifactorAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.phone.PhoneAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.twitter.TwitterAuthenticationDataSource
 import com.estholon.firebaseauthentication.data.datasources.authentication.yahoo.YahooAuthenticationDataSource
@@ -16,6 +17,7 @@ import com.estholon.firebaseauthentication.data.mapper.UserMapper
 import com.estholon.firebaseauthentication.domain.models.UserModel
 import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
 import com.facebook.AccessToken
+import com.google.firebase.auth.MultiFactorSession
 import com.google.firebase.auth.PhoneAuthProvider
 import javax.inject.Inject
 
@@ -30,6 +32,7 @@ class AuthenticationRepositoryImpl @Inject constructor(
     private val phoneAuthenticationDataSource: PhoneAuthenticationDataSource,
     private val twitterAuthenticationDataSource: TwitterAuthenticationDataSource,
     private val yahooAuthenticationDataSource: YahooAuthenticationDataSource,
+    private val multifactorAuthenticationDataSource: MultifactorAuthenticationDataSource,
     private val userMapper: UserMapper
 ): AuthenticationRepository {
 
@@ -178,6 +181,19 @@ class AuthenticationRepositoryImpl @Inject constructor(
 
     override suspend fun resetPassword ( email : String) : Result<Unit> {
         return emailAuthenticationDataSource.resetPassword(email)
+    }
+
+    // MFA
+
+    override suspend fun getMultifactorSession(): MultiFactorSession {
+        return multifactorAuthenticationDataSource.getMultifactorSession()
+    }
+
+    override suspend fun enrollMfaSendSms(
+        session: MultiFactorSession,
+        phoneNumber: String
+    ): Result<String> {
+        return multifactorAuthenticationDataSource.enrollMfaSendSms(session, phoneNumber)
     }
 
 }

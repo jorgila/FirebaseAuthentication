@@ -6,6 +6,7 @@ import com.estholon.firebaseauthentication.data.dtos.UserDto
 import com.estholon.firebaseauthentication.domain.models.UserModel
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.firebase.auth.MultiFactorSession
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.firestore.auth.User
 
@@ -64,5 +65,9 @@ interface AuthenticationRepository {
 
     // RESET PASSWORD
     suspend fun resetPassword( email : String ) : Result<Unit>
+
+    // MFA
+    suspend fun getMultifactorSession(): MultiFactorSession
+    suspend fun enrollMfaSendSms(session: MultiFactorSession, phoneNumber: String) : Result<String>
 
 }

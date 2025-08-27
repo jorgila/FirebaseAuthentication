@@ -20,7 +20,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    splashViewModel: SplashViewModel,
+    eventCheckUserLogged: () -> Boolean,
     navigateToHome: () -> Unit,
     navigateToSignIn: () -> Unit,
 ) {
@@ -30,7 +30,7 @@ fun SplashScreen(
     LaunchedEffect(key1 = true) {
         delay(1000)
 
-        if(splashViewModel.isUserLogged()){
+        if(eventCheckUserLogged()){
             navigateToHome()
         } else {
             navigateToSignIn()

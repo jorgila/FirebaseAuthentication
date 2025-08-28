@@ -6,8 +6,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.estholon.firebaseauthentication.ui.navigation.Routes.*
-import com.estholon.firebaseauthentication.ui.screens.authentication.otp.StartEnrollScreen
-import com.estholon.firebaseauthentication.ui.screens.authentication.otp.StartEnrollViewModel
+import com.estholon.firebaseauthentication.ui.screens.authentication.otp.startEnrollment.StartEnrollScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.otp.startEnrollment.StartEnrollViewModel
+import com.estholon.firebaseauthentication.ui.screens.authentication.otp.startEnrollment.models.StartEnrollEvent
 import com.estholon.firebaseauthentication.ui.screens.authentication.recover.RecoverScreen
 import com.estholon.firebaseauthentication.ui.screens.authentication.recover.RecoverViewModel
 import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.SignInScreen
@@ -66,12 +67,21 @@ fun AppNavigation(){
                     navController.popBackStack()
                     navController.navigate(route = HomeScreen.route)
                 },
+                navigateToStartEnroll = {
+                    navController.popBackStack()
+                    navController.navigate(route = StartEnrollScreen.route)
+                }
             )
         }
         composable(StartEnrollScreen.route){
-            val startEnrollViewModel: StartEnrollViewModel = hiltViewModel()
+            val viewModel: StartEnrollViewModel = hiltViewModel()
             StartEnrollScreen(
-                state = startEnrollViewModel.uiState
+                state = viewModel.state,
+                sendOTP = { phoneNumber ->
+                    viewModel.dispatch(
+                        event = StartEnrollEvent.SendOTP(phoneNumber = phoneNumber)
+                    )
+                }
             )
         }
         composable(RecoverScreen.route){

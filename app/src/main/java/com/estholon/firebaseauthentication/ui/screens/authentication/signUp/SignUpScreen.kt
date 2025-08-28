@@ -67,6 +67,7 @@ fun SignUpScreen(
     signUpViewModel: SignUpViewModel = hiltViewModel(),
     navigateToSignIn: () -> Unit,
     navigateToHome: () -> Unit,
+    navigateToStartEnroll: () -> Unit
 ) {
 
     val context = LocalContext.current
@@ -92,7 +93,7 @@ fun SignUpScreen(
                 signUpViewModel.signUpEmail(
                     email = user,
                     password = password,
-                    navigateToHome = { navigateToHome() },
+                    navigateToHome = { navigateToStartEnroll() },
                     communicateError = { Toast.makeText(context,uiState.error ?: "Error desconocido",Toast.LENGTH_LONG).show()  }
                 )
             }

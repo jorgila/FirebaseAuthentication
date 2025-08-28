@@ -1,5 +1,6 @@
 package com.estholon.firebaseauthentication.ui.screens.authentication.otp
 
+import androidx.lifecycle.ViewModel
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.IsEmailValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.SignUpEmailUseCase
 import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.SignUpUiState
@@ -15,7 +16,7 @@ import javax.inject.Inject
 class StartEnrollViewModel @Inject constructor(
     private val isEmailValidUseCase: IsEmailValidUseCase,
     private val signUpEmailUseCase: SignUpEmailUseCase
-){
+) : ViewModel() {
 
     // UI STATE
     private val _uiState = MutableStateFlow(SignUpUiState())

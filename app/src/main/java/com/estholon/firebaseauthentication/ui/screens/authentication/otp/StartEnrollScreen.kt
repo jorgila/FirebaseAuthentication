@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
 import com.estholon.firebaseauthentication.ui.core.components.otp.OtpCodeInput
 import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.SignUpUiState
 import com.facebook.CallbackManager
@@ -33,17 +32,11 @@ fun StartEnrollScreen(
     sendOTP: (String) -> Unit = {}
 ) {
 
-    val context = LocalContext.current
-    val activity = LocalActivity.current as Activity
-//    val uiState by signUpViewModel.uiState.collectAsState()
-
-
-    lateinit var callbackManager: CallbackManager
-
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+
         var phone by rememberSaveable { mutableStateOf("") }
         var code by rememberSaveable { mutableStateOf("") }
 
@@ -71,8 +64,6 @@ fun StartEnrollScreen(
             onClick = {
                 if (code.isNotEmpty()) {
                     sendOTP(code)
-                    // Navigate to the next screen or perform an action
-                    // navController.navigate(Routes.NextScreen.route)
                 }
             },
             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -81,7 +72,7 @@ fun StartEnrollScreen(
         }
     }
 
-    /* if (uiState.isLoading) {
+    /* if (state.isLoading) {
          Box(
              modifier = Modifier
                  .fillMaxSize()

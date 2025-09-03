@@ -30,9 +30,10 @@ fun AppNavigation(){
         startDestination = SplashScreen.route
     ){
         composable(SplashScreen.route){
-            val splashViewModel : SplashViewModel = hiltViewModel()
+            val viewModel : SplashViewModel = hiltViewModel()
             SplashScreen(
-                eventCheckUserLogged = { splashViewModel.isUserLogged() },
+                state = viewModel.state,
+                onIntent = viewModel::dispatch,
                 navigateToHome = {
                     navController.popBackStack()
                     navController.navigate(route=HomeScreen.route)

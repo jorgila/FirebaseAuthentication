@@ -1,14 +1,7 @@
 package com.estholon.firebaseauthentication.domain.usecases.authentication.common
 
-import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
-import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 
-class IsUserLoggedUseCase @Inject constructor(
-    private val authenticationRepository: AuthenticationRepository
-) {
-
-    operator fun invoke() : Boolean {
-        return authenticationRepository.isUserLogged()
-    }
-
+interface IsUserLoggedUseCase {
+    suspend operator fun invoke(): Flow<Result<Boolean>>
 }

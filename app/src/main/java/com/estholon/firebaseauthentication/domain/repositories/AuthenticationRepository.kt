@@ -12,7 +12,7 @@ import com.google.firebase.firestore.auth.User
 
 interface AuthenticationRepository {
 
-    fun isUserLogged() : Boolean
+    fun isUserLogged() : Result<Boolean>
 
     // EMAIL
     suspend fun signUpEmail( email: String, password: String ) : Result<UserModel?>

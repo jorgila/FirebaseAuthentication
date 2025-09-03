@@ -38,7 +38,7 @@ class AuthenticationRepositoryImpl @Inject constructor(
 
     // GENERAL FUNCTIONS
 
-    override fun isUserLogged(): Boolean {
+    override fun isUserLogged(): Result<Boolean> {
         return commonAuthenticationDataSource.isUserLogged()
     }
 

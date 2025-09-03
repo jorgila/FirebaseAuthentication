@@ -1,6 +1,6 @@
-package com.estholon.firebaseauthentication.ui.screens.authentication.signIn
+package com.estholon.firebaseauthentication.ui.screens.authentication.signIn.models
 
-data class SignInUiState(
+data class SignInState(
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
     val error: String? = null,

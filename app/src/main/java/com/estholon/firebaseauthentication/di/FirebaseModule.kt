@@ -30,6 +30,8 @@ import com.estholon.firebaseauthentication.data.repositories.AnalyticsRepository
 import com.estholon.firebaseauthentication.data.repositories.AuthenticationRepositoryImpl
 import com.estholon.firebaseauthentication.domain.repositories.AnalyticsRepository
 import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
+import com.estholon.firebaseauthentication.domain.usecases.authentication.multifactor.StartEnrollPhoneUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.multifactor.StartEnrollPhoneUseCaseImpl
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.ktx.Firebase
@@ -127,6 +129,12 @@ abstract class FirebaseModule {
     abstract fun bindAnalyticsRepository(
         analyticsRepositoryImpl: AnalyticsRepositoryImpl
     ): AnalyticsRepository
+
+    @Binds
+    @Singleton
+    abstract fun provideStartEnrollPhoneUseCase(
+        startEnrollPhoneUseCaseImpl: StartEnrollPhoneUseCaseImpl
+    ): StartEnrollPhoneUseCase
 
     companion object {
 

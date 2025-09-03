@@ -14,8 +14,12 @@ class CommonFirebaseAuthenticationDataSource @Inject constructor(
 
     private fun getCurrentUser() = firebaseAuth.currentUser
 
-    override fun isUserLogged(): Boolean {
-        return getCurrentUser() != null
+    override fun isUserLogged(): Result<Boolean> {
+        return try {
+            Result.success(getCurrentUser() != null)
+        } catch (e: Exception){
+            Result.failure(e)
+        }
     }
 
     // SIGN OUT OR LOGOUT

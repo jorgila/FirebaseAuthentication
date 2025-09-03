@@ -1,5 +1,6 @@
 package com.estholon.firebaseauthentication.ui.screens.splash
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,36 +10,56 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.ui.navigation.Routes.*
+import com.estholon.firebaseauthentication.ui.screens.splash.models.SplashEvent
+import com.estholon.firebaseauthentication.ui.screens.splash.models.SplashState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    eventCheckUserLogged: () -> Boolean,
+    state: SplashState = SplashState(),
+    onIntent: (SplashEvent) -> Unit,
     navigateToHome: () -> Unit,
     navigateToSignIn: () -> Unit,
 ) {
 
-    // Delay to navigate to other screen
+    // VARIABLES
 
-    LaunchedEffect(key1 = true) {
-        delay(1000)
+    val context = LocalContext.current
 
-        if(eventCheckUserLogged()){
+    // LAUNCHED EFFECTS
+
+    LaunchedEffect(state.shouldNavigateToHome) {
+        if (state.shouldNavigateToHome) {
+            delay(500) // UX delay
             navigateToHome()
-        } else {
-            navigateToSignIn()
         }
-
     }
 
-    // Splash Layout
+    LaunchedEffect(state.shouldNavigateToSignIn) {
+        if (state.shouldNavigateToSignIn) {
+            delay(500) // UX delay
+            navigateToSignIn()
+        }
+    }
+
+    LaunchedEffect(state.shouldShowError) {
+        if (state.shouldShowError) {
+            Toast.makeText(context, state.errorMessage, Toast.LENGTH_LONG).show()
+            // AUTO RETRY AFTER 2 SECONDS
+            delay(2000)
+            onIntent(SplashEvent.RetryLogin)
+        }
+    }
+
+    // LAYOUT
 
     Column(
         modifier = Modifier.fillMaxSize(),

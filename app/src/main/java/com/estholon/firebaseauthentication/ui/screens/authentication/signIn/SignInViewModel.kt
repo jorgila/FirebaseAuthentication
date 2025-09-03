@@ -16,6 +16,7 @@ import com.estholon.firebaseauthentication.domain.usecases.authentication.google
 import com.estholon.firebaseauthentication.domain.usecases.authentication.microsoft.SignInMicrosoftUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.twitter.SignInTwitterUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.yahoo.SignInYahooUseCase
+import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.models.SignInState
 import com.facebook.AccessToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -45,8 +46,8 @@ class SignInViewModel @Inject constructor(
 ): ViewModel() {
 
     // UI State
-    private val _uiState = MutableStateFlow(SignInUiState())
-    val uiState : StateFlow<SignInUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(SignInState())
+    val uiState : StateFlow<SignInState> = _uiState.asStateFlow()
 
     // Check to see if the text entered is an email
     fun isEmailValid(email: String) {

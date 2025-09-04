@@ -45,9 +45,10 @@ fun AppNavigation(){
             )
         }
         composable(SignInScreen.route){
-            val signInViewModel : SignInViewModel = hiltViewModel()
+            val viewModel : SignInViewModel = hiltViewModel()
             SignInScreen(
-                signInViewModel = signInViewModel,
+                state = viewModel.state,
+                onIntent = viewModel::dispatch,
                 navigateToSignUp = { navController.navigate(route = SignUpScreen.route) },
                 navigateToRecover = { navController.navigate(route=RecoverScreen.route) },
                 navigateToHome = {

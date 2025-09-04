@@ -2,6 +2,9 @@ package com.estholon.firebaseauthentication.ui.screens.authentication.signIn
 
 import android.app.Activity
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.domain.usecases.authentication.google.ClearCredentialStateUseCase
@@ -16,6 +19,7 @@ import com.estholon.firebaseauthentication.domain.usecases.authentication.google
 import com.estholon.firebaseauthentication.domain.usecases.authentication.microsoft.SignInMicrosoftUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.twitter.SignInTwitterUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.yahoo.SignInYahooUseCase
+import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.models.SignInEvent
 import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.models.SignInState
 import com.facebook.AccessToken
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,200 +49,239 @@ class SignInViewModel @Inject constructor(
     private val isPasswordValidUseCase: IsPasswordValidUseCase
 ): ViewModel() {
 
+    // STATE
+
+    var state by mutableStateOf(SignInState())
+        private set
+
+    // DISPATCHER
+
+    fun dispatch(event: SignInEvent) {
+        when (event) {
+            is SignInEvent.CheckIfEmailIsValid -> {
+                isEmailValid(event.email)
+            }
+            is SignInEvent.CheckIfPasswordIsValid -> {
+                isPasswordValid(event.password)
+            }
+            is SignInEvent.SignInEmail -> {
+                signInEmail(event.email, event.password)
+            }
+            is SignInEvent.SignInFacebook -> {
+                signInFacebook(event.accessToken)
+            }
+            is SignInEvent.SignInAnonymously -> {
+                signInAnonymously()
+            }
+            is SignInEvent.SignInGoogle -> {
+                signInGoogle(event.activity)
+            }
+            is SignInEvent.SignInGoogleCredentialManager -> {
+                signInGoogleCredentialManager(event.activity)
+            }
+            is SignInEvent.OnOathLoginSelected -> {
+                onOathLoginSelected(event.oath,event.activity)
+            }
+        }
+    }
+
     // UI State
     private val _uiState = MutableStateFlow(SignInState())
     val uiState : StateFlow<SignInState> = _uiState.asStateFlow()
 
-    // Check to see if the text entered is an email
-    fun isEmailValid(email: String) {
+    // EMAIL VALIDATOR
+
+    private fun isEmailValid(email: String) {
+        state = state.copy(
+            isLoading = true
+        )
         val result = isEmailValidUseCase(email)
         result.fold(
             onSuccess = {
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isEmailValid = true
-                    )
-                }
+                state = state.copy(
+                    isLoading = false,
+                    isEmailValid = true,
+                    emailError = null
+                )
             },
             onFailure = { exception ->
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isEmailValid = false,
-                        emailError = exception.message.toString()
-                    )
-                }
+                state = state.copy(
+                    isLoading = false,
+                    isEmailValid = false,
+                    emailError = exception.message.toString()
+                )
             }
         )
     }
 
-    fun isPasswordValid(password: String) {
+    // PASSWORD VALIDATOR
+
+    private fun isPasswordValid(password: String) {
+        state = state.copy(
+            isLoading = true
+        )
         val result = isPasswordValidUseCase(password)
         result.fold(
             onSuccess = {
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isPasswordValid = true
-                    )
-                }
+                state = state.copy(
+                    isLoading = false,
+                    isPasswordValid = true,
+                    passwordError = null
+                )
             },
             onFailure = { exception ->
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isPasswordValid = false,
-                        passwordError = exception.message.toString()
-                    )
-                }
+                state = state.copy(
+                    isLoading = false,
+                    isPasswordValid = false,
+                    passwordError = exception.message.toString()
+                )
             }
         )
     }
 
-    // Anonymously Sign In
+    // EMAIL SIGN IN
 
-    fun signInAnonymously(
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
-    ) {
-
-        viewModelScope.launch {
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
-            }
-
-            val result = withContext(Dispatchers.IO){
-                signInAnonymouslyUseCase()
-            }
-
-            result.fold(
-                onSuccess = {
-                    navigateToHome()
-                },
-                onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            error = exception.message.toString()
-                        )
-                    }
-                    delay(1000)
-                    communicateError()
-                }
-            )
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
-                )
-            }
-        }
-
-    }
-
-
-    // Email Sign In
-
-    fun signInEmail(
+    private fun signInEmail(
         email: String,
-        password: String,
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
+        password: String
     ) {
         viewModelScope.launch {
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
-            }
+
+            state = state.copy(
+                isLoading = true
+            )
 
             val result = signInEmailUseCase(email,password)
 
             result.fold(
                 onSuccess = {
-                    navigateToHome()
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = true,
+                    )
                 },
                 onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            error = exception.message.toString()
-                        )
-                    }
-                    delay(1000)
-                    communicateError()
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        error = exception.message.toString(),
+                    )
                 }
             )
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
-                )
-            }
         }
     }
 
-    // GOOGLE
+    // FACEBOOK SIGN IN
 
-    fun signInGoogleCredentialManager(activity: Activity, navigateToHome: () -> Unit) {
+    private fun signInFacebook(
+        accessToken: AccessToken,
+    ) {
         viewModelScope.launch {
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
+            state = state.copy(
+                isLoading = true
+            )
+            val result = signInFacebookUseCase(accessToken)
+            result.fold(
+                onSuccess = {
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = true,
+                    )
+                },
+                onFailure = { exception ->
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        error = exception.message.toString(),
+                    )
+                }
+            )
+        }
+    }
+
+    // ANONYMOUSLY SIGN IN
+
+    private fun signInAnonymously() {
+        viewModelScope.launch {
+            state = state.copy(
+                isLoading = true
+            )
+            val result = withContext(Dispatchers.IO){
+                signInAnonymouslyUseCase()
             }
+            result.fold(
+                onSuccess = {
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = true,
+                    )
+                },
+                onFailure = { exception ->
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        error = exception.message.toString(),
+                    )
+                }
+            )
+        }
+    }
+
+    // GOOGLE SIGN IN
+
+    private fun signInGoogleCredentialManager(activity: Activity) {
+        viewModelScope.launch {
+            state = state.copy(
+                isLoading = true
+            )
 
             val result = signInGoogleCredentialManagerUseCase(activity)
 
             result.fold(
-                onSuccess = { navigateToHome() },
+                onSuccess = {
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = true,
+                    )
+                },
                 onFailure = { exception ->
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        error = "Credential Manager no disponible",
+                    )
                     Log.d("SignInViewModel", "Credential Manager no disponible: ${exception.message}")
                 }
             )
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
-                )
-            }
         }
     }
 
-    fun signInGoogle(
+    private fun signInGoogle(
         activity: Activity,
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
     ) {
         viewModelScope.launch {
 
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
-            }
+            state = state.copy(
+                isLoading = true
+            )
 
             val result = signInGoogleUseCase(activity)
 
             result.fold(
                 onSuccess = {
-                    navigateToHome()
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = true,
+                    )
                 },
                 onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            error = exception.message.toString()
-                        )
-                    }
-                    delay(1000)
-                    communicateError()
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        error = exception.message.toString(),
+                    )
                 }
             )
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
-                )
-            }
-
         }
     }
 
@@ -248,61 +291,18 @@ class SignInViewModel @Inject constructor(
         }
     }
 
+    // OATH SIGN IN
 
-
-    fun signInFacebook(
-        accessToken: AccessToken,
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
-    ) {
-        viewModelScope.launch {
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
-            }
-
-            val result = signInFacebookUseCase(accessToken)
-            result.fold(
-                onSuccess = {
-                    navigateToHome()
-                },
-                onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            error = exception.message.toString()
-                        )
-                    }
-                    delay(1000)
-                    communicateError()
-                }
-            )
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
-                )
-            }
-
-        }
-    }
-
-    fun onOathLoginSelected(
+    private fun onOathLoginSelected(
         oath: OathLogin,
-        activity: Activity,
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
-    )
-    {
+        activity: Activity
+    ) {
 
         viewModelScope.launch {
 
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
-            }
+            state = state.copy(
+                isLoading = true
+            )
 
             val signIn = when (oath) {
                 OathLogin.GitHub -> signInGitHubUseCase(activity)
@@ -313,24 +313,19 @@ class SignInViewModel @Inject constructor(
 
             signIn.fold(
                 onSuccess = {
-                    navigateToHome()
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = true,
+                    )
                 },
                 onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            error = exception.message.toString()
-                        )
-                    }
-                    delay(1000)
-                    communicateError()
+                    state = state.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        error = exception.message.toString(),
+                    )
                 }
             )
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
-                )
-            }
 
         }
 

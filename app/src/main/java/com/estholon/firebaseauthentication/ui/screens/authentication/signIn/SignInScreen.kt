@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +59,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.firebaseauthentication.R
+import com.estholon.firebaseauthentication.ui.core.components.authentication.OtherMethods
+import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.models.SignInEvent
+import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.models.SignInState
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
@@ -66,7 +70,8 @@ import com.facebook.login.LoginResult
 
 @Composable
 fun SignInScreen(
-    signInViewModel: SignInViewModel,
+    state: SignInState = SignInState(),
+    onIntent: (SignInEvent) -> Unit,
     navigateToSignUp: () -> Unit,
     navigateToRecover: () -> Unit,
     navigateToHome: () -> Unit,
@@ -74,8 +79,9 @@ fun SignInScreen(
 
     val context = LocalContext.current
     val activity = LocalActivity.current as Activity
-    val uiState by signInViewModel.uiState.collectAsState()
     val callbackManager = CallbackManager.Factory.create()
+
+    // LAUNCHED EFFECTS
 
 // AUTOMATIC LAUNCH FOR SIGN IN WITH GOOGLE
 //    LaunchedEffect(Unit) {
@@ -84,6 +90,18 @@ fun SignInScreen(
 //            navigateToHome = { navController.navigate(HomeScreen.route) }
 //        )
 //    }
+
+    LaunchedEffect(state.shouldNavigateToHome) {
+        if(state.shouldNavigateToHome) {
+            navigateToHome()
+        }
+    }
+
+    LaunchedEffect(state.shouldShowEmailError) {
+        if(state.shouldShowEmailError) {
+            Toast.makeText(context, state.error, Toast.LENGTH_LONG).show()
+        }
+    }
 
 
     Column(
@@ -98,13 +116,17 @@ fun SignInScreen(
         )
         Spacer(modifier = Modifier.height(30.dp))
         SignInByMail(
-            onSignInEmail = { user, password -> signInViewModel.signInEmail(
-                email = user,
-                password = password,
-                navigateToHome = { navigateToHome() },
-                communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
-            ) },
-            onForgotPassword = { navigateToRecover() })
+            onSignInEmail = { user, password ->
+                SignInEvent.SignInEmail(user,password)
+            },
+            onForgotPassword = { navigateToRecover() },
+            onEmailChange = { email ->
+                onIntent(SignInEvent.CheckIfEmailIsValid(email))
+            },
+            onPasswordChange = { password ->
+                onIntent(SignInEvent.CheckIfPasswordIsValid(password))
+            }
+        )
         Spacer(modifier = Modifier.height(30.dp))
 
         // Facebook
@@ -120,13 +142,8 @@ fun SignInScreen(
                 }
 
                 override fun onSuccess(result: LoginResult) {
-                    signInViewModel.signInFacebook(
-                        result.accessToken,
-                        navigateToHome = { navigateToHome() },
-                        communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
-                    )
+                    onIntent(SignInEvent.SignInFacebook(result.accessToken))
                 }
-
             })
 
         // Facebook End
@@ -134,60 +151,31 @@ fun SignInScreen(
         OtherMethods(
             onPhoneSignIn = {  }, //TODO
             onAnonymously = {
-                signInViewModel.signInAnonymously(
-                    navigateToHome = { navigateToHome() },
-                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
-                )
+                onIntent(SignInEvent.SignInAnonymously)
             },
             onGoogleSignIn = {
-                signInViewModel.signInGoogle(
-                    activity = activity,
-                    navigateToHome = { navigateToHome() },
-                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
-                )
+                onIntent(SignInEvent.SignInGoogle(activity))
             },
             onFacebookSignIn = {
                 LoginManager.getInstance()
                     .logInWithReadPermissions(context as ActivityResultRegistryOwner, callbackManager, listOf("email", "public_profile"))
             },
             onGitHubSignIn = {
-
-                signInViewModel.onOathLoginSelected(
-                    oath = OathLogin.GitHub,
-                    activity = activity,
-                    navigateToHome = { navigateToHome() },
-                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
-                )
+                onIntent(SignInEvent.OnOathLoginSelected(OathLogin.GitHub,activity))
             },
             onMicrosoftSignIn = {
-
-                signInViewModel.onOathLoginSelected(
-                    oath = OathLogin.Microsoft,
-                    activity = activity,
-                    navigateToHome = { navigateToHome() },
-                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
-                )
+                onIntent(SignInEvent.OnOathLoginSelected(OathLogin.Microsoft,activity))
             },
             onTwitterSignIn = {
-                signInViewModel.onOathLoginSelected(
-                    oath = OathLogin.Twitter,
-                    activity = activity,
-                    navigateToHome = { navigateToHome() },
-                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
-                )
+                onIntent(SignInEvent.OnOathLoginSelected(OathLogin.Twitter,activity))
             },
             onYahooSignIn = {
-                signInViewModel.onOathLoginSelected(
-                    oath = OathLogin.Yahoo,
-                    activity = activity,
-                    navigateToHome = { navigateToHome()},
-                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() }
-                )
+                onIntent(SignInEvent.OnOathLoginSelected(OathLogin.Yahoo,activity))
             }
         )
     }
 
-    if(uiState.isLoading){
+    if(state.isLoading){
         Box(modifier = Modifier.fillMaxSize().semantics {
             contentDescription = "Iniciando sesión, por favor espere"
             liveRegion = LiveRegionMode.Polite
@@ -221,9 +209,11 @@ fun SignUpLink(onCreateAccountPressed: () -> Unit){
 }
 @Composable
 fun SignInByMail(
+    state: SignInState = SignInState(),
     onSignInEmail: (user: String, password: String) -> Unit,
     onForgotPassword: () -> Unit,
-    signInViewModel: SignInViewModel = hiltViewModel()
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit
 ){
 
     val focusManager = LocalFocusManager.current
@@ -241,12 +231,10 @@ fun SignInByMail(
         mutableStateOf(false)
     }
 
-    val uiState by signInViewModel.uiState.collectAsState()
-
     TextField(
         label = { Text(text="Usuario")},
         value = user,
-        isError = !uiState.isEmailValid,
+        isError = !state.isEmailValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
@@ -255,19 +243,19 @@ fun SignInByMail(
             onNext = { focusManager.moveFocus(FocusDirection.Down)}
         ),
         onValueChange = {
-            signInViewModel.isEmailValid(it)
+            onEmailChange(it)
             user = it
         },
         singleLine = true,
         maxLines = 1,
         modifier = Modifier.semantics {
             contentDescription = "Campo de correo electrónico"
-            if (!uiState.isEmailValid && uiState.emailError != null) {
-                stateDescription = uiState.emailError!!
+            if (!state.isEmailValid && state.emailError != null) {
+                stateDescription = state.emailError!!
             }
         },
-        supportingText = if (!uiState.isEmailValid && uiState.emailError != null) {
-            { Text(uiState.emailError!!, color = MaterialTheme.colorScheme.error) }
+        supportingText = if (!state.isEmailValid && state.emailError != null) {
+            { Text(state.emailError!!, color = MaterialTheme.colorScheme.error) }
         } else null
     )
 
@@ -277,10 +265,10 @@ fun SignInByMail(
         label = { Text(text = "Contraseña") },
         value = password,
         onValueChange = {
-            signInViewModel.isPasswordValid(it)
+            onPasswordChange(it)
             password = it
         },
-        isError = !uiState.isPasswordValid,
+        isError = !state.isPasswordValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = ImeAction.Done
@@ -310,12 +298,12 @@ fun SignInByMail(
         },
         modifier = Modifier.semantics {
             contentDescription = "Campo de contraseña"
-            if (!uiState.isPasswordValid && uiState.passwordError != null) {
-                stateDescription = uiState.passwordError!!
+            if (!state.isPasswordValid && state.passwordError != null) {
+                stateDescription = state.passwordError!!
             }
         },
-        supportingText = if (!uiState.isPasswordValid && uiState.passwordError != null) {
-            { Text(uiState.passwordError!!, color = MaterialTheme.colorScheme.error) }
+        supportingText = if (!state.isPasswordValid && state.passwordError != null) {
+            { Text(state.passwordError!!, color = MaterialTheme.colorScheme.error) }
         } else null
     )
 
@@ -327,14 +315,14 @@ fun SignInByMail(
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 onSignInEmail(user, password)
             },
-            enabled = (uiState.isEmailValid && uiState.isPasswordValid),
+            enabled = (state.isEmailValid && state.isPasswordValid),
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .width(250.dp)
                 .height(50.dp)
                 .semantics {
                     contentDescription = "Iniciar sesión con correo electrónico"
-                    if(!uiState.isEmailValid && !uiState.isPasswordValid){
+                    if(!state.isEmailValid && !state.isPasswordValid){
                         disabled()
                     }
                 }
@@ -351,197 +339,4 @@ fun SignInByMail(
     }
 }
 
-@Composable
-fun OtherMethods(
-    onPhoneSignIn: () -> Unit,
-    onAnonymously : () -> Unit,
-    onGoogleSignIn : () -> Unit,
-    onFacebookSignIn : () -> Unit,
-    onGitHubSignIn : () -> Unit,
-    onMicrosoftSignIn : () -> Unit,
-    onTwitterSignIn : () -> Unit,
-    onYahooSignIn : () -> Unit
-){
-
-    val hapticFeedback = LocalHapticFeedback.current
-
-    Text(text = "Otros métodos")
-    Spacer(modifier = Modifier.height(30.dp))
-    Column {
-        Row {
-            FloatingActionButton(
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onPhoneSignIn()
-                },
-                modifier = Modifier
-                    .size(56.dp)
-                    .semantics {
-                    contentDescription = "Iniciar sesión o crear cuenta con el teléfono"
-                    role = Role.Button
-                }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_phone),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(45.dp)
-                        .padding(8.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(20.dp))
-            FloatingActionButton(
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onGoogleSignIn()
-                },
-                modifier = Modifier
-                    .size(56.dp)
-                    .semantics {
-                    contentDescription = "Iniciar sesión o crear cuenta con Google"
-                    role = Role.Button
-                }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_google),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(45.dp)
-                        .padding(8.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(20.dp))
-            FloatingActionButton(
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onFacebookSignIn()
-                },
-                modifier = Modifier
-                    .size(56.dp)
-                    .semantics {
-                    contentDescription = "Iniciar sesión o crear cuenta con Facebook"
-                    role = Role.Button
-                }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_fb),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(45.dp)
-                        .padding(8.dp)
-
-                )
-            }
-            Spacer(modifier = Modifier.width(20.dp))
-            FloatingActionButton(
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onGitHubSignIn()
-                },
-                modifier = Modifier
-                    .size(56.dp)
-                    .semantics {
-                    contentDescription = "Iniciar sesión o crear cuenta con GitHub"
-                    role = Role.Button
-                }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_github),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(45.dp)
-                        .padding(8.dp)
-                )
-            }
-
-        }
-        Spacer(modifier = Modifier.height(30.dp))
-        Row {
-            FloatingActionButton(
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onMicrosoftSignIn()
-                },
-                modifier = Modifier
-                    .size(56.dp)
-                    .semantics {
-                    contentDescription = "Iniciar sesión o crear cuenta con Microsoft"
-                    role = Role.Button
-                }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_microsoft),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(45.dp)
-                        .padding(8.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(20.dp))
-            FloatingActionButton(
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onTwitterSignIn()
-                },
-                modifier = Modifier
-                    .size(56.dp)
-                    .semantics {
-                    contentDescription = "Iniciar sesión o crear cuenta con Twitter"
-                    role = Role.Button
-                }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_twitter),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(45.dp)
-                        .padding(8.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(20.dp))
-            FloatingActionButton(
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onYahooSignIn()
-                },
-                modifier = Modifier
-                    .size(56.dp)
-                    .semantics {
-                    contentDescription = "Iniciar sesión o crear cuenta con Yahoo"
-                    role = Role.Button
-                }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_yahoo),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(45.dp)
-                        .padding(8.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(20.dp))
-            FloatingActionButton(
-                onClick = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onAnonymously()
-                },
-                modifier = Modifier
-                    .size(56.dp)
-                    .semantics {
-                    contentDescription = "Iniciar sesión con Anonymously"
-                    role = Role.Button
-                }
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_anonymously),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(45.dp)
-                        .padding(8.dp)
-                )
-            }
-
-        }
-    }
-}
 

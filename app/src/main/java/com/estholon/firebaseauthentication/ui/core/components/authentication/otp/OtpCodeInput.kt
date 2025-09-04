@@ -1,7 +1,7 @@
 @file:Suppress("unused")
 @file:OptIn(ExperimentalComposeUiApi::class)
 
-package com.estholon.firebaseauthentication.ui.core.components.otp
+package com.estholon.firebaseauthentication.ui.core.components.authentication.otp
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat

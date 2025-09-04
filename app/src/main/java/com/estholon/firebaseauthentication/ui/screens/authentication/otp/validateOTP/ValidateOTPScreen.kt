@@ -8,7 +8,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.estholon.firebaseauthentication.ui.core.components.otp.OtpCodeInput
+import com.estholon.firebaseauthentication.ui.core.components.authentication.otp.OtpCodeInput
 
 @Composable
 fun ValidateOTPScreen(modifier: Modifier = Modifier) {

@@ -54,8 +54,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.firebaseauthentication.R
+import com.estholon.firebaseauthentication.ui.core.components.authentication.OtherMethods
 import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.OathLogin
-import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.OtherMethods
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException

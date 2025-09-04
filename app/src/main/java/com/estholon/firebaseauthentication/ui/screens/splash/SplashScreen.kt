@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,7 +26,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    state: SplashState = SplashState(),
+    state: State<SplashState> = mutableStateOf(SplashState()),
     onIntent: (SplashEvent) -> Unit,
     navigateToHome: () -> Unit,
     navigateToSignIn: () -> Unit,
@@ -36,23 +38,23 @@ fun SplashScreen(
 
     // LAUNCHED EFFECTS
 
-    LaunchedEffect(state.shouldNavigateToHome) {
-        if (state.shouldNavigateToHome) {
+    LaunchedEffect(state.value.shouldNavigateToHome) {
+        if (state.value.shouldNavigateToHome) {
             delay(500) // UX delay
             navigateToHome()
         }
     }
 
-    LaunchedEffect(state.shouldNavigateToSignIn) {
-        if (state.shouldNavigateToSignIn) {
+    LaunchedEffect(state.value.shouldNavigateToSignIn) {
+        if (state.value.shouldNavigateToSignIn) {
             delay(500) // UX delay
             navigateToSignIn()
         }
     }
 
-    LaunchedEffect(state.shouldShowError) {
-        if (state.shouldShowError) {
-            Toast.makeText(context, state.errorMessage, Toast.LENGTH_LONG).show()
+    LaunchedEffect(state.value.shouldShowError) {
+        if (state.value.shouldShowError) {
+            Toast.makeText(context, state.value.errorMessage, Toast.LENGTH_LONG).show()
             // AUTO RETRY AFTER 2 SECONDS
             delay(2000)
             onIntent(SplashEvent.RetryLogin)

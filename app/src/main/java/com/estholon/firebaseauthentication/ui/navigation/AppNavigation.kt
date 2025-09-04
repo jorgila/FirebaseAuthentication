@@ -1,6 +1,7 @@
 package com.estholon.firebaseauthentication.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -32,7 +33,7 @@ fun AppNavigation(){
         composable(SplashScreen.route){
             val viewModel : SplashViewModel = hiltViewModel()
             SplashScreen(
-                state = viewModel.state,
+                state = viewModel.state.collectAsState(),
                 onIntent = viewModel::dispatch,
                 navigateToHome = {
                     navController.popBackStack()
@@ -47,7 +48,7 @@ fun AppNavigation(){
         composable(SignInScreen.route){
             val viewModel : SignInViewModel = hiltViewModel()
             SignInScreen(
-                state = viewModel.state,
+                state = viewModel.state.collectAsState(),
                 onIntent = viewModel::dispatch,
                 navigateToSignUp = { navController.navigate(route = SignUpScreen.route) },
                 navigateToRecover = { navController.navigate(route=RecoverScreen.route) },

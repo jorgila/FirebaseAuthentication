@@ -10,6 +10,9 @@ import com.estholon.firebaseauthentication.ui.screens.splash.models.SplashEvent
 import com.estholon.firebaseauthentication.ui.screens.splash.models.SplashState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
@@ -23,9 +26,9 @@ class SplashViewModel @Inject constructor(
 
     // STATE
 
-    var state by mutableStateOf(SplashState())
-        private set
-
+    private val _state = MutableStateFlow(SplashState())
+    val state: StateFlow<SplashState> = _state.asStateFlow()
+    
     // INIT
 
     init {
@@ -38,6 +41,7 @@ class SplashViewModel @Inject constructor(
         when(event) {
             is SplashEvent.CheckUserLogin -> isUserLogged()
             is SplashEvent.RetryLogin -> retryLogin()
+            is SplashEvent.NavigationCompleted -> TODO()
         }
     }
 
@@ -54,17 +58,17 @@ class SplashViewModel @Inject constructor(
 
                 result
                     .onStart {
-                        state = state.copy(
+                        _state.value = _state.value.copy(
                             isLoading = true
                         )
                     }
                     .onCompletion {
-                        state = state.copy(
+                        _state.value = _state.value.copy(
                             isLoading = false
                         )
                     }
                     .catch { e ->
-                        state = state.copy(
+                        _state.value = _state.value.copy(
                             isSuccess = false,
                             isError = true,
                             errorMessage = e.message
@@ -73,13 +77,13 @@ class SplashViewModel @Inject constructor(
                     .collect { result ->
                         result.fold(
                             onSuccess = {
-                                state = state.copy(
+                                _state.value = _state.value.copy(
                                     isSuccess = true,
                                     isUserLogged = it
                                 )
                             },
                             onFailure = { e ->
-                                state = state.copy(
+                                _state.value = _state.value.copy(
                                     isSuccess = false,
                                     isError = true,
                                     isUserLogged = false,
@@ -89,7 +93,7 @@ class SplashViewModel @Inject constructor(
                         )
                     }
             } catch (e: Exception) {
-                state = state.copy(
+                _state.value = _state.value.copy(
                     isSuccess = false,
                     isError = true,
                     isUserLogged = false,
@@ -100,7 +104,7 @@ class SplashViewModel @Inject constructor(
     }
 
     private fun retryLogin() {
-        state = SplashState()
+        _state.value = SplashState()
         dispatch(SplashEvent.CheckUserLogin)
     }
 }

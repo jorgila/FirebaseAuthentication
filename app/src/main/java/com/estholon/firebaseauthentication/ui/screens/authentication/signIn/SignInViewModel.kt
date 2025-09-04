@@ -2,18 +2,16 @@ package com.estholon.firebaseauthentication.ui.screens.authentication.signIn
 
 import android.app.Activity
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.firebaseauthentication.domain.usecases.authentication.google.ClearCredentialStateUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.IsEmailValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.IsPasswordValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.anonymously.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.SignInEmailUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.facebook.SignInFacebookUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.github.SignInGitHubUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.google.ClearCredentialStateUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.google.SignInGoogleCredentialManagerUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.google.SignInGoogleUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.microsoft.SignInMicrosoftUseCase
@@ -50,9 +48,9 @@ class SignInViewModel @Inject constructor(
 ): ViewModel() {
 
     // STATE
-
-    var state by mutableStateOf(SignInState())
-        private set
+    
+    private val _state = MutableStateFlow(SignInState())
+    val state : StateFlow<SignInState> = _state.asStateFlow()
 
     // DISPATCHER
 
@@ -85,27 +83,23 @@ class SignInViewModel @Inject constructor(
         }
     }
 
-    // UI State
-    private val _uiState = MutableStateFlow(SignInState())
-    val uiState : StateFlow<SignInState> = _uiState.asStateFlow()
-
     // EMAIL VALIDATOR
 
     private fun isEmailValid(email: String) {
-        state = state.copy(
+        _state.value = _state.value.copy(
             isLoading = true
         )
         val result = isEmailValidUseCase(email)
         result.fold(
             onSuccess = {
-                state = state.copy(
+                _state.value = _state.value.copy(
                     isLoading = false,
                     isEmailValid = true,
                     emailError = null
                 )
             },
             onFailure = { exception ->
-                state = state.copy(
+                _state.value = _state.value.copy(
                     isLoading = false,
                     isEmailValid = false,
                     emailError = exception.message.toString()
@@ -117,20 +111,20 @@ class SignInViewModel @Inject constructor(
     // PASSWORD VALIDATOR
 
     private fun isPasswordValid(password: String) {
-        state = state.copy(
+        _state.value = _state.value.copy(
             isLoading = true
         )
         val result = isPasswordValidUseCase(password)
         result.fold(
             onSuccess = {
-                state = state.copy(
+                _state.value = _state.value.copy(
                     isLoading = false,
                     isPasswordValid = true,
                     passwordError = null
                 )
             },
             onFailure = { exception ->
-                state = state.copy(
+                _state.value = _state.value.copy(
                     isLoading = false,
                     isPasswordValid = false,
                     passwordError = exception.message.toString()
@@ -147,7 +141,7 @@ class SignInViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
 
-            state = state.copy(
+            _state.value = _state.value.copy(
                 isLoading = true
             )
 
@@ -155,13 +149,13 @@ class SignInViewModel @Inject constructor(
 
             result.fold(
                 onSuccess = {
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = true,
                     )
                 },
                 onFailure = { exception ->
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = false,
                         error = exception.message.toString(),
@@ -177,19 +171,19 @@ class SignInViewModel @Inject constructor(
         accessToken: AccessToken,
     ) {
         viewModelScope.launch {
-            state = state.copy(
+            _state.value = _state.value.copy(
                 isLoading = true
             )
             val result = signInFacebookUseCase(accessToken)
             result.fold(
                 onSuccess = {
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = true,
                     )
                 },
                 onFailure = { exception ->
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = false,
                         error = exception.message.toString(),
@@ -203,7 +197,7 @@ class SignInViewModel @Inject constructor(
 
     private fun signInAnonymously() {
         viewModelScope.launch {
-            state = state.copy(
+            _state.value = _state.value.copy(
                 isLoading = true
             )
             val result = withContext(Dispatchers.IO){
@@ -211,13 +205,13 @@ class SignInViewModel @Inject constructor(
             }
             result.fold(
                 onSuccess = {
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = true,
                     )
                 },
                 onFailure = { exception ->
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = false,
                         error = exception.message.toString(),
@@ -231,7 +225,7 @@ class SignInViewModel @Inject constructor(
 
     private fun signInGoogleCredentialManager(activity: Activity) {
         viewModelScope.launch {
-            state = state.copy(
+            _state.value = _state.value.copy(
                 isLoading = true
             )
 
@@ -239,13 +233,13 @@ class SignInViewModel @Inject constructor(
 
             result.fold(
                 onSuccess = {
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = true,
                     )
                 },
                 onFailure = { exception ->
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = false,
                         error = "Credential Manager no disponible",
@@ -261,7 +255,7 @@ class SignInViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
 
-            state = state.copy(
+            _state.value = _state.value.copy(
                 isLoading = true
             )
 
@@ -269,13 +263,13 @@ class SignInViewModel @Inject constructor(
 
             result.fold(
                 onSuccess = {
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = true,
                     )
                 },
                 onFailure = { exception ->
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = false,
                         error = exception.message.toString(),
@@ -285,7 +279,7 @@ class SignInViewModel @Inject constructor(
         }
     }
 
-    fun clearCredentialState(){
+    private fun clearCredentialState(){
         viewModelScope.launch {
             clearCredentialStateUseCase()
         }
@@ -300,7 +294,7 @@ class SignInViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            state = state.copy(
+            _state.value = _state.value.copy(
                 isLoading = true
             )
 
@@ -313,13 +307,13 @@ class SignInViewModel @Inject constructor(
 
             signIn.fold(
                 onSuccess = {
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = true,
                     )
                 },
                 onFailure = { exception ->
-                    state = state.copy(
+                    _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = false,
                         error = exception.message.toString(),

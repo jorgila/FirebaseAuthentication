@@ -4,7 +4,7 @@ import android.app.Activity
 import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.OathLogin
 import com.facebook.AccessToken
 
-interface SignInEvent {
+sealed interface SignInEvent {
 
     data class CheckIfEmailIsValid(val email: String) : SignInEvent
     data class CheckIfPasswordIsValid(val password: String) : SignInEvent

@@ -7,7 +7,6 @@ import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -22,7 +21,6 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,8 +29,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -45,11 +43,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.LiveRegionMode
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
@@ -57,7 +53,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.ui.core.components.authentication.OtherMethods
 import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.models.SignInEvent
@@ -70,7 +65,7 @@ import com.facebook.login.LoginResult
 
 @Composable
 fun SignInScreen(
-    state: SignInState = SignInState(),
+    state: State<SignInState> = mutableStateOf(SignInState()),
     onIntent: (SignInEvent) -> Unit,
     navigateToSignUp: () -> Unit,
     navigateToRecover: () -> Unit,
@@ -85,21 +80,18 @@ fun SignInScreen(
 
 // AUTOMATIC LAUNCH FOR SIGN IN WITH GOOGLE
 //    LaunchedEffect(Unit) {
-//        signInViewModel.signInGoogleCredentialManager(
-//            activity = activity,
-//            navigateToHome = { navController.navigate(HomeScreen.route) }
-//        )
+//        onIntent(SignInEvent.SignInGoogleCredentialManager(activity))
 //    }
 
-    LaunchedEffect(state.shouldNavigateToHome) {
-        if(state.shouldNavigateToHome) {
+    LaunchedEffect(state.value.shouldNavigateToHome) {
+        if(state.value.shouldNavigateToHome) {
             navigateToHome()
         }
     }
 
-    LaunchedEffect(state.shouldShowEmailError) {
-        if(state.shouldShowEmailError) {
-            Toast.makeText(context, state.error, Toast.LENGTH_LONG).show()
+    LaunchedEffect(state.value.shouldShowEmailError) {
+        if(state.value.shouldShowEmailError) {
+            Toast.makeText(context, state.value.error, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -116,8 +108,9 @@ fun SignInScreen(
         )
         Spacer(modifier = Modifier.height(30.dp))
         SignInByMail(
+            state = state,
             onSignInEmail = { user, password ->
-                SignInEvent.SignInEmail(user,password)
+                onIntent(SignInEvent.SignInEmail(user,password))
             },
             onForgotPassword = { navigateToRecover() },
             onEmailChange = { email ->
@@ -175,7 +168,7 @@ fun SignInScreen(
         )
     }
 
-    if(state.isLoading){
+    if(state.value.isLoading){
         Box(modifier = Modifier.fillMaxSize().semantics {
             contentDescription = "Iniciando sesión, por favor espere"
             liveRegion = LiveRegionMode.Polite
@@ -209,7 +202,7 @@ fun SignUpLink(onCreateAccountPressed: () -> Unit){
 }
 @Composable
 fun SignInByMail(
-    state: SignInState = SignInState(),
+    state: State<SignInState> = mutableStateOf(SignInState()),
     onSignInEmail: (user: String, password: String) -> Unit,
     onForgotPassword: () -> Unit,
     onEmailChange: (String) -> Unit,
@@ -234,7 +227,7 @@ fun SignInByMail(
     TextField(
         label = { Text(text="Usuario")},
         value = user,
-        isError = !state.isEmailValid,
+        isError = !state.value.isEmailValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
@@ -250,12 +243,12 @@ fun SignInByMail(
         maxLines = 1,
         modifier = Modifier.semantics {
             contentDescription = "Campo de correo electrónico"
-            if (!state.isEmailValid && state.emailError != null) {
-                stateDescription = state.emailError!!
+            if (!state.value.isEmailValid && state.value.emailError != null) {
+                stateDescription = state.value.emailError!!
             }
         },
-        supportingText = if (!state.isEmailValid && state.emailError != null) {
-            { Text(state.emailError!!, color = MaterialTheme.colorScheme.error) }
+        supportingText = if (!state.value.isEmailValid && state.value.emailError != null) {
+            { Text(state.value.emailError!!, color = MaterialTheme.colorScheme.error) }
         } else null
     )
 
@@ -268,7 +261,7 @@ fun SignInByMail(
             onPasswordChange(it)
             password = it
         },
-        isError = !state.isPasswordValid,
+        isError = !state.value.isPasswordValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = ImeAction.Done
@@ -298,12 +291,12 @@ fun SignInByMail(
         },
         modifier = Modifier.semantics {
             contentDescription = "Campo de contraseña"
-            if (!state.isPasswordValid && state.passwordError != null) {
-                stateDescription = state.passwordError!!
+            if (!state.value.isPasswordValid && state.value.passwordError != null) {
+                stateDescription = state.value.passwordError!!
             }
         },
-        supportingText = if (!state.isPasswordValid && state.passwordError != null) {
-            { Text(state.passwordError!!, color = MaterialTheme.colorScheme.error) }
+        supportingText = if (!state.value.isPasswordValid && state.value.passwordError != null) {
+            { Text(state.value.passwordError!!, color = MaterialTheme.colorScheme.error) }
         } else null
     )
 
@@ -315,14 +308,14 @@ fun SignInByMail(
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 onSignInEmail(user, password)
             },
-            enabled = (state.isEmailValid && state.isPasswordValid),
+            enabled = (state.value.isEmailValid && state.value.isPasswordValid),
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .width(250.dp)
                 .height(50.dp)
                 .semantics {
                     contentDescription = "Iniciar sesión con correo electrónico"
-                    if(!state.isEmailValid && !state.isPasswordValid){
+                    if(!state.value.isEmailValid && !state.value.isPasswordValid){
                         disabled()
                     }
                 }

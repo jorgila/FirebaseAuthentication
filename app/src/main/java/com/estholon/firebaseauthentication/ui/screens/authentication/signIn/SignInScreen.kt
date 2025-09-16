@@ -89,8 +89,8 @@ fun SignInScreen(
         }
     }
 
-    LaunchedEffect(state.value.shouldShowEmailError) {
-        if(state.value.shouldShowEmailError) {
+    LaunchedEffect(state.value.shouldShowError) {
+        if(state.value.shouldShowError) {
             Toast.makeText(context, state.value.error, Toast.LENGTH_LONG).show()
         }
     }

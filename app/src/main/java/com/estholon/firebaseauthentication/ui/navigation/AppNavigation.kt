@@ -89,9 +89,10 @@ fun AppNavigation(){
             )
         }
         composable(RecoverScreen.route){
-            val recoverViewModel: RecoverViewModel = hiltViewModel()
+            val viewModel: RecoverViewModel = hiltViewModel()
             RecoverScreen(
-                recoverViewModel = recoverViewModel,
+                state = viewModel.state.collectAsState(),
+                onIntent = viewModel::dispatch,
                 navigateToSignIn = {
                     navController.popBackStack()
                     navController.navigate(Routes.SignInScreen.route)

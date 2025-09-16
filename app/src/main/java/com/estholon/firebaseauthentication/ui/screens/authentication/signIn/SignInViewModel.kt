@@ -386,6 +386,8 @@ class SignInViewModel @Inject constructor(
         signInOthersJob?.cancel()
     }
 
+    // APPLICATION LIFECYCLE
+
     override fun onCleared() {
         super.onCleared()
         cancelAllJobs()

@@ -18,8 +18,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.runtime.State
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -39,19 +40,39 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.firebaseauthentication.R
+import com.estholon.firebaseauthentication.ui.screens.authentication.recover.models.RecoverEvent
+import com.estholon.firebaseauthentication.ui.screens.authentication.recover.models.RecoverState
 import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.SignInLink
 
 
 @Composable
 fun RecoverScreen(
-    recoverViewModel: RecoverViewModel,
+    state: State<RecoverState> = mutableStateOf(RecoverState()),
+    onIntent: (RecoverEvent) -> Unit,
     navigateToSignIn: () -> Unit
 ) {
 
+    // VARIABLES
+
     val context = LocalContext.current
-    val uiState by recoverViewModel.uiState.collectAsState()
+
+
+    // LAUNCHED EFFECTS
+
+    LaunchedEffect(state.value.shouldNavigateToSignIn) {
+        if(state.value.shouldNavigateToSignIn) {
+            navigateToSignIn()
+        }
+    }
+
+    LaunchedEffect(state.value.shouldShowError) {
+        if(state.value.shouldShowError) {
+            Toast.makeText(context, state.value.error, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // VIEW
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -65,18 +86,15 @@ fun RecoverScreen(
         )
         Spacer(modifier = Modifier.height(30.dp))
         RecoverPassword(
-            onRecoverPassword = {user ->
-                recoverViewModel.resetPassword(
-                    email = user,
-                    navigateToSignIn = { navigateToSignIn() },
-                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show() },
-                )
-            }
+            onIntent = { event ->
+                onIntent(event)
+            },
+            state
         )
         Spacer(modifier = Modifier.height(350.dp))
     }
 
-    if(uiState.isLoading){
+    if(state.value.isLoading){
         Box(modifier = Modifier.fillMaxSize().semantics {
             contentDescription = "Enviando correo, por favor espere"
             liveRegion = LiveRegionMode.Polite
@@ -93,11 +111,9 @@ fun RecoverScreen(
 
 @Composable
 fun RecoverPassword(
-    onRecoverPassword: (email: String) -> Unit,
-    recoverViewModel: RecoverViewModel = hiltViewModel()
+    onIntent: (RecoverEvent) -> Unit,
+    state: State<RecoverState> = mutableStateOf(RecoverState())
 ){
-
-    val uiState by recoverViewModel.uiState.collectAsState()
 
     val hapticFeedback = LocalHapticFeedback.current
 
@@ -109,7 +125,7 @@ fun RecoverPassword(
         label = { Text(text="Usuario") },
         value = user,
         onValueChange = {
-            recoverViewModel.isEmailValid(it)
+            onIntent(RecoverEvent.CheckIfEmailIsValid(it))
             user = it
         },
         keyboardOptions = KeyboardOptions(
@@ -119,20 +135,20 @@ fun RecoverPassword(
         keyboardActions = KeyboardActions(
             onDone = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                onRecoverPassword(user)
+                onIntent(RecoverEvent.ResetPassword(user))
             }
         ),
         singleLine = true,
         maxLines = 1,
-        isError = !uiState.isEmailValid,
+        isError = !state.value.isEmailValid,
         modifier = Modifier.semantics {
             contentDescription = "Campo de correo electrónico"
-            if (!uiState.isEmailValid && uiState.emailError != null) {
-                stateDescription = uiState.emailError!!
+            if (!state.value.isEmailValid && state.value.emailError != null) {
+                stateDescription = state.value.emailError!!
             }
         },
-        supportingText = if (!uiState.isEmailValid && uiState.emailError != null) {
-            { Text(uiState.emailError!!, color = MaterialTheme.colorScheme.error) }
+        supportingText = if (!state.value.isEmailValid && state.value.emailError != null) {
+            { Text(state.value.emailError!!, color = MaterialTheme.colorScheme.error) }
         } else null
     )
 
@@ -142,16 +158,16 @@ fun RecoverPassword(
         Button(
             onClick = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                onRecoverPassword(user)
+                onIntent(RecoverEvent.ResetPassword(user))
             },
-            enabled = (uiState.isEmailValid),
+            enabled = (state.value.isEmailValid),
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .width(250.dp)
                 .height(50.dp)
                 .semantics {
                     contentDescription = "Recuperar contraseña con correo electrónico"
-                    if(!uiState.isEmailValid){
+                    if(!state.value.isEmailValid){
                         disabled()
                     }
                 }

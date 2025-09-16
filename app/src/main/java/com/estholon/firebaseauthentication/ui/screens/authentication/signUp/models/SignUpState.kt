@@ -10,7 +10,7 @@ data class SignUpState(
     val passwordError: String? = null,
     val multifactor: Boolean = false
 ){
-    val shouldShowEmailError: Boolean get() = !isLoading && !isSuccess && !error.isNullOrEmpty()
+    val shouldShowError: Boolean get() = !isLoading && !isSuccess && !error.isNullOrEmpty()
     val shouldNavigateToHome: Boolean get() = !isLoading && isSuccess && !multifactor
     val shouldNavigateToStartEnroll: Boolean get() = !isLoading && isSuccess && multifactor
 }

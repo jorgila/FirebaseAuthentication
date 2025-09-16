@@ -4,7 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.IsEmailValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.ResetPasswordUseCase
+import com.estholon.firebaseauthentication.ui.screens.authentication.recover.models.RecoverEvent
+import com.estholon.firebaseauthentication.ui.screens.authentication.recover.models.RecoverState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,71 +23,105 @@ class RecoverViewModel @Inject constructor(
     private val isEmailValidUseCase: IsEmailValidUseCase
 ): ViewModel() {
 
-    // UI State
-    private val _uiState = MutableStateFlow(RecoverUiState())
-    val uiState : StateFlow<RecoverUiState> = _uiState.asStateFlow()
+    // STATE
+    private val _state = MutableStateFlow(RecoverState())
+    val state : StateFlow<RecoverState> = _state.asStateFlow()
 
-    // Check to see if the text entered is an email
-    fun isEmailValid(email: String) {
+    // JOBS
+
+    @Volatile
+    var recoverJob: Job? = null
+
+    // DISPATCHER
+
+    fun dispatch (event: RecoverEvent) {
+        when (event) {
+            is RecoverEvent.CheckIfEmailIsValid -> {
+                isEmailValid(event.email)
+            }
+            is RecoverEvent.ResetPassword -> {
+                resetPassword(event.email)
+            }
+        }
+    }
+
+    // EMAIL VALIDATOR
+    private fun isEmailValid(email: String) {
+
+        _state.value = _state.value.copy(
+            isLoading = true
+        )
+
         val result = isEmailValidUseCase(email)
         result.fold(
             onSuccess = {
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isEmailValid = true
-                    )
-                }
+                _state.value = _state.value.copy(
+                    isLoading = true,
+                    isEmailValid = true
+                )
             },
             onFailure = { exception ->
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isEmailValid = false,
-                        emailError = exception.message.toString()
-                    )
-                }
+                _state.value = _state.value.copy(
+                    isLoading = true,
+                    isEmailValid = true,
+                    emailError = exception.message.toString()
+                )
             }
         )
     }
 
     // Progress Indicator Variable
 
-    fun resetPassword(
-        email: String,
-        navigateToSignIn: () -> Unit,
-        communicateError: () -> Unit
+    private fun resetPassword(
+        email: String
     ) {
-        viewModelScope.launch {
 
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
-            }
+        if(isJobActive(recoverJob)){
+            return
+        }
+
+        recoverJob?.cancel()
+
+        recoverJob = viewModelScope.launch(Dispatchers.Main) {
+
+            _state.value = _state.value.copy(
+                isLoading = true
+            )
 
             val result = resetPasswordUseCase(email)
             result.fold(
                 onSuccess = {
-                    navigateToSignIn()
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isSuccess = true,
+                    )
                 },
                 onFailure = { exception ->
 
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            error = exception.message.toString()
-                        )
-                    }
-
-                    delay(1000)
-                    communicateError()
-
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        error = exception.message.toString()
+                    )
                 }
             )
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
-                )
-            }
         }
+    }
+
+    // JOBS
+
+    private fun isJobActive(job: Job?): Boolean {
+        return job?.isActive == true
+    }
+
+    private fun cancelAllJobs() {
+        recoverJob?.cancel()
+    }
+
+    // APPLICATION LIFECYCLE
+
+    override fun onCleared() {
+        super.onCleared()
+        cancelAllJobs()
     }
 }

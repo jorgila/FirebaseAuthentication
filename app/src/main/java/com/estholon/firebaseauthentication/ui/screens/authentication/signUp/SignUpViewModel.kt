@@ -15,17 +15,17 @@ import com.estholon.firebaseauthentication.domain.usecases.authentication.twitte
 import com.estholon.firebaseauthentication.domain.usecases.authentication.yahoo.SignInYahooUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.SignUpEmailUseCase
 import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.OathLogin
+import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.models.SignUpEvent
+import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.models.SignUpState
 import com.facebook.AccessToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -46,70 +46,190 @@ class SignUpViewModel @Inject constructor(
 ): ViewModel() {
 
     // UI STATE
-    private val _uiState = MutableStateFlow(SignUpUiState())
-    val uiState : StateFlow<SignUpUiState> get() = _uiState.asStateFlow()
+    private val _state = MutableStateFlow(SignUpState())
+    val state : StateFlow<SignUpState> get() = _state.asStateFlow()
 
     // JOBS
+    @Volatile
     var signUpEmailJob: Job? = null
+    @Volatile
     var signUpGoogleJob: Job? = null
+    @Volatile
     var signUpFacebookJob: Job? = null
+    @Volatile
     var signUpAnonymouslyJob: Job? = null
+    @Volatile
+    var signUpOthersJob: Job? = null
+
+    // DISPATCHER
+    fun dispatch(event: SignUpEvent){
+        when(event){
+            is SignUpEvent.CheckIfEmailIsValid -> {
+                isEmailValid(event.email)
+            }
+            is SignUpEvent.CheckIfPasswordIsValid -> {
+                isPasswordValid(event.password)
+            }
+            is SignUpEvent.SignUpEmail -> {
+                signUpEmail(event.email,event.password)
+            }
+            is SignUpEvent.SignUpFacebook -> {
+                signUpFacebook(event.accessToken)
+            }
+            is SignUpEvent.OnOathLoginSelected -> {
+                onOathLoginSelected(event.oath,event.activity)
+            }
+            is SignUpEvent.SignUpAnonymously -> {
+                signUpAnonymously()
+            }
+            is SignUpEvent.SignUpGoogle -> {
+                signInGoogle(event.activity)
+            }
+            is SignUpEvent.SignUpGoogleCredentialManager -> {
+
+            }
+        }
+    }
+
+
 
     // EMAIL VALIDATOR
 
-    fun isEmailValid(email: String) {
+    private fun isEmailValid(email: String) {
+        _state.value = _state.value.copy(
+            isLoading = true
+        )
         val result = isEmailValidUseCase(email)
         result.fold(
             onSuccess = {
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isEmailValid = true
-                    )
-                }
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    isEmailValid = true,
+                    multifactor = true
+                )
             },
             onFailure = { exception ->
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isEmailValid = false,
-                        emailError = exception.message.toString()
-                    )
-                }
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    isEmailValid = false,
+                    emailError = exception.message.toString()
+                )
             }
         )
     }
 
     // PASSWORD VALIDATOR
 
-    fun isPasswordValid(password: String) {
+    private fun isPasswordValid(password: String) {
+        _state.value = _state.value.copy(
+            isLoading = true
+        )
         val result = isPasswordValidUseCase(password)
         result.fold(
             onSuccess = {
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isPasswordValid = true
-                    )
-                }
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    isPasswordValid = true
+                )
             },
             onFailure = { exception ->
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isPasswordValid = false,
-                        passwordError = exception.message.toString()
-                    )
-                }
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    isPasswordValid = false,
+                    passwordError = exception.message.toString()
+                )
             }
         )
     }
 
+    // EMAIL SIGN UP
 
-    // Anonymously Sign In
-
-    fun signUpAnonymously(
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
+    private fun signUpEmail(
+        email: String,
+        password: String
     ) {
 
-        if(_uiState.value.isLoading){
+        if(isJobActive(signUpEmailJob)){
+            return
+        }
+
+        signUpEmailJob?.cancel()
+
+        signUpEmailJob = viewModelScope.launch(Dispatchers.Main) {
+
+        _state.value = _state.value.copy(
+                isLoading = true
+            )
+            val result = withContext(Dispatchers.IO){
+                signUpEmailUseCase(email,password)
+            }
+            result.fold(
+                onSuccess = {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isSuccess = true
+                    )
+                },
+                onFailure = { exception ->
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        error = exception.message.toString()
+                    )
+                }
+            )
+        }
+    }
+
+    // FACEBOOK SIGN UP
+
+    private fun signUpFacebook(
+        accessToken: AccessToken
+    ) {
+
+        if(isJobActive(signUpFacebookJob)){
+            return
+        }
+
+        signUpFacebookJob?.cancel()
+
+        signUpFacebookJob = viewModelScope.launch(Dispatchers.Main) {
+            _state.value = _state.value.copy(
+                isLoading = true
+            )
+            try {
+                val result = signInFacebookUseCase(accessToken)
+                result.fold(
+                    onSuccess = {
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = true
+                        )
+                    },
+                    onFailure = { exception ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = false,
+                            error = exception.message.toString()
+                        )
+                    }
+                )
+            } catch (e: Exception){
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    isSuccess = false,
+                    error = e.message.toString()
+                )
+            }
+        }
+    }
+
+
+    // ANONYMOUSLY SIGN UP
+
+    private fun signUpAnonymously() {
+
+        if(isJobActive(signUpAnonymouslyJob)){
             return
         }
 
@@ -117,11 +237,9 @@ class SignUpViewModel @Inject constructor(
 
         signUpAnonymouslyJob = viewModelScope.launch(Dispatchers.Main) {
 
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
-            }
+            _state.value = _state.value.copy(
+                isLoading = true
+            )
 
             try {
 
@@ -136,128 +254,73 @@ class SignUpViewModel @Inject constructor(
                 result.fold(
                     onSuccess = {
                         ensureActive()
-                        _uiState.update { uiState ->
-                            uiState.copy(
-                                isLoading = false
-                            )
-                        }
-                        navigateToHome()
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = true
+                        )
                     },
                     onFailure = { e ->
                         ensureActive()
-                        _uiState.update { uiState ->
-                            uiState.copy(
-                                isLoading = false,
-                                error = e.message.toString()
-                            )
-                        }
-                        delay(1000)
-                        communicateError()
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = false,
+                            error = e.message.toString()
+                        )
                     }
                 )
 
             } catch (e: Exception) {
                 if (e !is CancellationException){
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            error = e.message.toString()
-                        )
-                    }
-                    communicateError()
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        error = e.message.toString()
+                    )
                 }
             }
         }
     }
 
-    // Sign Up with email
 
-    fun signUpEmail(
-        email: String,
-        password: String,
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
+    // GOOGLE SIGN UP
+
+    private fun signInGoogle(
+        activity: Activity
     ) {
 
-        viewModelScope.launch {
+        if(isJobActive(signUpGoogleJob)){
+            return
+        }
 
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
-            }
+        signUpGoogleJob?.cancel()
 
+        signUpGoogleJob = viewModelScope.launch(Dispatchers.Main) {
 
-            val result = withContext(Dispatchers.IO){
-                signUpEmailUseCase(email,password)
-            }
-
-            result.fold(
-                onSuccess = {
-                    navigateToHome()
-                },
-                onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            error = exception.message.toString()
-                        )
-                    }
-                    delay(1000)
-                    communicateError()
-                }
+            _state.value = _state.value.copy(
+                isLoading = true
             )
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
-                )
-            }
-
-        }
-
-    }
-
-    // GOOGLE
-
-    fun signInGoogle(
-        activity: Activity,
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
-    ) {
-        viewModelScope.launch {
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
-            }
 
             val result = signInGoogleUseCase(activity)
 
             result.fold(
                 onSuccess = {
-                    navigateToHome()
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isSuccess = true
+                    )
                 },
                 onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            error = exception.message.toString()
-                        )
-                    }
-                    communicateError()
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        error = exception.message.toString()
+                    )
                 }
             )
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
-                )
-            }
-
         }
     }
 
-    fun clearCredentialState(){
+    private fun clearCredentialState(){
         viewModelScope.launch {
             clearCredentialStateUseCase()
         }
@@ -265,15 +328,18 @@ class SignUpViewModel @Inject constructor(
 
     // OTHER METHODS
 
-    fun onOathLoginSelected(
+    private fun onOathLoginSelected(
         oath: OathLogin,
-        activity: Activity,
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
-    )
-    {
+        activity: Activity
+    ) {
 
-        viewModelScope.launch {
+        if(isJobActive(signUpOthersJob)){
+            return
+        }
+
+        signUpOthersJob?.cancel()
+
+        signUpOthersJob = viewModelScope.launch(Dispatchers.Main) {
 
             val result = when (oath) {
                 OathLogin.GitHub -> signInGitHubUseCase(activity)
@@ -282,96 +348,49 @@ class SignUpViewModel @Inject constructor(
                 OathLogin.Yahoo -> signInYahooUseCase(activity)
             }
 
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
-            }
+            _state.value = _state.value.copy(
+                isLoading = false
+            )
 
             withContext(Dispatchers.IO){
                 result.fold(
                     onSuccess = {
-                        navigateToHome()
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = true,
+                        )
                     },
                     onFailure = { exception ->
-                        _uiState.update { uiState ->
-                            uiState.copy(
-                                error = exception.message.toString()
-                            )
-                        }
-                        communicateError()
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = false,
+                            error = exception.message.toString()
+                        )
                     }
                 )
             }
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = false
-                )
-            }
-
-        }
-
-    }
-
-    fun signUpFacebook(
-        accessToken: AccessToken,
-        navigateToHome: () -> Unit,
-        communicateError: () -> Unit
-    ) {
-        viewModelScope.launch {
-
-            _uiState.update { uiState ->
-                uiState.copy(
-                    isLoading = true
-                )
-            }
-
-            try {
-
-                val result = signInFacebookUseCase(accessToken)
-                result.fold(
-                    onSuccess = {
-                        navigateToHome()
-                    },
-                    onFailure = { exception ->
-                        _uiState.update { uiState ->
-                            uiState.copy(
-                                error = exception.message.toString()
-                            )
-                        }
-                        communicateError()
-                    }
-                )
-
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isLoading = false
-                    )
-                }
-
-            } catch (e: Exception){
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isLoading = false,
-                        error = e.message
-                    )
-                }
-                communicateError()
-            }
-
-
-
-
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
+    // JOBS
+
+    private fun isJobActive(job: Job?): Boolean {
+        return job?.isActive == true
+    }
+
+    private fun cancelAllJobs() {
         signUpEmailJob?.cancel()
         signUpGoogleJob?.cancel()
         signUpFacebookJob?.cancel()
         signUpAnonymouslyJob?.cancel()
+        signUpOthersJob?.cancel()
+    }
+
+    // APPLICATION LIFECYCLE
+
+    override fun onCleared() {
+        super.onCleared()
+        cancelAllJobs()
     }
 
 }

@@ -59,9 +59,10 @@ fun AppNavigation(){
             )
         }
         composable(SignUpScreen.route){
-            val signUpViewModel: SignUpViewModel = hiltViewModel()
+            val viewModel: SignUpViewModel = hiltViewModel()
             SignUpScreen(
-                signUpViewModel = signUpViewModel,
+                state = viewModel.state.collectAsState(),
+                onIntent = viewModel::dispatch,
                 navigateToSignIn = {
                     navController.popBackStack()
                     navController.navigate(route = SignInScreen.route)

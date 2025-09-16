@@ -28,7 +28,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -52,10 +53,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.ui.core.components.authentication.OtherMethods
 import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.OathLogin
+import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.models.SignUpEvent
+import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.models.SignUpState
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
@@ -64,7 +66,8 @@ import com.facebook.login.LoginResult
 
 @Composable
 fun SignUpScreen(
-    signUpViewModel: SignUpViewModel = hiltViewModel(),
+    state: State<SignUpState> = mutableStateOf(SignUpState()),
+    onIntent: (SignUpEvent) -> Unit,
     navigateToSignIn: () -> Unit,
     navigateToHome: () -> Unit,
     navigateToStartEnroll: () -> Unit
@@ -72,10 +75,28 @@ fun SignUpScreen(
 
     val context = LocalContext.current
     val activity = LocalActivity.current as Activity
-    val uiState by signUpViewModel.uiState.collectAsState()
-
 
     lateinit var callbackManager: CallbackManager
+
+    // LAUNCHED EFFECTS
+
+    LaunchedEffect(state.value.shouldNavigateToHome) {
+        if(state.value.shouldNavigateToHome) {
+            navigateToHome()
+        }
+    }
+
+    LaunchedEffect(state.value.shouldShowEmailError) {
+        if(state.value.shouldShowEmailError) {
+            Toast.makeText(context, state.value.error, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    LaunchedEffect(state.value.shouldNavigateToStartEnroll) {
+        if(state.value.shouldNavigateToStartEnroll){
+            navigateToStartEnroll()
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -89,18 +110,17 @@ fun SignUpScreen(
         )
         Spacer(modifier = Modifier.height(30.dp))
         SignUpByMail(
+            state = state,
+            onIntent = { signUpEvent -> 
+                onIntent(signUpEvent)
+            },
             onSignUpEmail = { user, password ->
-                signUpViewModel.signUpEmail(
-                    email = user,
-                    password = password,
-                    navigateToHome = { navigateToStartEnroll() },
-                    communicateError = { Toast.makeText(context,uiState.error ?: "Error desconocido",Toast.LENGTH_LONG).show()  }
-                )
+                onIntent(SignUpEvent.SignUpEmail(user,password))
             }
         )
 
 
-        // Facebook
+        // FACEBOOK
 
         callbackManager = CallbackManager.Factory.create()
 
@@ -115,47 +135,22 @@ fun SignUpScreen(
                 }
 
                 override fun onSuccess(result: LoginResult) {
-                    signUpViewModel.signUpFacebook(
-                        result.accessToken,
-                        navigateToHome = { navigateToHome() },
-                        communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
-                    )
+                    onIntent(SignUpEvent.SignUpFacebook(result.accessToken))
                 }
 
             })
 
-        // Facebook End
+        // FACEBOOK END
 
 
         Spacer(modifier = Modifier.height(30.dp))
         OtherMethods(
             onPhoneSignIn = {}, //TODO
             onAnonymously = {
-                signUpViewModel.signUpAnonymously(
-                    navigateToHome = {
-                        navigateToHome()
-                    },
-                    communicateError = {
-                        Toast.makeText(
-                            context,
-                            uiState.error.toString(),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                )
+                onIntent(SignUpEvent.SignUpAnonymously)
             },
             onGoogleSignIn = {
-                signUpViewModel.signInGoogle(
-                    activity = activity,
-                    navigateToHome = { navigateToHome() },
-                    communicateError = {
-                        Toast.makeText(
-                            context,
-                            uiState.error.toString(),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                )
+                onIntent(SignUpEvent.SignUpGoogle(activity))
             },
             onFacebookSignIn = {
                 LoginManager.getInstance()
@@ -166,66 +161,22 @@ fun SignUpScreen(
                     )
             },
             onGitHubSignIn = {
-                signUpViewModel.onOathLoginSelected(
-                    oath = OathLogin.GitHub,
-                    activity = activity,
-                    navigateToHome = { navigateToHome() },
-                    communicateError = {
-                        Toast.makeText(
-                            context,
-                            uiState.error.toString(),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                )
+                onIntent(SignUpEvent.OnOathLoginSelected(OathLogin.GitHub,activity)) 
             },
             onMicrosoftSignIn = {
-                signUpViewModel.onOathLoginSelected(
-                    oath = OathLogin.Microsoft,
-                    activity = activity,
-                    navigateToHome = { navigateToHome() },
-                    communicateError = {
-                        Toast.makeText(
-                            context,
-                            uiState.error.toString(),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                )
+                onIntent(SignUpEvent.OnOathLoginSelected(OathLogin.Microsoft,activity))
             },
             onTwitterSignIn = {
-                signUpViewModel.onOathLoginSelected(
-                    oath = OathLogin.Twitter,
-                    activity = activity,
-                    navigateToHome = { navigateToHome() },
-                    communicateError = {
-                        Toast.makeText(
-                            context,
-                            uiState.error.toString(),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                )
+                onIntent(SignUpEvent.OnOathLoginSelected(OathLogin.Twitter,activity))
             },
             onYahooSignIn = {
-                signUpViewModel.onOathLoginSelected(
-                    oath = OathLogin.Yahoo,
-                    activity = activity,
-                    navigateToHome = { navigateToHome() },
-                    communicateError = {
-                        Toast.makeText(
-                            context,
-                            uiState.error.toString(),
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                )
+                onIntent(SignUpEvent.OnOathLoginSelected(OathLogin.Yahoo,activity))
             }
         )
 
     }
 
-    if(uiState.isLoading){
+    if(state.value.isLoading){
         Box(modifier = Modifier.fillMaxSize().semantics {
             contentDescription = "Creando cuenta, por favor espere"
             liveRegion = LiveRegionMode.Polite
@@ -259,13 +210,12 @@ fun SignInLink(onCreateAccount: () -> Unit){
 @Composable
 fun SignUpByMail(
     onSignUpEmail: (user: String, password: String) -> Unit,
-    signUpViewModel: SignUpViewModel = hiltViewModel()
+    state: State<SignUpState> = mutableStateOf(SignUpState()),
+    onIntent: (SignUpEvent) -> Unit
 ){
 
     val focusManager = LocalFocusManager.current
     val hapticFeedback = LocalHapticFeedback.current
-
-    val uiState by signUpViewModel.uiState.collectAsState()
 
     var user by rememberSaveable {
         mutableStateOf("")
@@ -282,7 +232,7 @@ fun SignUpByMail(
     TextField(
         label = { Text(text="Usuario") },
         value = user,
-        isError = !uiState.isEmailValid,
+        isError = !state.value.isEmailValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
@@ -291,19 +241,19 @@ fun SignUpByMail(
             onNext = { focusManager.moveFocus(FocusDirection.Down)}
         ),
         onValueChange = {
-            signUpViewModel.isEmailValid(it)
+            onIntent(SignUpEvent.CheckIfEmailIsValid(it))
             user = it
         },
         singleLine = true,
         maxLines = 1,
         modifier = Modifier.semantics {
             contentDescription = "Campo de correo electrónico"
-            if (!uiState.isEmailValid && uiState.emailError != null) {
-                stateDescription = uiState.emailError!!
+            if (!state.value.isEmailValid && state.value.emailError != null) {
+                stateDescription = state.value.emailError!!
             }
         },
-        supportingText = if (!uiState.isEmailValid && uiState.emailError != null) {
-            { Text(uiState.emailError!!, color = MaterialTheme.colorScheme.error) }
+        supportingText = if (!state.value.isEmailValid && state.value.emailError != null) {
+            { Text(state.value.emailError!!, color = MaterialTheme.colorScheme.error) }
         } else null
     )
 
@@ -312,13 +262,13 @@ fun SignUpByMail(
     TextField(
         label = { Text(text = "Contraseña") },
         value = password,
-        isError = !uiState.isPasswordValid,
+        isError = !state.value.isPasswordValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             imeAction = ImeAction.Done
         ),
         onValueChange = {
-            signUpViewModel.isPasswordValid(it)
+            onIntent(SignUpEvent.CheckIfPasswordIsValid(it))
             password = it
         },
         keyboardActions = KeyboardActions(
@@ -346,12 +296,12 @@ fun SignUpByMail(
         },
         modifier = Modifier.semantics {
             contentDescription = "Campo de contraseña"
-            if (!uiState.isPasswordValid && uiState.passwordError != null) {
-                stateDescription = uiState.passwordError!!
+            if (!state.value.isPasswordValid && state.value.passwordError != null) {
+                stateDescription = state.value.passwordError!!
             }
         },
-        supportingText = if (!uiState.isPasswordValid && uiState.passwordError != null) {
-            { Text(uiState.passwordError!!, color = MaterialTheme.colorScheme.error) }
+        supportingText = if (!state.value.isPasswordValid && state.value.passwordError != null) {
+            { Text(state.value.passwordError!!, color = MaterialTheme.colorScheme.error) }
         } else null
     )
 
@@ -363,14 +313,14 @@ fun SignUpByMail(
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 onSignUpEmail(user, password)
             },
-            enabled = ( uiState.isEmailValid && uiState.isPasswordValid ),
+            enabled = ( state.value.isEmailValid && state.value.isPasswordValid ),
             shape = RoundedCornerShape(50.dp),
             modifier = Modifier
                 .width(250.dp)
                 .height(50.dp)
                 .semantics {
                     contentDescription = "Crear cuenta con correo electrónico"
-                    if(!uiState.isEmailValid && !uiState.isPasswordValid){
+                    if(!state.value.isEmailValid && !state.value.isPasswordValid){
                         disabled()
                     }
                 }

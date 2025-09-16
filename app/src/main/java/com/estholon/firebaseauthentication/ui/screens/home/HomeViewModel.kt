@@ -13,8 +13,11 @@ import com.estholon.firebaseauthentication.domain.usecases.authentication.micros
 import com.estholon.firebaseauthentication.domain.usecases.authentication.twitter.LinkTwitterUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.yahoo.LinkYahooUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.common.SignOutUseCase
+import com.estholon.firebaseauthentication.ui.screens.home.models.HomeEvent
+import com.estholon.firebaseauthentication.ui.screens.home.models.HomeState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -38,354 +41,419 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     // UI STATE
-    private val _uiState = MutableStateFlow<HomeViewState>(HomeViewState())
-    val uiState : StateFlow<HomeViewState> get() = _uiState.asStateFlow()
+    private val _state = MutableStateFlow(HomeState())
+    val state : StateFlow<HomeState> get() = _state.asStateFlow()
 
-    // Logout
+    // JOBS
+    @Volatile
+    var logoutJob: Job? = null
+    @Volatile
+    var linkEmailJob: Job? = null
+    @Volatile
+    var linkGoogleJob: Job? = null
+    @Volatile
+    var linkFacebookJob: Job? = null
+    @Volatile
+    var linkAnonymouslyJob: Job? = null
+    @Volatile
+    var linkOthersJob: Job? = null
 
-    fun logout(navigateToLogin:()-> Unit) {
-        _uiState.update { uiState ->
-            uiState.copy(
+    // DISPATCHER
+
+    fun dispatch(event: HomeEvent){
+        when(event){
+            is HomeEvent.CheckIfEmailIsValid -> {
+                isEmailValid(event.email)
+            }
+            is HomeEvent.CheckIfPasswordIsValid -> {
+                isPasswordValid(event.password)
+            }
+            is HomeEvent.LinkEmail -> {
+                onLinkEmail(event.email, event.password)
+            }
+            is HomeEvent.LinkFacebook -> {
+                onLinkFacebook(event.accessToken)
+            }
+            is HomeEvent.LinkGitHub -> {
+                onLinkGitHub(event.activity)
+            }
+            is HomeEvent.LinkGoogle -> {
+                onLinkGoogle(event.activity)
+            }
+            is HomeEvent.LinkMicrosoft -> {
+                onLinkMicrosoft(event.activity)
+            }
+            is HomeEvent.LinkTwitter -> {
+                onLinkTwitter(event.activity)
+            }
+            is HomeEvent.LinkYahoo -> {
+                onLinkYahoo(event.activity)
+            }
+            is HomeEvent.Logout -> {
+                logout()
+            }
+        }
+    }
+
+
+    // LOGOUT
+
+    private fun logout() {
+
+        if(isJobActive(logoutJob)){
+            return
+        }
+
+        logoutJob?.cancel()
+
+        logoutJob = viewModelScope.launch(Dispatchers.Main) {
+            _state.value = _state.value.copy(
                 isLoading = true
             )
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            signOutUseCase()
-        }
-        navigateToLogin()
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = false
+
+            // TODO: Improve with result handler
+            viewModelScope.launch(Dispatchers.IO) {
+                signOutUseCase()
+            }
+
+            _state.value = _state.value.copy(
+                isLoading = false,
+                logout = true
             )
         }
     }
 
     // EMAIL VALIDATOR
 
-    fun isEmailValid(email: String) {
+    private fun isEmailValid(email: String) {
+
+        _state.value = _state.value.copy(
+            isLoading = true
+        )
+
         val result = isEmailValidUseCase(email)
         result.fold(
             onSuccess = {
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isEmailValid = true
-                    )
-                }
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    isEmailValid = true
+                )
             },
             onFailure = { exception ->
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isEmailValid = false,
-                        emailError = exception.message.toString()
-                    )
-                }
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    isEmailValid = false,
+                    emailError = exception.message.toString()
+                )
             }
         )
     }
 
     // PASSWORD VALIDATOR
 
-    fun isPasswordValid(password: String) {
+    private fun isPasswordValid(password: String) {
+
+        _state.value = _state.value.copy(
+            isLoading = true
+        )
+
         val result = isPasswordValidUseCase(password)
         result.fold(
             onSuccess = {
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isPasswordValid = true
-                    )
-                }
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    isPasswordValid = true
+                )
             },
             onFailure = { exception ->
-                _uiState.update { uiState ->
-                    uiState.copy(
-                        isPasswordValid = false,
-                        passwordError = exception.message.toString()
-                    )
-                }
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    isPasswordValid = false,
+                    passwordError = exception.message.toString()
+                )
             }
         )
     }
 
-
     // LINK ACCOUNT WITH EMAIL
 
-    fun onLinkEmail(
+    private fun onLinkEmail(
         email: String,
-        password: String,
-        communicateSuccess: () -> Unit,
-        communicateError: () -> Unit
+        password: String
     ) {
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = true
-            )
+        if(isJobActive(linkEmailJob)){
+            return
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = linkEmailUseCase(email, password)
-            result.fold(
-                onSuccess = { userModel ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateSuccess()
-                    }
-                },
-                onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            error = exception.message ?: "Error al vincular cuenta de email"
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateError()
-                    }
-                }
+        linkEmailJob?.cancel()
+
+        linkEmailJob = viewModelScope.launch(Dispatchers.Main) {
+            _state.value = _state.value.copy(
+                isLoading = true
             )
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = linkEmailUseCase(email, password)
+                result.fold(
+                    onSuccess = { userModel ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = true
+                        )
+                    },
+                    onFailure = { e ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = false,
+                            error = e.message ?: "Error al vincular cuenta de email"
+                        )
+                    }
+                )
+            }
         }
     }
 
     // LINK ACCOUNT WITH GOOGLE
 
-    fun onLinkGoogle(
-        activity: android.app.Activity,
-        communicateSuccess: () -> Unit,
-        communicateError: () -> Unit
+    private fun onLinkGoogle(
+        activity: android.app.Activity
     ) {
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = true
-            )
+
+        if(isJobActive(linkGoogleJob)){
+            return
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = linkGoogleUseCase(activity)
-            result.fold(
-                onSuccess = { userModel ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateSuccess()
-                    }
-                },
-                onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            error = exception.message ?: "Error al vincular cuenta de Google"
-                        )
-                    }
-                    withContext(Dispatchers.Main) {
-                        communicateError()
-                    }
-                }
+        linkGoogleJob?.cancel()
+
+        linkGoogleJob = viewModelScope.launch(Dispatchers.Main) {
+
+            _state.value = _state.value.copy(
+                isLoading = true
             )
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = linkGoogleUseCase(activity)
+                result.fold(
+                    onSuccess = { userModel ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = true
+                        )
+                    },
+                    onFailure = { e ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = false,
+                            error = e.message ?: "Error al vincular cuenta de email"
+                        )
+                    }
+                )
+            }
         }
     }
 
     // LINK ACCOUNT WITH FACEBOOK
 
-    fun onLinkFacebook(
-        accessToken: com.facebook.AccessToken,
-        communicateSuccess: () -> Unit,
-        communicateError: () -> Unit
+    private fun onLinkFacebook(
+        accessToken: com.facebook.AccessToken
     ) {
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = true
-            )
+
+        if(isJobActive(linkFacebookJob)){
+            return
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = linkFacebookUseCase(accessToken)
-            result.fold(
-                onSuccess = { userModel ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateSuccess()
-                    }
-                },
-                onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            error = exception.message ?: "Error al vincular cuenta de Facebook"
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateError()
-                    }
-                }
+        linkFacebookJob?.cancel()
+
+        linkFacebookJob = viewModelScope.launch(Dispatchers.Main) {
+            _state.value = _state.value.copy(
+                isLoading = true
             )
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = linkFacebookUseCase(accessToken)
+                result.fold(
+                    onSuccess = { userModel ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = true
+                        )
+                    },
+                    onFailure = { e ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = false,
+                            error = e.message ?: "Error al vincular cuenta de email"
+                        )
+                    }
+                )
+            }
         }
     }
 
-    fun onLinkGitHub(
-        activity: Activity,
-        communicateSuccess: () -> Unit,
-        communicateError: () -> Unit
+    // LINK ACCOUNT WITH GITHUB
+    private fun onLinkGitHub(
+        activity: Activity
     ) {
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = true
-            )
+        if(isJobActive(linkOthersJob)){
+            return
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = linkGitHubUseCase(activity)
-            result.fold(
-                onSuccess = { userModel ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateSuccess()
-                    }
-                },
-                onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            error = exception.message ?: "Error al vincular cuenta de GitHub"
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateError()
-                    }
-                }
+        linkOthersJob?.cancel()
+
+        linkOthersJob = viewModelScope.launch(Dispatchers.Main) {
+            _state.value = _state.value.copy(
+                isLoading = true
             )
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = linkGitHubUseCase(activity)
+                result.fold(
+                    onSuccess = { userModel ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = true
+                        )
+                    },
+                    onFailure = { e ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = false,
+                            error = e.message ?: "Error al vincular cuenta de email"
+                        )
+                    }
+                )
+            }
         }
     }
 
-    fun onLinkMicrosoft(
-        activity: Activity,
-        communicateSuccess: () -> Unit,
-        communicateError: () -> Unit
+    // LINK ACCOUNT WITH MICROSOFT
+    private fun onLinkMicrosoft(
+        activity: Activity
     ) {
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = true
-            )
+        if(isJobActive(linkOthersJob)){
+            return
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = linkMicrosoftUseCase(activity)
-            result.fold(
-                onSuccess = { userModel ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateSuccess()
-                    }
-                },
-                onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            error = exception.message ?: "Error al vincular cuenta de Microsoft"
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateError()
-                    }
-                }
+        linkOthersJob?.cancel()
+
+        linkOthersJob = viewModelScope.launch(Dispatchers.Main) {
+            _state.value = _state.value.copy(
+                isLoading = true
             )
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = linkMicrosoftUseCase(activity)
+                result.fold(
+                    onSuccess = { userModel ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = true
+                        )
+                    },
+                    onFailure = { e ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = false,
+                            error = e.message ?: "Error al vincular cuenta de email"
+                        )
+                    }
+                )
+            }
         }
     }
 
-    fun onLinkTwitter(
-        activity: Activity,
-        communicateSuccess: () -> Unit,
-        communicateError: () -> Unit
+    // LINK ACCOUNT WITH TWITTER
+    private fun onLinkTwitter(
+        activity: Activity
     ) {
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = true
-            )
+        if(isJobActive(linkOthersJob)){
+            return
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = linkTwitterUseCase(activity)
-            result.fold(
-                onSuccess = { userModel ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateSuccess()
-                    }
-                },
-                onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            error = exception.message ?: "Error al vincular cuenta de Twitter"
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateError()
-                    }
-                }
+        linkOthersJob?.cancel()
+
+        linkOthersJob = viewModelScope.launch(Dispatchers.Main) {
+            _state.value = _state.value.copy(
+                isLoading = true
             )
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = linkTwitterUseCase(activity)
+                result.fold(
+                    onSuccess = { userModel ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = true
+                        )
+                    },
+                    onFailure = { e ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = false,
+                            error = e.message ?: "Error al vincular cuenta de email"
+                        )
+                    }
+                )
+            }
         }
     }
 
-    fun onLinkYahoo(
-        activity: Activity,
-        communicateSuccess: () -> Unit,
-        communicateError: () -> Unit
+    // LINK ACCOUNT WITH YAHOO
+    private fun onLinkYahoo(
+        activity: Activity
     ) {
-        _uiState.update { uiState ->
-            uiState.copy(
-                isLoading = true
-            )
+        if(isJobActive(linkOthersJob)){
+            return
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = linkYahooUseCase(activity)
-            result.fold(
-                onSuccess = { userModel ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateSuccess()
-                    }
-                },
-                onFailure = { exception ->
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            isLoading = false,
-                            error = exception.message ?: "Error al vincular cuenta de Yahoo"
-                        )
-                    }
-                    withContext(Dispatchers.Main){
-                        communicateError()
-                    }
-                }
+        linkOthersJob?.cancel()
+
+        linkOthersJob = viewModelScope.launch(Dispatchers.Main) {
+            _state.value = _state.value.copy(
+                isLoading = true
             )
+
+            viewModelScope.launch(Dispatchers.IO) {
+                val result = linkYahooUseCase(activity)
+                result.fold(
+                    onSuccess = { userModel ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = true
+                        )
+                    },
+                    onFailure = { e ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            isSuccess = false,
+                            error = e.message ?: "Error al vincular cuenta de email"
+                        )
+                    }
+                )
+            }
         }
     }
 
+    // JOBS
+
+    private fun isJobActive(job: Job?): Boolean {
+        return job?.isActive == true
+    }
+
+    private fun cancelAllJobs() {
+        logoutJob?.cancel()
+        linkEmailJob?.cancel()
+        linkGoogleJob?.cancel()
+        linkFacebookJob?.cancel()
+        linkAnonymouslyJob?.cancel()
+        linkOthersJob?.cancel()
+    }
+
+    // APPLICATION LIFECYCLE
+
+    override fun onCleared() {
+        super.onCleared()
+        cancelAllJobs()
+    }
 
 }

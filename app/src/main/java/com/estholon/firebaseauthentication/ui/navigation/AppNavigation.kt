@@ -100,9 +100,10 @@ fun AppNavigation(){
             )
         }
         composable(HomeScreen.route){
-            val homeViewModel: HomeViewModel = hiltViewModel()
+            val viewModel: HomeViewModel = hiltViewModel()
             HomeScreen(
-                homeViewModel = homeViewModel,
+                state = viewModel.state.collectAsState(),
+                onIntent = viewModel::dispatch,
                 navigateToSignIn = {
                     navController.popBackStack()
                     navController.navigate(SignInScreen.route)

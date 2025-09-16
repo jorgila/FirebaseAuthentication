@@ -28,6 +28,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +57,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.estholon.firebaseauthentication.R
 import com.estholon.firebaseauthentication.ui.navigation.Routes.*
+import com.estholon.firebaseauthentication.ui.screens.home.models.HomeEvent
+import com.estholon.firebaseauthentication.ui.screens.home.models.HomeState
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
@@ -63,16 +67,27 @@ import com.facebook.login.LoginResult
 
 @Composable
 fun HomeScreen(
-    homeViewModel: HomeViewModel,
+    state: State<HomeState> = mutableStateOf(HomeState()),
+    onIntent: (HomeEvent) -> Unit,
     navigateToSignIn: () -> Unit
 ){
+
+    // VARIABLES
+
     val activity = LocalActivity.current!!
     val context = LocalContext.current
-    val uiState by homeViewModel.uiState.collectAsState()
 
     lateinit var callbackManager: CallbackManager
 
-    // Facebook
+    // LAUNCHED EFFECT
+
+    LaunchedEffect(state.value.logout) {
+        if(state.value.logout){
+            navigateToSignIn()
+        }
+    }
+
+    // FACEBOOK
 
     callbackManager = CallbackManager.Factory.create()
 
@@ -87,17 +102,14 @@ fun HomeScreen(
             }
 
             override fun onSuccess(result: LoginResult) {
-                homeViewModel.onLinkFacebook(
-                    result.accessToken,
-                    communicateSuccess = { Toast.makeText(context,"Linked Successfully",Toast.LENGTH_LONG).show() },
-                    communicateError = { Toast.makeText(context,uiState.error.toString(),Toast.LENGTH_LONG).show()  }
-                )
+                onIntent(HomeEvent.LinkFacebook(result.accessToken))
             }
 
         })
 
-    // Facebook End
+    // FACEBOOK END
 
+    // VIEW
 
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -112,60 +124,44 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
             LinkWithMail(
-                onLinkWithEmail = { user, password ->
-                    homeViewModel.onLinkEmail(
-                        email = user,
-                        password = password,
-                        communicateSuccess = { Toast.makeText(context,"Cuenta vinculada",Toast.LENGTH_LONG).show()},
-                        communicateError = { Toast.makeText(context,uiState.error ?: "Cuenta no vinculada",Toast.LENGTH_LONG).show()},
-                    )
+                state = state,
+                onIntent = { event ->
+                    onIntent(event)
                 }
             )
             Spacer(modifier = Modifier.height(30.dp))
 
             LinkWithOtherMethods(
-                onGoogleLink = { homeViewModel.onLinkGoogle(
-                    activity = activity,
-                    communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
-                    communicateError = { Toast.makeText(context,"Account not linked",Toast.LENGTH_LONG).show()},
-                ) },
+                onGoogleLink = {
+                    onIntent(HomeEvent.LinkGoogle(activity))
+                },
                 onFacebookLink = {
                     LoginManager.getInstance()
                         .logInWithReadPermissions(context as ActivityResultRegistryOwner, callbackManager, listOf("email", "public_profile"))
                 },
-                onGitHubLink = { homeViewModel.onLinkGitHub(
-                    activity = activity,
-                    communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
-                    communicateError = { Toast.makeText(context,uiState.error,Toast.LENGTH_LONG).show()},
-                ) },
-                onMicrosoftLink = { homeViewModel.onLinkMicrosoft(
-                    activity = activity,
-                    communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
-                    communicateError = { Toast.makeText(context,uiState.error,Toast.LENGTH_LONG).show()},
-                ) },
-                onTwitterLink = { homeViewModel.onLinkTwitter(
-                    activity = activity,
-                    communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
-                    communicateError = { Toast.makeText(context,uiState.error,Toast.LENGTH_LONG).show()},
-                ) },
-                onYahooLink = { homeViewModel.onLinkYahoo(
-                    activity = activity,
-                    communicateSuccess = { Toast.makeText(context,"Account linked",Toast.LENGTH_LONG).show()},
-                    communicateError = { Toast.makeText(context,uiState.error,Toast.LENGTH_LONG).show()},
-                ) }
+                onGitHubLink = {
+                    onIntent(HomeEvent.LinkGitHub(activity))
+                },
+                onMicrosoftLink = {
+                    onIntent(HomeEvent.LinkMicrosoft(activity))
+                },
+                onTwitterLink = {
+                    onIntent(HomeEvent.LinkTwitter(activity))
+                },
+                onYahooLink = {
+                    onIntent(HomeEvent.LinkYahoo(activity))
+                }
             )
 
             Spacer(modifier = Modifier.height(30.dp))
             Button(onClick = {
-                homeViewModel.logout {
-                    navigateToSignIn()
-                }
+                onIntent(HomeEvent.Logout)
             }) {
                 Text(text = "LOGOUT")
             }
         }
 
-        if(uiState.isLoading){
+        if(state.value.isLoading){
             Box(modifier = Modifier.fillMaxSize().semantics {
                 contentDescription = "Cargando, por favor espere"
                 liveRegion = LiveRegionMode.Polite
@@ -185,12 +181,11 @@ fun HomeScreen(
 
 @Composable
 fun LinkWithMail(
-    onLinkWithEmail: (user: String, password: String) -> Unit,
-    homeViewModel: HomeViewModel = hiltViewModel()
+    state: State<HomeState> = mutableStateOf(HomeState()),
+    onIntent: (HomeEvent) -> Unit,
 ){
 
     val context = LocalContext.current
-    val uiState by homeViewModel.uiState.collectAsState()
     val focusManager = LocalFocusManager.current
     val hapticFeedback = LocalHapticFeedback.current
 
@@ -217,7 +212,7 @@ fun LinkWithMail(
     TextField(
         label = { Text(text="Usuario")},
         value = user,
-        isError = !uiState.isEmailValid,
+        isError = !state.value.isEmailValid,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Email,
             imeAction = ImeAction.Next
@@ -226,19 +221,19 @@ fun LinkWithMail(
             onNext = { focusManager.moveFocus(FocusDirection.Down)}
         ),
         onValueChange = {
-            homeViewModel.isEmailValid(it)
+            onIntent(HomeEvent.CheckIfEmailIsValid(it))
             user = it
         },
         singleLine = true,
         maxLines = 1,
         modifier = Modifier.semantics {
             contentDescription = "Campo de correo electrónico"
-            if (!uiState.isEmailValid && uiState.emailError != null) {
-                stateDescription = uiState.emailError!!
+            if (!state.value.isEmailValid && state.value.emailError != null) {
+                stateDescription = state.value.emailError!!
             }
         },
-        supportingText = if (!uiState.isEmailValid && uiState.emailError != null) {
-            { Text(uiState.emailError!!, color = MaterialTheme.colorScheme.error) }
+        supportingText = if (!state.value.isEmailValid && state.value.emailError != null) {
+            { Text(state.value.emailError!!, color = MaterialTheme.colorScheme.error) }
         } else null
     )
 
@@ -246,7 +241,7 @@ fun LinkWithMail(
 
     TextField(
         label = { Text(text = "Contraseña") },
-        isError = !uiState.isPasswordValid,
+        isError = !state.value.isPasswordValid,
         value = password,
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
@@ -255,11 +250,11 @@ fun LinkWithMail(
         keyboardActions = KeyboardActions(
             onDone = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                onLinkWithEmail(user,password)
+                onIntent(HomeEvent.LinkEmail(user,password))
             }
         ),
         onValueChange = {
-            homeViewModel.isPasswordValid(it)
+            onIntent(HomeEvent.CheckIfPasswordIsValid(it))
             password = it
         },
         singleLine = true,
@@ -281,12 +276,12 @@ fun LinkWithMail(
         },
         modifier = Modifier.semantics {
             contentDescription = "Campo de contraseña"
-            if (!uiState.isPasswordValid && uiState.passwordError != null) {
-                stateDescription = uiState.passwordError!!
+            if (!state.value.isPasswordValid && state.value.passwordError != null) {
+                stateDescription = state.value.passwordError!!
             }
         },
-        supportingText = if (!uiState.isPasswordValid && uiState.passwordError != null) {
-            { Text(uiState.passwordError!!, color = MaterialTheme.colorScheme.error) }
+        supportingText = if (!state.value.isPasswordValid && state.value.passwordError != null) {
+            { Text(state.value.passwordError!!, color = MaterialTheme.colorScheme.error) }
         } else null
     )
 
@@ -296,7 +291,7 @@ fun LinkWithMail(
         Button(
             onClick = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                onLinkWithEmail(user, password)
+                onIntent(HomeEvent.LinkEmail(user,password))
             },
             enabled = (user != null && password.length >= 6),
             shape = RoundedCornerShape(50.dp),

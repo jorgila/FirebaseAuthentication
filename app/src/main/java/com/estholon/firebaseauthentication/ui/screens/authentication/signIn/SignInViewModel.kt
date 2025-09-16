@@ -22,6 +22,7 @@ import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.mode
 import com.facebook.AccessToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,6 +52,20 @@ class SignInViewModel @Inject constructor(
     
     private val _state = MutableStateFlow(SignInState())
     val state : StateFlow<SignInState> = _state.asStateFlow()
+
+    // JOBS
+    @Volatile
+    var signInEmailJob: Job? = null
+    @Volatile
+    var signInGoogleJob: Job? = null
+    @Volatile
+    var signInGoogleCredentialJob: Job? = null
+    @Volatile
+    var signInFacebookJob: Job? = null
+    @Volatile
+    var signInAnonymouslyJob: Job? = null
+    @Volatile
+    var signInOthersJob: Job? = null
 
     // DISPATCHER
 
@@ -139,7 +154,13 @@ class SignInViewModel @Inject constructor(
         email: String,
         password: String
     ) {
-        viewModelScope.launch {
+        if(isJobActive(signInEmailJob)){
+            return
+        }
+
+        signInEmailJob?.cancel()
+
+        signInEmailJob = viewModelScope.launch(Dispatchers.Main) {
 
             _state.value = _state.value.copy(
                 isLoading = true
@@ -170,7 +191,13 @@ class SignInViewModel @Inject constructor(
     private fun signInFacebook(
         accessToken: AccessToken,
     ) {
-        viewModelScope.launch {
+        if(isJobActive(signInFacebookJob)){
+            return
+        }
+
+        signInFacebookJob?.cancel()
+
+        signInFacebookJob = viewModelScope.launch(Dispatchers.Main) {
             _state.value = _state.value.copy(
                 isLoading = true
             )
@@ -196,8 +223,13 @@ class SignInViewModel @Inject constructor(
     // ANONYMOUSLY SIGN IN
 
     private fun signInAnonymously() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(
+        if(isJobActive(signInAnonymouslyJob)){
+            return
+        }
+
+        signInAnonymouslyJob?.cancel()
+
+        signInAnonymouslyJob = viewModelScope.launch(Dispatchers.Main) {            _state.value = _state.value.copy(
                 isLoading = true
             )
             val result = withContext(Dispatchers.IO){
@@ -224,7 +256,13 @@ class SignInViewModel @Inject constructor(
     // GOOGLE SIGN IN
 
     private fun signInGoogleCredentialManager(activity: Activity) {
-        viewModelScope.launch {
+        if(isJobActive(signInGoogleCredentialJob)){
+            return
+        }
+
+        signInGoogleCredentialJob?.cancel()
+
+        signInGoogleCredentialJob = viewModelScope.launch(Dispatchers.Main) {
             _state.value = _state.value.copy(
                 isLoading = true
             )
@@ -253,8 +291,13 @@ class SignInViewModel @Inject constructor(
     private fun signInGoogle(
         activity: Activity,
     ) {
-        viewModelScope.launch {
+        if(isJobActive(signInGoogleJob)){
+            return
+        }
 
+        signInGoogleJob?.cancel()
+
+        signInGoogleJob = viewModelScope.launch(Dispatchers.Main) {
             _state.value = _state.value.copy(
                 isLoading = true
             )
@@ -292,7 +335,13 @@ class SignInViewModel @Inject constructor(
         activity: Activity
     ) {
 
-        viewModelScope.launch {
+        if(isJobActive(signInOthersJob)){
+            return
+        }
+
+        signInOthersJob?.cancel()
+
+        signInOthersJob = viewModelScope.launch(Dispatchers.Main) {
 
             _state.value = _state.value.copy(
                 isLoading = true
@@ -320,9 +369,26 @@ class SignInViewModel @Inject constructor(
                     )
                 }
             )
-
         }
+    }
 
+    // JOBS
+
+    private fun isJobActive(job: Job?): Boolean {
+        return job?.isActive == true
+    }
+
+    private fun cancelAllJobs() {
+        signInEmailJob?.cancel()
+        signInGoogleJob?.cancel()
+        signInFacebookJob?.cancel()
+        signInAnonymouslyJob?.cancel()
+        signInOthersJob?.cancel()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        cancelAllJobs()
     }
 
 }

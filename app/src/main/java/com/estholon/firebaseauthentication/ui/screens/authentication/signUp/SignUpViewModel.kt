@@ -1,6 +1,7 @@
 package com.estholon.firebaseauthentication.ui.screens.authentication.signUp
 
 import android.app.Activity
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.firebaseauthentication.domain.usecases.authentication.google.ClearCredentialStateUseCase
@@ -14,6 +15,7 @@ import com.estholon.firebaseauthentication.domain.usecases.authentication.micros
 import com.estholon.firebaseauthentication.domain.usecases.authentication.twitter.SignInTwitterUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.yahoo.SignInYahooUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.SignUpEmailUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.google.SignInGoogleCredentialManagerUseCase
 import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.OathLogin
 import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.models.SignUpEvent
 import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.models.SignUpState
@@ -35,6 +37,7 @@ class SignUpViewModel @Inject constructor(
     private val signUpEmailUseCase: SignUpEmailUseCase,
     private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase,
     private val signInFacebookUseCase: SignInFacebookUseCase,
+    private val signInGoogleCredentialManagerUseCase: SignInGoogleCredentialManagerUseCase,
     private val signInGoogleUseCase: SignInGoogleUseCase,
     private val clearCredentialStateUseCase: ClearCredentialStateUseCase,
     private val signInYahooUseCase: SignInYahooUseCase,
@@ -52,6 +55,8 @@ class SignUpViewModel @Inject constructor(
     // JOBS
     @Volatile
     var signUpEmailJob: Job? = null
+    @Volatile
+    var signInGoogleCredentialJob: Job? = null
     @Volatile
     var signUpGoogleJob: Job? = null
     @Volatile
@@ -86,7 +91,7 @@ class SignUpViewModel @Inject constructor(
                 signInGoogle(event.activity)
             }
             is SignUpEvent.SignUpGoogleCredentialManager -> {
-
+                signInGoogleCredentialManager(event.activity)
             }
         }
     }
@@ -283,6 +288,39 @@ class SignUpViewModel @Inject constructor(
 
 
     // GOOGLE SIGN UP
+
+    private fun signInGoogleCredentialManager(activity: Activity) {
+        if(isJobActive(signInGoogleCredentialJob)){
+            return
+        }
+
+        signInGoogleCredentialJob?.cancel()
+
+        signInGoogleCredentialJob = viewModelScope.launch(Dispatchers.Main) {
+            _state.value = _state.value.copy(
+                isLoading = true
+            )
+
+            val result = signInGoogleCredentialManagerUseCase(activity)
+
+            result.fold(
+                onSuccess = {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isSuccess = true,
+                    )
+                },
+                onFailure = { exception ->
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        isSuccess = false,
+                        error = "Credential Manager no disponible",
+                    )
+                    Log.d("SignInViewModel", "Credential Manager no disponible: ${exception.message}")
+                }
+            )
+        }
+    }
 
     private fun signInGoogle(
         activity: Activity

@@ -2,12 +2,11 @@ package com.estholon.firebaseauthentication.ui.screens.authentication.signIn
 
 import android.app.Activity
 import android.util.Log
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.estholon.firebaseauthentication.domain.usecases.authentication.anonymously.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.IsEmailValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.IsPasswordValidUseCase
-import com.estholon.firebaseauthentication.domain.usecases.authentication.anonymously.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.SignInEmailUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.facebook.SignInFacebookUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.github.SignInGitHubUseCase
@@ -23,11 +22,9 @@ import com.facebook.AccessToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject

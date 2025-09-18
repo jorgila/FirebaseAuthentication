@@ -4,18 +4,18 @@ import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.firebaseauthentication.domain.usecases.authentication.google.ClearCredentialStateUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.anonymously.SignInAnonymouslyUseCaseImpl
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.IsEmailValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.IsPasswordValidUseCase
-import com.estholon.firebaseauthentication.domain.usecases.authentication.anonymously.SignInAnonymouslyUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.email.SignUpEmailUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.facebook.SignInFacebookUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.github.SignInGitHubUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.google.ClearCredentialStateUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.google.SignInGoogleCredentialManagerUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.google.SignInGoogleUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.microsoft.SignInMicrosoftUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.twitter.SignInTwitterUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.yahoo.SignInYahooUseCase
-import com.estholon.firebaseauthentication.domain.usecases.authentication.email.SignUpEmailUseCase
-import com.estholon.firebaseauthentication.domain.usecases.authentication.google.SignInGoogleCredentialManagerUseCase
 import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.OathLogin
 import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.models.SignUpEvent
 import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.models.SignUpState
@@ -35,7 +35,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val signUpEmailUseCase: SignUpEmailUseCase,
-    private val signInAnonymouslyUseCase: SignInAnonymouslyUseCase,
+    private val signInAnonymouslyUseCaseImpl: SignInAnonymouslyUseCaseImpl,
     private val signInFacebookUseCase: SignInFacebookUseCase,
     private val signInGoogleCredentialManagerUseCase: SignInGoogleCredentialManagerUseCase,
     private val signInGoogleUseCase: SignInGoogleUseCase,
@@ -251,7 +251,7 @@ class SignUpViewModel @Inject constructor(
                 val result =
                     withContext(Dispatchers.IO){
                         ensureActive()
-                        signInAnonymouslyUseCase()
+                        signInAnonymouslyUseCaseImpl()
                     }
 
                 ensureActive()

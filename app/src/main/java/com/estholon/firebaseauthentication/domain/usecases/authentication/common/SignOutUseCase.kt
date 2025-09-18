@@ -1,14 +1,7 @@
 package com.estholon.firebaseauthentication.domain.usecases.authentication.common
 
-import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
-import javax.inject.Inject
+interface SignOutUseCase {
 
-class SignOutUseCase @Inject constructor(
-    private val authenticationRepository: AuthenticationRepository
-) {
-
-    suspend operator fun invoke(){
-        authenticationRepository.signOut()
-    }
+    suspend operator fun invoke()
 
 }

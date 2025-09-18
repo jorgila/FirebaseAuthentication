@@ -3,6 +3,7 @@ package com.estholon.firebaseauthentication.ui.screens.home
 import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.estholon.firebaseauthentication.domain.usecases.authentication.common.SignOutUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.IsEmailValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.IsPasswordValidUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.LinkEmailUseCase
@@ -12,7 +13,6 @@ import com.estholon.firebaseauthentication.domain.usecases.authentication.google
 import com.estholon.firebaseauthentication.domain.usecases.authentication.microsoft.LinkMicrosoftUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.twitter.LinkTwitterUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.yahoo.LinkYahooUseCase
-import com.estholon.firebaseauthentication.domain.usecases.authentication.common.SignOutUseCase
 import com.estholon.firebaseauthentication.ui.screens.home.models.HomeEvent
 import com.estholon.firebaseauthentication.ui.screens.home.models.HomeState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,9 +21,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel

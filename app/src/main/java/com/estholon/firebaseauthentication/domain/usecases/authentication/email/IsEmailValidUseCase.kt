@@ -1,17 +1,7 @@
 package com.estholon.firebaseauthentication.domain.usecases.authentication.email
 
-import android.util.Patterns
-import javax.inject.Inject
+interface IsEmailValidUseCase {
 
-class IsEmailValidUseCase @Inject constructor(
+    operator fun invoke( email : String ) : Result<Unit>
 
-) {
-
-    operator fun invoke( email : String ) : Result<Unit> {
-        return when {
-            email.isEmpty() -> Result.failure(Exception("El email es requerido"))
-            !Patterns.EMAIL_ADDRESS.matcher( email ).matches() -> Result.failure(Exception("El formato del email no es válido"))
-            else -> Result.success(Unit)
-        }
-    }
 }

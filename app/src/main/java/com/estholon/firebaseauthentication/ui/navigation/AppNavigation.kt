@@ -16,6 +16,8 @@ import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.Sign
 import com.estholon.firebaseauthentication.ui.screens.authentication.signIn.SignInViewModel
 import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.SignUpScreen
 import com.estholon.firebaseauthentication.ui.screens.authentication.signUp.SignUpViewModel
+import com.estholon.firebaseauthentication.ui.screens.authentication.verificationEmail.VerificationEmailScreen
+import com.estholon.firebaseauthentication.ui.screens.authentication.verificationEmail.VerificationEmailViewModel
 import com.estholon.firebaseauthentication.ui.screens.home.HomeScreen
 import com.estholon.firebaseauthentication.ui.screens.home.HomeViewModel
 import com.estholon.firebaseauthentication.ui.screens.splash.SplashScreen
@@ -52,6 +54,10 @@ fun AppNavigation(){
                 onIntent = viewModel::dispatch,
                 navigateToSignUp = { navController.navigate(route = SignUpScreen.route) },
                 navigateToRecover = { navController.navigate(route=RecoverScreen.route) },
+                navigateToVerificationEmail = {
+                    navController.popBackStack()
+                    navController.navigate(route = VerificationEmailScreen.route)
+                },
                 navigateToHome = {
                     navController.popBackStack()
                     navController.navigate(route = HomeScreen.route)
@@ -71,19 +77,34 @@ fun AppNavigation(){
                     navController.popBackStack()
                     navController.navigate(route = HomeScreen.route)
                 },
+                navigateToVerificationEmail = {
+                    navController.popBackStack()
+                    navController.navigate(route = VerificationEmailScreen.route)
+                }
+            )
+        }
+
+        composable(VerificationEmailScreen.route){
+            val viewModel: VerificationEmailViewModel = hiltViewModel()
+            VerificationEmailScreen(
+                state = viewModel.state.collectAsState(),
+                onIntent = viewModel::dispatch,
                 navigateToStartEnroll = {
                     navController.popBackStack()
                     navController.navigate(route = StartEnrollScreen.route)
                 }
             )
         }
+
         composable(StartEnrollScreen.route){
             val viewModel: StartEnrollViewModel = hiltViewModel()
             StartEnrollScreen(
                 state = viewModel.state,
                 sendOTP = { phoneNumber ->
                     viewModel.dispatch(
-                        event = StartEnrollEvent.SendOTP(phoneNumber = phoneNumber)
+                        event = StartEnrollEvent.SendOTP(
+                            phoneNumber = phoneNumber
+                        )
                     )
                 }
             )

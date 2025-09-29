@@ -29,7 +29,7 @@ class StartEnrollViewModel @Inject constructor(
 
     fun dispatch(event: StartEnrollEvent){
         when(event){
-            StartEnrollEvent.ScreenOpened -> TODO()
+            is StartEnrollEvent.ScreenOpened -> TODO()
             is StartEnrollEvent.SendOTP -> sendOTP(phoneNumber = event.phoneNumber)
         }
     }

@@ -70,7 +70,7 @@ fun SignUpScreen(
     onIntent: (SignUpEvent) -> Unit,
     navigateToSignIn: () -> Unit,
     navigateToHome: () -> Unit,
-    navigateToStartEnroll: () -> Unit
+    navigateToVerificationEmail: () -> Unit
 ) {
 
     val context = LocalContext.current
@@ -94,7 +94,7 @@ fun SignUpScreen(
 
     LaunchedEffect(state.value.shouldNavigateToStartEnroll) {
         if(state.value.shouldNavigateToStartEnroll){
-            navigateToStartEnroll()
+            navigateToVerificationEmail()
         }
     }
 

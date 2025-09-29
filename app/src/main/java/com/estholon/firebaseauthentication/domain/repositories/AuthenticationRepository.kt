@@ -14,6 +14,8 @@ interface AuthenticationRepository {
 
     fun isUserLogged() : Result<Boolean>
 
+    suspend fun isEmailVerified() : Result<Boolean>
+
     // EMAIL
     suspend fun signUpEmail( email: String, password: String ) : Result<UserModel?>
     suspend fun signInEmail( email: String, password: String ) : Result<UserModel?>
@@ -67,7 +69,11 @@ interface AuthenticationRepository {
     suspend fun resetPassword( email : String ) : Result<Unit>
 
     // MFA
+    suspend fun sendEmailVerification(): Result<Unit>
     suspend fun getMultifactorSession(): MultiFactorSession
     suspend fun enrollMfaSendSms(session: MultiFactorSession, phoneNumber: String) : Result<String>
-
+    suspend fun verifySmsForEnroll(
+        verificationId: String,
+        verificationCode: String
+    ) : Result<Unit>
 }

@@ -6,5 +6,9 @@ interface MultifactorAuthenticationDataSource {
 
     suspend fun getMultifactorSession(): MultiFactorSession
     suspend fun enrollMfaSendSms(session: MultiFactorSession, phoneNumber: String): Result<String>
+    suspend fun verifySmsForEnroll(
+        verificationId: String,
+        verificationCode: String
+    ) : Result<Unit>
 
 }

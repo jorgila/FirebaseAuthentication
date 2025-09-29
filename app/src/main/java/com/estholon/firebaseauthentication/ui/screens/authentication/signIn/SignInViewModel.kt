@@ -169,6 +169,7 @@ class SignInViewModel @Inject constructor(
                 onSuccess = {
                     _state.value = _state.value.copy(
                         isLoading = false,
+                        verificationNeeded = true,
                         isSuccess = true,
                     )
                 },
@@ -237,6 +238,7 @@ class SignInViewModel @Inject constructor(
                     _state.value = _state.value.copy(
                         isLoading = false,
                         isSuccess = true,
+                        verificationNeeded = false
                     )
                 },
                 onFailure = { exception ->

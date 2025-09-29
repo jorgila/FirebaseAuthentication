@@ -7,8 +7,11 @@ data class SignInState(
     val isEmailValid: Boolean = false,
     val emailError: String? = null,
     val isPasswordValid: Boolean = false,
-    val passwordError: String? = null
+    val passwordError: String? = null,
+    val verificationNeeded: Boolean = false
 ){
     val shouldShowError: Boolean get() = !isLoading && !isSuccess && !error.isNullOrEmpty()
-    val shouldNavigateToHome: Boolean get() = !isLoading && isSuccess
+    val shouldNavigateToHome: Boolean get() = !isLoading && isSuccess && !verificationNeeded
+
+    val shouldNavigateToVerificationEmail: Boolean get() = !isLoading && isSuccess && verificationNeeded
 }

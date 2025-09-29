@@ -34,6 +34,8 @@ import com.estholon.firebaseauthentication.domain.usecases.analytics.SendEventUs
 import com.estholon.firebaseauthentication.domain.usecases.analytics.SendEventUseCaseImpl
 import com.estholon.firebaseauthentication.domain.usecases.authentication.anonymously.SignInAnonymouslyUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.anonymously.SignInAnonymouslyUseCaseImpl
+import com.estholon.firebaseauthentication.domain.usecases.authentication.common.IsEmailVerifiedUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.common.IsEmailVerifiedUseCaseImpl
 import com.estholon.firebaseauthentication.domain.usecases.authentication.common.SignOutUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.common.SignOutUseCaseImpl
 import com.estholon.firebaseauthentication.domain.usecases.authentication.email.IsEmailValidUseCase
@@ -68,6 +70,8 @@ import com.estholon.firebaseauthentication.domain.usecases.authentication.micros
 import com.estholon.firebaseauthentication.domain.usecases.authentication.microsoft.LinkMicrosoftUseCaseImpl
 import com.estholon.firebaseauthentication.domain.usecases.authentication.microsoft.SignInMicrosoftUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.microsoft.SignInMicrosoftUseCaseImpl
+import com.estholon.firebaseauthentication.domain.usecases.authentication.multifactor.SendVerificationEmailUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.multifactor.SendVerificationEmailUseCaseImpl
 import com.estholon.firebaseauthentication.domain.usecases.authentication.multifactor.StartEnrollPhoneUseCase
 import com.estholon.firebaseauthentication.domain.usecases.authentication.multifactor.StartEnrollPhoneUseCaseImpl
 import com.estholon.firebaseauthentication.domain.usecases.authentication.twitter.LinkTwitterUseCase
@@ -322,6 +326,17 @@ abstract class FirebaseModule {
         signInYahooUseCaseImpl: SignInYahooUseCaseImpl
     ): SignInYahooUseCase
 
+    @Binds
+    @Singleton
+    abstract fun provideSendVerificationEmailUseCase(
+        sendVerificationEmailUseCaseImpl: SendVerificationEmailUseCaseImpl
+    ): SendVerificationEmailUseCase
+
+    @Binds
+    @Singleton
+    abstract fun provideIsEmailVerifiedUseCase(
+        isEmailVerifiedUseCaseImpl: IsEmailVerifiedUseCaseImpl
+    ): IsEmailVerifiedUseCase
 
     companion object {
 

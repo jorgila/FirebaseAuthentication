@@ -42,6 +42,14 @@ class AuthenticationRepositoryImpl @Inject constructor(
         return commonAuthenticationDataSource.isUserLogged()
     }
 
+    override suspend fun sendEmailVerification(): Result<Unit> {
+        return commonAuthenticationDataSource.sendEmailVerification()
+    }
+
+    override suspend fun isEmailVerified(): Result<Boolean> {
+        return commonAuthenticationDataSource.isEmailVerified()
+    }
+
     // EMAIL
 
     override suspend fun signUpEmail(email: String, password: String): Result<UserModel?> {
@@ -171,12 +179,6 @@ class AuthenticationRepositoryImpl @Inject constructor(
             .map { dto -> dto?.let { userMapper.userDtoToDomain(it) } }
     }
 
-    // SIGN OUT
-
-    override suspend fun signOut() {
-        commonAuthenticationDataSource.signOut()
-    }
-
     // RESET PASSWORD
 
     override suspend fun resetPassword ( email : String) : Result<Unit> {
@@ -194,6 +196,19 @@ class AuthenticationRepositoryImpl @Inject constructor(
         phoneNumber: String
     ): Result<String> {
         return multifactorAuthenticationDataSource.enrollMfaSendSms(session, phoneNumber)
+    }
+
+    override suspend fun verifySmsForEnroll(
+        verificationId: String,
+        verificationCode: String
+    ): Result<Unit> {
+        return multifactorAuthenticationDataSource.verifySmsForEnroll(verificationId, verificationCode)
+    }
+
+    // SIGN OUT
+
+    override suspend fun signOut() {
+        commonAuthenticationDataSource.signOut()
     }
 
 }

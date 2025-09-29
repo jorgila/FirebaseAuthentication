@@ -3,6 +3,7 @@ package com.estholon.firebaseauthentication.data.datasources.authentication.comm
 import com.estholon.firebaseauthentication.data.datasources.authentication.google.GoogleAuthenticationDataSource
 import com.facebook.login.LoginManager
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class CommonFirebaseAuthenticationDataSource @Inject constructor(
@@ -20,6 +21,32 @@ class CommonFirebaseAuthenticationDataSource @Inject constructor(
         } catch (e: Exception){
             Result.failure(e)
         }
+    }
+
+    override suspend fun isEmailVerified(): Result<Boolean> {
+        return try {
+            val currentUser = firebaseAuth.currentUser
+            if (currentUser == null) {
+                Result.success(false)
+            } else {
+                // Force token renovation
+                currentUser.getIdToken(true).await()
+                // Reload user to get the updated status
+                currentUser.reload().await()
+                // Get verification status
+                val isEmailVerified = currentUser.isEmailVerified
+                Result.success(isEmailVerified)
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // EMAIL VERIFICATION
+
+    override suspend fun sendEmailVerification(): Result<Unit> = runCatching {
+        val user = firebaseAuth.currentUser ?: throw Exception("No hay usuario autenticado")
+        user.sendEmailVerification().await()
     }
 
     // SIGN OUT OR LOGOUT

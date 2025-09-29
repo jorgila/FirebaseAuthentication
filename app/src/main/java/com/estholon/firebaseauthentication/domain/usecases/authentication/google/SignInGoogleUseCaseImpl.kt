@@ -4,12 +4,14 @@ import android.app.Activity
 import com.estholon.firebaseauthentication.domain.models.AnalyticsModel
 import com.estholon.firebaseauthentication.domain.repositories.AuthenticationRepository
 import com.estholon.firebaseauthentication.domain.usecases.analytics.SendEventUseCase
+import com.estholon.firebaseauthentication.domain.usecases.authentication.multifactor.SendVerificationEmailUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class SignInGoogleUseCaseImpl @Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
+    private val sendVerificationEmailUseCase: SendVerificationEmailUseCase,
     private val sendEventUseCase: SendEventUseCase
 ) : SignInGoogleUseCase {
 
@@ -20,6 +22,7 @@ class SignInGoogleUseCaseImpl @Inject constructor(
 
                 result.fold(
                     onSuccess = {
+                        // Send statistics to analytics
                         val analyticsModel = AnalyticsModel(
                             title = "Sign In",
                             analyticsString = listOf(Pair("Google", "Failed Sign In / Up"))

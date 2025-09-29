@@ -69,6 +69,7 @@ fun SignInScreen(
     onIntent: (SignInEvent) -> Unit,
     navigateToSignUp: () -> Unit,
     navigateToRecover: () -> Unit,
+    navigateToVerificationEmail: () -> Unit,
     navigateToHome: () -> Unit,
 ) {
 
@@ -86,6 +87,12 @@ fun SignInScreen(
     LaunchedEffect(state.value.shouldNavigateToHome) {
         if(state.value.shouldNavigateToHome) {
             navigateToHome()
+        }
+    }
+
+    LaunchedEffect(state.value.shouldNavigateToVerificationEmail) {
+        if(state.value.shouldNavigateToVerificationEmail) {
+            navigateToVerificationEmail()
         }
     }
 
